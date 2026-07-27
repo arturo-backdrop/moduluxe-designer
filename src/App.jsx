@@ -1,7 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { CONFIG } from './config.js';
+import { useAutoSave, loadSavedProject, clearSavedProject } from './hooks/useAutoSave.js';
 
-// Components (built one by one)
 import Onboarding  from './components/Onboarding.jsx';
 import Viewport    from './components/Viewport.jsx';
 import Sidebar     from './components/Sidebar.jsx';
@@ -10,45 +10,54 @@ import BottomBar   from './components/BottomBar.jsx';
 import QuotePanel  from './components/QuotePanel.jsx';
 import VideoWidget from './components/VideoWidget.jsx';
 
-// ── App styles ────────────────────────────────────────────────
 const styles = {
-  root: {
-    position: 'relative',
-    width:    '100%',
-    height:   '100%',
-    overflow: 'hidden',
-  },
-  ui: {
-    position:      'absolute',
-    inset:         0,
-    pointerEvents: 'none', // canvas handles events by default
-    zIndex:        10,
-  },
+  root: { position:'relative', width:'100%', height:'100%', overflow:'hidden' },
+  ui:   { position:'absolute', inset:0, pointerEvents:'none', zIndex:10 },
+};
+
+const DEFAULT_STATE = {
+  projectName: 'My Booth Design',
+  floorSize:   null,
+  activePreset:null,
+  sceneItems:  [],
+  mode:        'place',
+  activeTool:  'select',
 };
 
 export default function App() {
-  // ── Onboarding state ────────────────────────────────────────
   const [onboardingDone, setOnboardingDone] = useState(false);
-  const [floorSize,      setFloorSize]      = useState(null);
-  const [activePreset,   setActivePreset]   = useState(null);
+  const [projectName,    setProjectName]    = useState(DEFAULT_STATE.projectName);
+  const [floorSize,      setFloorSize]      = useState(DEFAULT_STATE.floorSize);
+  const [activePreset,   setActivePreset]   = useState(DEFAULT_STATE.activePreset);
+  const [sceneItems,     setSceneItems]     = useState(DEFAULT_STATE.sceneItems);
+  const [mode,           setMode]           = useState(DEFAULT_STATE.mode);
+  const [activeTool,     setActiveTool]     = useState(DEFAULT_STATE.activeTool);
+  const [history,        setHistory]        = useState([[]]);
+  const [historyIdx,     setHistoryIdx]     = useState(0);
 
-  // ── Scene state ─────────────────────────────────────────────
-  const [sceneItems,  setSceneItems]  = useState([]); // { id, modelId, count, ... }
-  const [mode,        setMode]        = useState('place'); // 'place' | 'draw'
-  const [activeTool,  setActiveTool]  = useState('select');
+  // ── Restore from localStorage on mount ──────────────────────
+  useEffect(() => {
+    const saved = loadSavedProject();
+    if (saved) {
+      setProjectName(saved.projectName || DEFAULT_STATE.projectName);
+      setFloorSize(saved.floorSize     || null);
+      setActivePreset(saved.activePreset || null);
+      setSceneItems(saved.sceneItems   || []);
+      if (saved.floorSize) setOnboardingDone(true);
+    }
+  }, []);
 
-  // ── History ─────────────────────────────────────────────────
-  const [history,    setHistory]    = useState([[]]);
-  const [historyIdx, setHistoryIdx] = useState(0);
+  // ── Autosave ─────────────────────────────────────────────────
+  useAutoSave({ projectName, floorSize, activePreset, sceneItems });
 
+  // ── History ──────────────────────────────────────────────────
   const canUndo = historyIdx > 0;
   const canRedo = historyIdx < history.length - 1;
 
   const pushHistory = useCallback((items) => {
     setHistory(prev => {
-      const next = prev.slice(0, historyIdx + 1);
-      next.push(items);
-      return next.slice(-50); // max 50 snapshots
+      const next = [...prev.slice(0, historyIdx + 1), items].slice(-50);
+      return next;
     });
     setHistoryIdx(prev => Math.min(prev + 1, 49));
   }, [historyIdx]);
@@ -65,8 +74,7 @@ export default function App() {
     setSceneItems(history[historyIdx + 1]);
   }, [canRedo, history, historyIdx]);
 
-  // ── Keyboard shortcuts ───────────────────────────────────────
-  React.useEffect(() => {
+  useEffect(() => {
     const handler = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
       if ((e.ctrlKey || e.metaKey) && e.key === 'y') { e.preventDefault(); redo(); }
@@ -75,18 +83,34 @@ export default function App() {
     return () => window.removeEventListener('keydown', handler);
   }, [undo, redo]);
 
-  // ── Onboarding complete ──────────────────────────────────────
+  // ── New project ───────────────────────────────────────────────
+  const handleNew = useCallback(() => {
+    if (sceneItems.length > 0) {
+      if (!window.confirm('Start a new design? Your current work will be cleared.')) return;
+    }
+    clearSavedProject();
+    setProjectName(DEFAULT_STATE.projectName);
+    setFloorSize(null);
+    setActivePreset(null);
+    setSceneItems([]);
+    setHistory([[]]);
+    setHistoryIdx(0);
+    setMode('place');
+    setActiveTool('select');
+    setOnboardingDone(false);
+  }, [sceneItems]);
+
+  // ── Onboarding complete ───────────────────────────────────────
   const handleOnboardingComplete = useCallback(({ floorSize, preset }) => {
     setFloorSize(floorSize);
     setActivePreset(preset);
     setOnboardingDone(true);
   }, []);
 
-  // ── Scene item management ────────────────────────────────────
+  // ── Scene items ───────────────────────────────────────────────
   const addSceneItem = useCallback((modelId) => {
     setSceneItems(prev => {
-      const existing = prev.find(x => x.modelId === modelId);
-      const next = existing
+      const next = prev.find(x => x.modelId === modelId)
         ? prev.map(x => x.modelId === modelId ? { ...x, count: x.count + 1 } : x)
         : [...prev, { id: `${modelId}_${Date.now()}`, modelId, count: 1 }];
       pushHistory(next);
@@ -94,19 +118,12 @@ export default function App() {
     });
   }, [pushHistory]);
 
-  // ── Render ───────────────────────────────────────────────────
   if (!onboardingDone) {
-    return (
-      <Onboarding
-        config={CONFIG}
-        onComplete={handleOnboardingComplete}
-      />
-    );
+    return <Onboarding config={CONFIG} onComplete={handleOnboardingComplete} />;
   }
 
   return (
     <div style={styles.root}>
-      {/* 3D Viewport — renders Three.js scene */}
       <Viewport
         config={CONFIG}
         floorSize={floorSize}
@@ -115,21 +132,19 @@ export default function App() {
         mode={mode}
         activeTool={activeTool}
       />
-
-      {/* UI overlay */}
       <div style={styles.ui}>
-        {/* Header — project name, undo/redo, mode toggle */}
         <Header
           config={CONFIG}
+          projectName={projectName}
+          onProjectNameChange={setProjectName}
           mode={mode}
           onModeChange={setMode}
           canUndo={canUndo}
           canRedo={canRedo}
           onUndo={undo}
           onRedo={redo}
+          onNew={handleNew}
         />
-
-        {/* Sidebar — catalog + toolbar */}
         <Sidebar
           config={CONFIG}
           mode={mode}
@@ -137,23 +152,9 @@ export default function App() {
           onToolChange={setActiveTool}
           onAddProduct={addSceneItem}
         />
-
-        {/* Quote panel — top right */}
-        <QuotePanel
-          config={CONFIG}
-          sceneItems={sceneItems}
-        />
-
-        {/* Bottom bar — your build */}
-        <BottomBar
-          config={CONFIG}
-          sceneItems={sceneItems}
-        />
-
-        {/* Video widget — bottom right (optional) */}
-        {CONFIG.youtubeId && (
-          <VideoWidget config={CONFIG} />
-        )}
+        <QuotePanel config={CONFIG} sceneItems={sceneItems} />
+        <BottomBar config={CONFIG} sceneItems={sceneItems} />
+        {CONFIG.youtubeId && <VideoWidget config={CONFIG} />}
       </div>
     </div>
   );
