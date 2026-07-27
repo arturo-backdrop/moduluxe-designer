@@ -1,0 +1,153 @@
+/* ── Wrapper — centered at top ───────────────────────────── */
+.headerWrap {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  pointer-events: all;
+  z-index: 20;
+}
+
+/* ── Project pill ────────────────────────────────────────── */
+.projectPill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+  padding: 10px 18px;
+}
+
+.nameWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Hidden span — mirrors input for width measurement */
+.nameHidden {
+  position: absolute;
+  visibility: hidden;
+  white-space: pre;
+  font-family: 'Figtree', sans-serif;
+  font-weight: 500;
+  font-size: 15px;
+  pointer-events: none;
+}
+
+.nameInput {
+  font-family: 'Figtree', sans-serif;
+  font-weight: 500;
+  font-size: 15px;
+  color: #1a1a1a;
+  border: none;
+  outline: none;
+  background: transparent;
+  min-width: 80px;
+  max-width: 280px;
+}
+
+.editBtn {
+  display: flex;
+  align-items: center;
+  color: #bbb;
+  transition: color 0.15s;
+  padding: 0;
+  flex-shrink: 0;
+}
+.editBtn:hover { color: #b48b31; }
+
+.pillDivider {
+  width: 1px;
+  height: 20px;
+  background: #e8e8e8;
+  flex-shrink: 0;
+}
+
+.historyBtns {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.historyBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.historyBtn:hover:not(:disabled) {
+  background: #f5f5f5;
+  color: #1a1a1a;
+}
+.historyBtn:disabled { opacity: 0.3; cursor: default; }
+
+/* ── Mode toggle pill ────────────────────────────────────── */
+.modeToggle {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 40px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  padding: 4px;
+  gap: 0;
+  position: relative;
+  cursor: pointer;
+}
+
+.modeSlider {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  height: calc(100% - 8px);
+  background: #3a3a3a;
+  border-radius: 40px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  pointer-events: none;
+  z-index: 0;
+  transition:
+    transform 0.22s cubic-bezier(0.4,0,0.6,1),
+    width    0.22s cubic-bezier(0.4,0,0.6,1);
+}
+
+.modeBtn {
+  font-family: 'Figtree', sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  padding: 7px 18px;
+  border-radius: 40px;
+  border: none;
+  cursor: pointer;
+  color: #888;
+  background: transparent;
+  position: relative;
+  z-index: 1;
+  transition: color 0.25s ease;
+  white-space: nowrap;
+  user-select: none;
+}
+.modeBtnActive { color: white; }
+.modeBtn:not(.modeBtnActive):hover { color: #1a1a1a; }
+
+/* ── Version ─────────────────────────────────────────────── */
+.version {
+  position: fixed;
+  bottom: 10px;
+  right: 14px;
+  font-size: 10px;
+  font-weight: 400;
+  color: rgba(0,0,0,0.25);
+  pointer-events: none;
+  user-select: none;
+}
