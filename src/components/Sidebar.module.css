@@ -1,25 +1,110 @@
-/* ── Layout ───────────────────────────────────────────────── */
+/* ── Wrapper ─────────────────────────────────────────────── */
 .sidebarWrap {
   position: absolute;
   top: 16px;
   left: 16px;
   bottom: 100px;
   display: flex;
+  flex-direction: row;
   align-items: flex-start;
   gap: 10px;
-  pointer-events: all;
-  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34,1.2,0.64,1);
 }
-.visible {
+
+/* ── Right column ────────────────────────────────────────── */
+.rightCol {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── Zoom ────────────────────────────────────────────────── */
+.zoomWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: white;
+  border-radius: 14px;
+  padding: 6px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.09);
+}
+.zoomBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  background: transparent;
+  transition: all 0.15s;
+}
+.zoomBtn svg { width: 17px; height: 17px; }
+.zoomBtn:hover  { background: #f5f5f5; color: #333; }
+.zoomBtn:active { background: #ede9df; color: #b48b31; }
+.zoomDivider { width: 28px; height: 1px; background: #f0f0f0; margin: 2px 0; }
+
+/* ── Tools container ─────────────────────────────────────── */
+.toolsContainer {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 16px;
+  padding: 8px 6px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.09);
+  overflow: hidden;
+}
+
+.toolSection {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.drawTools {
+  transition: max-height 0.4s cubic-bezier(0.34,1.1,0.64,1),
+              opacity    0.3s ease,
+              transform  0.4s cubic-bezier(0.34,1.1,0.64,1),
+              margin-top 0.4s cubic-bezier(0.34,1.1,0.64,1);
+  overflow: hidden;
+}
+.drawToolsVisible {
+  max-height: 220px;
   opacity: 1;
-  transform: translateX(0);
-  pointer-events: all;
+  transform: translateY(0);
+  margin-top: 4px;
 }
-.hidden {
+.drawToolsHidden {
+  max-height: 0;
   opacity: 0;
-  transform: translateX(-20px);
-  pointer-events: none !important;
+  transform: translateY(-16px);
+  margin-top: 0;
+  pointer-events: none;
 }
+
+/* ── Tool button ─────────────────────────────────────────── */
+.toolBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 54px;
+  height: 54px;
+  border-radius: 12px;
+  background: transparent;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.toolBtn:hover { background: #f5f5f5; }
+.toolBtnActive { background: #b48b31 !important; box-shadow: 0 2px 12px rgba(180,139,49,0.30); }
+.toolIcon { width: 22px; height: 22px; color: #888; transition: color 0.15s; }
+.toolBtn:hover .toolIcon  { color: #444; }
+.toolBtnActive .toolIcon  { color: white; }
+.toolLabel { font-size: 9px; font-weight: 500; color: #aaa; line-height: 1; transition: color 0.15s; }
+.toolBtn:hover .toolLabel { color: #444; }
+.toolBtnActive .toolLabel { color: white; }
+.toolDivider { width: 36px; height: 1px; background: #f0f0f0; margin: 4px auto; }
 
 /* ── Panel ───────────────────────────────────────────────── */
 .panel {
@@ -31,29 +116,47 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.34,1.1,0.64,1);
 }
+.panelVisible { opacity: 1; transform: translateX(0); pointer-events: all; }
+.panelHidden  { opacity: 0; transform: translateX(-24px); pointer-events: none; }
 
 /* ── Logo ────────────────────────────────────────────────── */
 .logoHeader {
-  background: #111111;
+  background: #111;
   padding: 18px 24px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.logo {
-  height: 40px;
-  width: auto;
-  display: block;
-}
+.logo { height: 40px; width: auto; display: block; }
 
-/* ── Tabs ────────────────────────────────────────────────── */
-.tabs {
-  flex-shrink: 0;
+/* ── Tabs row ────────────────────────────────────────────── */
+.tabsRow {
   display: flex;
-  padding: 0 16px;
+  align-items: center;
   border-bottom: 1px solid #f0f0f0;
+  flex-shrink: 0;
+  padding: 0 4px;
+}
+.tabArrow {
+  flex-shrink: 0;
+  width: 22px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ccc;
+  background: transparent;
+  transition: color 0.15s;
+}
+.tabArrow:hover { color: #888; }
+.tabArrow svg   { width: 14px; height: 14px; }
+
+.tabs {
+  flex: 1;
+  display: flex;
   overflow-x: auto;
   scrollbar-width: none;
   gap: 2px;
@@ -75,12 +178,10 @@
   border-left: none;
   border-right: none;
   border-top: none;
+  flex-shrink: 0;
 }
 .tab:hover { color: #555; }
-.tabActive {
-  color: #b48b31 !important;
-  border-bottom-color: #b48b31 !important;
-}
+.tabActive  { color: #b48b31 !important; border-bottom-color: #b48b31 !important; }
 
 /* ── Product list ────────────────────────────────────────── */
 .productList {
@@ -114,10 +215,8 @@
   cursor: grab;
   position: relative;
   overflow: hidden;
-  transition:
-    border-color 0.25s cubic-bezier(0.34,1.2,0.64,1),
-    background   0.2s ease,
-    box-shadow   0.25s ease;
+  transition: border-color 0.25s cubic-bezier(0.34,1.2,0.64,1),
+              background 0.2s ease, box-shadow 0.25s ease;
 }
 .productItem:active { cursor: grabbing; }
 .productItemHovered {
@@ -125,8 +224,6 @@
   background: #fdf8ef;
   box-shadow: 0 2px 12px rgba(180,139,49,0.10);
 }
-
-/* Thumbnail */
 .thumbPlaceholder {
   width: 46px;
   height: 60px;
@@ -139,14 +236,7 @@
   transition: background 0.2s;
 }
 .productItemHovered .thumbPlaceholder { background: #ede9df; }
-.thumbImg {
-  width: 46px;
-  height: 60px;
-  object-fit: contain;
-  border-radius: 6px;
-  flex-shrink: 0;
-}
-
+.thumbImg { width: 46px; height: 60px; object-fit: contain; border-radius: 6px; flex-shrink: 0; }
 .productInfo { flex: 1; min-width: 0; }
 .productName {
   font-weight: 500;
@@ -166,8 +256,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-/* Drag label */
 .dragLabel {
   position: absolute;
   right: 12px;
@@ -179,110 +267,11 @@
   color: #b48b31;
   opacity: 0;
   transform: translateY(5px);
-  transition:
-    opacity 0.22s ease 0.04s,
-    transform 0.26s cubic-bezier(0.34,1.4,0.64,1) 0.03s;
+  transition: opacity 0.22s ease 0.04s, transform 0.26s cubic-bezier(0.34,1.4,0.64,1) 0.03s;
   pointer-events: none;
   display: flex;
   align-items: center;
   gap: 5px;
 }
-.dragLabel svg { width: 13px; height: 13px; flex-shrink: 0; }
-.dragLabelVisible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* ── Right column ────────────────────────────────────────── */
-.rightCol {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: center;
-}
-
-/* ── Toolbar ─────────────────────────────────────────────── */
-.toolbar {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  background: white;
-  border-radius: 16px;
-  padding: 8px 6px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.09);
-}
-
-.toolBtn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  width: 54px;
-  height: 54px;
-  border-radius: 12px;
-  transition: background 0.15s, box-shadow 0.15s;
-  background: transparent;
-}
-.toolBtn:hover { background: #f5f5f5; }
-.toolBtnActive {
-  background: #b48b31 !important;
-  box-shadow: 0 2px 12px rgba(180,139,49,0.30);
-}
-
-.toolIcon {
-  width: 22px;
-  height: 22px;
-  color: #888;
-  transition: color 0.15s;
-}
-.toolBtn:hover .toolIcon    { color: #444; }
-.toolBtnActive .toolIcon    { color: white; }
-
-.toolLabel {
-  font-size: 9px;
-  font-weight: 500;
-  color: #aaa;
-  transition: color 0.15s;
-  line-height: 1;
-}
-.toolBtn:hover .toolLabel   { color: #444; }
-.toolBtnActive .toolLabel   { color: white; }
-
-.toolDivider {
-  width: 36px;
-  height: 1px;
-  background: #f0f0f0;
-  margin: 2px auto;
-}
-
-/* ── Zoom ────────────────────────────────────────────────── */
-.zoomWrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: white;
-  border-radius: 14px;
-  padding: 6px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.09);
-}
-.zoomBtn {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #888;
-  transition: all 0.15s;
-  background: transparent;
-}
-.zoomBtn svg { width: 17px; height: 17px; }
-.zoomBtn:hover         { background: #f5f5f5; color: #333; }
-.zoomBtn:active        { background: #ede9df; color: #b48b31; }
-.zoomDivider {
-  width: 28px;
-  height: 1px;
-  background: #f0f0f0;
-  margin: 2px 0;
-}
+.dragLabel svg    { width: 13px; height: 13px; flex-shrink: 0; }
+.dragLabelVisible { opacity: 1; transform: translateY(0); }

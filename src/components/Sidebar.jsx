@@ -1,50 +1,69 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './Sidebar.module.css';
 
-// ── Tool definitions ──────────────────────────────────────────
-const TOOLS = [
-  {
-    id: 'select', label: 'Select', dividerAfter: true,
-    icon: (
-      <svg viewBox="0 0 24 24" fill="currentColor">
-        <path d="M5 3l14 9-7 1-4 7z"/>
-      </svg>
-    ),
-  },
-  {
-    id: 'wall', label: 'Wall',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 20V7l7-4v17M11 7l9 4v9"/>
-      </svg>
-    ),
-  },
-  {
-    id: 'column', label: 'Column',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="8" y="3" width="8" height="18" rx="2"/>
-      </svg>
-    ),
-  },
-  {
-    id: 'door', label: 'Door',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="4" y="2" width="16" height="20" rx="2"/>
-        <circle cx="15" cy="12" r="1" fill="currentColor" stroke="none"/>
-      </svg>
-    ),
-  },
-  {
-    id: 'measure', label: 'Measure',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 12h16M4 12l3-3M4 12l3 3M20 12l-3-3M20 12l-3 3"/>
-      </svg>
-    ),
-  },
-];
+// ── Icons ─────────────────────────────────────────────────────
+const Icons = {
+  select: (
+    <svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M5 3l14 9-7 1-4 7z"/>
+    </svg>
+  ),
+  measure: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 12h16M4 12l3-3M4 12l3 3M20 12l-3-3M20 12l-3 3"/>
+    </svg>
+  ),
+  wall: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 20V7l7-4v17M11 7l9 4v9"/>
+    </svg>
+  ),
+  column: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="8" y="3" width="8" height="18" rx="2"/>
+    </svg>
+  ),
+  door: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="2" width="16" height="20" rx="2"/>
+      <circle cx="15" cy="12" r="1" fill="currentColor" stroke="none"/>
+    </svg>
+  ),
+  zoomIn: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+  ),
+  zoomOut: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+      <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+  ),
+  chevLeft: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+  ),
+  chevRight: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="9 18 15 12 9 6"/>
+    </svg>
+  ),
+};
+
+// ── Tool button ───────────────────────────────────────────────
+function ToolBtn({ id, label, icon, active, onClick }) {
+  return (
+    <button
+      className={`${styles.toolBtn} ${active ? styles.toolBtnActive : ''}`}
+      onClick={() => onClick(id)}
+      title={label}
+    >
+      <div className={styles.toolIcon}>{icon}</div>
+      <span className={styles.toolLabel}>{label}</span>
+    </button>
+  );
+}
 
 // ── Thumbnail placeholder ─────────────────────────────────────
 function ThumbPlaceholder() {
@@ -62,7 +81,6 @@ function ThumbPlaceholder() {
 // ── Product item ──────────────────────────────────────────────
 function ProductItem({ item, onDragStart }) {
   const [hovered, setHovered] = useState(false);
-
   return (
     <div
       className={`${styles.productItem} ${hovered ? styles.productItemHovered : ''}`}
@@ -77,7 +95,7 @@ function ProductItem({ item, onDragStart }) {
       }
       <div className={styles.productInfo}>
         <div className={styles.productName}>{item.name}</div>
-        <div className={styles.productDims}>{item.dims || item.category}</div>
+        <div className={styles.productDims}>{item.dims || item.category || ''}</div>
       </div>
       <div className={`${styles.dragLabel} ${hovered ? styles.dragLabelVisible : ''}`}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -89,20 +107,21 @@ function ProductItem({ item, onDragStart }) {
   );
 }
 
-// ── Sidebar main ──────────────────────────────────────────────
+// ── Main Sidebar ──────────────────────────────────────────────
 export default function Sidebar({ config, mode, activeTool, onToolChange, onAddProduct }) {
-  const [catalog,   setCatalog]   = useState({});
-  const [activeTab, setActiveTab] = useState(null);
-  const [loading,   setLoading]   = useState(true);
+  const [catalog,     setCatalog]     = useState({});
+  const [activeTab,   setActiveTab]   = useState(null);
+  const [loading,     setLoading]     = useState(true);
+  const tabsRef = useRef(null);
 
-  // Load manifest
+  const isPlace = mode === 'place';
+
   useEffect(() => {
     if (!config.manifestUrl) { setLoading(false); return; }
     fetch(config.manifestUrl)
       .then(r => r.json())
       .then(data => {
-        // Group by category
-        const items = Array.isArray(data) ? data : data.models || [];
+        const items = Array.isArray(data) ? data : (data.models || []);
         const grouped = {};
         items.forEach(item => {
           const cat = item.category || 'Other';
@@ -118,93 +137,90 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
 
   const tabs = Object.keys(catalog);
 
+  function scrollTabs(dir) {
+    if (tabsRef.current) tabsRef.current.scrollBy({ left: dir * 80, behavior: 'smooth' });
+  }
+
   function handleDragStart(item) {
-    // Will connect to Three.js drag in Viewport
     onAddProduct(item.id);
   }
 
-  const showCatalog = mode === 'place';
-
   return (
-    <div className={`${styles.sidebarWrap} ${showCatalog ? styles.visible : styles.hidden}`}
-      style={{ pointerEvents: 'all' }}>
+    <div className={styles.sidebarWrap} style={{ pointerEvents: 'all' }}>
 
-      {/* ── Panel ── */}
-      <div className={styles.panel}>
+      {/* ── Right col: zoom + tools ── */}
+      <div className={styles.rightCol}>
+
+        {/* Zoom — always on top */}
+        <div className={styles.zoomWrap}>
+          <button className={styles.zoomBtn} title="Zoom in"
+            onClick={() => window.dispatchEvent(new CustomEvent('viewport:zoom', { detail: 1 }))}>
+            {Icons.zoomIn}
+          </button>
+          <div className={styles.zoomDivider} />
+          <button className={styles.zoomBtn} title="Zoom out"
+            onClick={() => window.dispatchEvent(new CustomEvent('viewport:zoom', { detail: -1 }))}>
+            {Icons.zoomOut}
+          </button>
+        </div>
+
+        {/* Tool sections container — clips the draw tools sliding behind */}
+        <div className={styles.toolsContainer}>
+
+          {/* Section 1: Select + Measure — always visible */}
+          <div className={styles.toolSection}>
+            <ToolBtn id="select"  label="Select"  icon={Icons.select}  active={activeTool==='select'}  onClick={onToolChange} />
+            <div className={styles.toolDivider} />
+            <ToolBtn id="measure" label="Measure" icon={Icons.measure} active={activeTool==='measure'} onClick={onToolChange} />
+          </div>
+
+          {/* Section 2: Wall tools — slides behind section 1 in Place mode */}
+          <div className={`${styles.toolSection} ${styles.drawTools} ${!isPlace ? styles.drawToolsVisible : styles.drawToolsHidden}`}>
+            <ToolBtn id="wall"   label="Wall"   icon={Icons.wall}   active={activeTool==='wall'}   onClick={onToolChange} />
+            <ToolBtn id="column" label="Column" icon={Icons.column} active={activeTool==='column'} onClick={onToolChange} />
+            <ToolBtn id="door"   label="Door"   icon={Icons.door}   active={activeTool==='door'}   onClick={onToolChange} />
+          </div>
+
+        </div>
+      </div>
+
+      {/* ── Panel: catalog — slides out in Draw mode ── */}
+      <div className={`${styles.panel} ${isPlace ? styles.panelVisible : styles.panelHidden}`}>
+
         {/* Logo */}
         <div className={styles.logoHeader}>
           <img src="/moduluxe-designer/backdrop-logo-inverse.png" alt="backdrop.com" className={styles.logo} />
         </div>
 
-        {/* Tabs */}
+        {/* Tabs with arrows */}
         {tabs.length > 0 && (
-          <div className={styles.tabs}>
-            {tabs.map(tab => (
-              <button
-                key={tab}
-                className={`${styles.tab} ${activeTab === tab ? styles.tabActive : ''}`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab}
-              </button>
-            ))}
+          <div className={styles.tabsRow}>
+            <button className={styles.tabArrow} onClick={() => scrollTabs(-1)}>{Icons.chevLeft}</button>
+            <div className={styles.tabs} ref={tabsRef}>
+              {tabs.map(tab => (
+                <button
+                  key={tab}
+                  className={`${styles.tab} ${activeTab === tab ? styles.tabActive : ''}`}
+                  onClick={() => setActiveTab(tab)}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+            <button className={styles.tabArrow} onClick={() => scrollTabs(1)}>{Icons.chevRight}</button>
           </div>
         )}
 
         {/* Product list */}
         <div className={styles.productList}>
-          {loading && (
-            <div className={styles.emptyState}>Loading catalog...</div>
-          )}
-          {!loading && tabs.length === 0 && (
-            <div className={styles.emptyState}>No products available.</div>
-          )}
+          {loading && <div className={styles.emptyState}>Loading catalog...</div>}
+          {!loading && tabs.length === 0 && <div className={styles.emptyState}>No products available.</div>}
           {!loading && activeTab && (catalog[activeTab] || []).map(item => (
-            <ProductItem
-              key={item.id}
-              item={item}
-              onDragStart={handleDragStart}
-            />
+            <ProductItem key={item.id} item={item} onDragStart={handleDragStart} />
           ))}
         </div>
       </div>
 
-      {/* ── Right column: Zoom + Toolbar ── */}
-      <div className={styles.rightCol}>
-        {/* Toolbar */}
-        <div className={styles.toolbar}>
-          {TOOLS.map(tool => (
-            <React.Fragment key={tool.id}>
-              <button
-                className={`${styles.toolBtn} ${activeTool === tool.id ? styles.toolBtnActive : ''}`}
-                onClick={() => onToolChange(tool.id)}
-                title={tool.label}
-              >
-                <div className={styles.toolIcon}>{tool.icon}</div>
-                <span className={styles.toolLabel}>{tool.label}</span>
-              </button>
-              {tool.dividerAfter && <div className={styles.toolDivider} />}
-            </React.Fragment>
-          ))}
-        </div>
-
-        {/* Zoom */}
-        <div className={styles.zoomWrap}>
-          <button className={styles.zoomBtn} title="Zoom in"
-            onClick={() => window.dispatchEvent(new CustomEvent('viewport:zoom', { detail: 1 }))}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-          </button>
-          <div className={styles.zoomDivider} />
-          <button className={styles.zoomBtn} title="Zoom out"
-            onClick={() => window.dispatchEvent(new CustomEvent('viewport:zoom', { detail: -1 }))}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-              <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
