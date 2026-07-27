@@ -1,0 +1,50 @@
+/* ── Fonts ───────────────────────────────────────────────── */
+@font-face {
+  font-family: 'Figtree';
+  src: url('/moduluxe-designer/fonts/Figtree-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Figtree';
+  src: url('/moduluxe-designer/fonts/Figtree-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Figtree';
+  src: url('/moduluxe-designer/fonts/Figtree-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-display: swap;
+}
+
+/* ── Reset ───────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Figtree', sans-serif;
+  background: #e8e8e8;
+}
+
+button {
+  font-family: 'Figtree', sans-serif;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+input {
+  font-family: 'Figtree', sans-serif;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 4px; height: 4px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: #e0e0e0; border-radius: 4px; }
