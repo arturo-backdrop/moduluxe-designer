@@ -24,6 +24,35 @@ export const CONFIG = {
   hubspotPortalId: null,
   hubspotFormId:   null,
 
+  // ── Presets ────────────────────────────────────────────────
+  // Add preset configs here — blocks are visual thumbnail previews
+  presets: [
+    {
+      id:          'linear-3m',
+      name:        'Linear Wall 3m',
+      description: 'Clean backdrop with counter',
+      blocks:      [{ w:8, h:40 }, { w:8, h:32 }, { w:8, h:40 }],
+    },
+    {
+      id:          'island-6m',
+      name:        'Island Display',
+      description: '360° visibility, open layout',
+      blocks:      [{ w:16, h:36 }, { w:10, h:24 }, { w:16, h:36 }],
+    },
+    {
+      id:          'lshape-4m',
+      name:        'L-Shape',
+      description: 'Corner booth configuration',
+      blocks:      [{ w:8, h:40 }, { w:8, h:28 }, { w:28, h:8 }],
+    },
+    {
+      id:          'premium-island',
+      name:        'Premium Island',
+      description: 'High-impact double-sided',
+      blocks:      [{ w:12, h:40 }, { w:8, h:28 }, { w:12, h:40 }],
+    },
+  ],
+
   // ── Video tutorial ─────────────────────────────────────────
   // Leave null to hide the video widget entirely
   youtubeId:   null,
