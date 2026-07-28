@@ -203,24 +203,27 @@ export default function Viewport({ config, floorSize, sceneItems, mode, activeTo
 
     // Outline helpers
     function addOutline(obj) {
-      const geo = new THREE.BoxGeometry(1,1,1); // placeholder, updated per mesh
-      // Stencil
+      const toProcess = [];
       obj.traverse(child => {
-        if (!child.isMesh) return;
+        if (child.isMesh && !child.userData.isOutline && !child.userData.isXray && !child.userData.isStencil) {
+          toProcess.push(child);
+        }
+      });
+      toProcess.forEach(child => {
         const sm = new THREE.Mesh(child.geometry, makeStencilMat());
         sm.renderOrder = 1;
-        sm.matrixAutoUpdate = false;
+        sm.userData.isStencil = true;
         child.add(sm);
-        // Solid outline
+
         const solid = new THREE.Mesh(child.geometry, makeOutlineMat(SETTINGS.outline.color, SETTINGS.outline.thickness, true));
         solid.renderOrder = 2;
-        solid.visible     = false;
+        solid.visible = false;
         solid.userData.isOutline = true;
         child.add(solid);
-        // Xray outline
+
         const xray = new THREE.Mesh(child.geometry, makeOutlineMat(SETTINGS.outline.color, SETTINGS.outline.thickness, false, SETTINGS.outline.xrayOpacity));
         xray.renderOrder = 3;
-        xray.visible     = false;
+        xray.visible = false;
         xray.userData.isXray = true;
         child.add(xray);
       });
