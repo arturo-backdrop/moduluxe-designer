@@ -59,11 +59,23 @@ function ProductItem({ item, onDragStart }) {
 }
 
 export default function Sidebar({ config, mode, activeTool, onToolChange, onAddProduct }) {
-  const [catalog,   setCatalog]   = useState({});
-  const [activeTab, setActiveTab] = useState(null);
-  const [loading,   setLoading]   = useState(true);
-  const tabsRef = useRef(null);
-  const isPlace = mode === 'place';
+  const [catalog,      setCatalog]      = useState({});
+  const [activeTab,    setActiveTab]    = useState(null);
+  const [loading,      setLoading]      = useState(true);
+  const [logoHeight,   setLogoHeight]   = useState(76);
+  const tabsRef   = useRef(null);
+  const logoRef   = useRef(null);
+  const isPlace   = mode === 'place';
+
+  // Measure logo header height for responsive alignment
+  useEffect(() => {
+    if (!logoRef.current) return;
+    const ro = new ResizeObserver(entries => {
+      setLogoHeight(entries[0].contentRect.height);
+    });
+    ro.observe(logoRef.current);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!config.manifestUrl) { setLoading(false); return; }
@@ -95,7 +107,7 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
 
       {/* ── Panel — slides out in Draw mode ── */}
       <div className={`${styles.panel} ${isPlace ? styles.panelVisible : styles.panelHidden}`}>
-        <div className={styles.logoHeader}>
+        <div className={styles.logoHeader} ref={logoRef}>
           <img src="/moduluxe-designer/backdrop-logo-inverse.png" alt="backdrop.com" className={styles.logo} />
         </div>
 
@@ -123,7 +135,7 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
       </div>
 
       {/* ── Toolbar — always visible, right of panel ── */}
-      <div className={styles.rightCol}>
+      <div className={styles.rightCol} style={{ paddingTop: logoHeight }}>
 
         {/* Zoom */}
         <div className={styles.zoomWrap}>
