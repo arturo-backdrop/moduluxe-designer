@@ -129,9 +129,20 @@ function QuoteModal({ config, sceneItems, onClose }) {
 }
 
 // ── QuotePanel pill ───────────────────────────────────────────
-export default function QuotePanel({ config, sceneItems }) {
+export default function QuotePanel({ config, sceneItems, catalog }) {
   const [open, setOpen] = useState(false);
   const count = sceneItems.reduce((s, i) => s + i.count, 0);
+
+  const total = sceneItems.reduce((sum, item) => {
+    const price = catalog?.[item.modelId]?.price || 0;
+    return sum + price * item.count;
+  }, 0);
+
+  const hasPrice = total > 0;
+
+  function formatPrice(n) {
+    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
 
   return (
     <>
@@ -141,7 +152,14 @@ export default function QuotePanel({ config, sceneItems }) {
 
         <div className={styles.totalBlock}>
           <div className={styles.totalLabel}>Estimated Total</div>
-          <div className={styles.totalValue}>Contact for pricing</div>
+          <div className={styles.totalValue}>
+            {hasPrice ? formatPrice(total) : 'Contact for pricing'}
+          </div>
+          {hasPrice && (
+            <div className={styles.rentText}>
+              Or rent for 1/3 of the price
+            </div>
+          )}
         </div>
 
         <button
