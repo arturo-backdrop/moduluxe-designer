@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import styles from './QuotePanel.module.css';
 
+// ── Configurable copy ─────────────────────────────────────────
+const RENT_TEXT = 'Or rent for 1/3 of the price';
+
 // ── Quote Modal ───────────────────────────────────────────────
 function QuoteModal({ config, sceneItems, onClose }) {
   const [step,    setStep]    = useState(1);
@@ -155,9 +158,7 @@ export default function QuotePanel({ config, sceneItems, catalog }) {
           <div className={styles.totalValue}>
             {hasPrice ? formatPrice(total) : 'Contact for pricing'}
           </div>
-          <div className={styles.rentText}>
-            Or rent for 1/3 of the price
-          </div>
+          <div className={styles.rentText}>{RENT_TEXT}</div>
         </div>
 
         <button
