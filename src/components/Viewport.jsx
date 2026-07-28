@@ -169,8 +169,11 @@ export default function Viewport({ config, floorSize, sceneItems, mode, activeTo
     const roughUrl = `${import.meta.env.BASE_URL}textures/floor_roughness.png`;
     texLoader.load(roughUrl, t => {
       t.wrapS = t.wrapT = THREE.RepeatWrapping;
-      t.repeat.set(SETTINGS.floor.tiling, SETTINGS.floor.tiling);
+      t.repeat.set(3.5, 3.5);   // different tiling than base/normal
+      t.rotation = 0.3;          // slight rotation breaks pattern
+      t.center.set(0.5, 0.5);   // rotate around center
       floorMat.roughnessMap = t;
+      floorMat.roughness    = 0.5; // base roughness, map modulates it
       floorMat.needsUpdate  = true;
     });
 
