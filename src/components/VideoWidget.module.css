@@ -1,7 +1,7 @@
 /* ── Widget — bottom right ───────────────────────────────── */
 .widget {
   position: absolute;
-  bottom: 110px;
+  bottom: 40px;
   right: 20px;
   z-index: 20;
 }
