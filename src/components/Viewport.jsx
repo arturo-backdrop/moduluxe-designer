@@ -154,6 +154,8 @@ export default function Viewport({ config, floorSize, sceneItems, mode, activeTo
     texLoader.load(baseUrl, t => {
       t.wrapS = t.wrapT = THREE.RepeatWrapping;
       t.repeat.set(SETTINGS.floor.tiling, SETTINGS.floor.tiling);
+      t.rotation = 0.15;
+      t.center.set(0.5, 0.5);
       t.colorSpace = THREE.SRGBColorSpace;
       t.anisotropy = renderer.capabilities.getMaxAnisotropy();
       floorMat.map = t;
