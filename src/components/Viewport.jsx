@@ -13,6 +13,7 @@ const SETTINGS = {
   outline: { color: 0xffffff, thickness: 0.004, xrayOpacity: 0.4 },
   shadow: { mapSize: 2048, radius: 3, bias: -0.001 },
   DRAG_THRESHOLD: 5,
+  GRID_SNAP: 0.25,  // snap increment in meters
 };
 
 // ── Outline helpers ───────────────────────────────────────────
@@ -196,7 +197,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     scene.add(itemGroup);
 
     // State
-    const modelObjects = new Map(); // modelId -> Object3D
+    const modelObjects = new Map(); // uid -> Object3D
     const planeY0      = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
     const raycaster    = new THREE.Raycaster();
     const pointer      = new THREE.Vector2();
@@ -206,6 +207,21 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     let dragArmed      = false;
     let dragStartX     = 0, dragStartY = 0;
     let dragOffsetX    = 0, dragOffsetZ = 0;
+    let isOrbiting     = false; // track orbit state to suppress hover
+
+    // Grid snap
+    function snap(v) {
+      return Math.round(v / SETTINGS.GRID_SNAP) * SETTINGS.GRID_SNAP;
+    }
+
+    // Clamp to floor bounds (accounting for object half-size)
+    function clampToFloor(x, z, hw, hd) {
+      const halfW = floorW / 2, halfD = floorD / 2;
+      return {
+        x: Math.max(-halfW + hw, Math.min(halfW - hw, x)),
+        z: Math.max(-halfD + hd, Math.min(halfD - hd, z)),
+      };
+    }
 
     // Ground projection
     function groundPoint(cx, cy) {
@@ -225,9 +241,10 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       return obj.parent === itemGroup ? obj : null;
     }
 
-    // ── Pointer down — start drag or select ──────────────────
+    // ── Pointer down ─────────────────────────────────────────
     const onPointerDown = (e) => {
-      if (e.button !== 0) return; // left only
+      if (e.button !== 0) return;
+      isOrbiting = false;
       const rect = canvas.getBoundingClientRect();
       pointer.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
       pointer.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
@@ -239,31 +256,36 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       const topObj = getItemObj(hits[0].object);
       if (!topObj) return;
 
-      draggingId   = topObj.userData.modelId;
-      dragArmed    = false;
-      dragStartX   = e.clientX;
-      dragStartY   = e.clientY;
-
-      // Compute drag offset so object doesn't jump
-      const pt     = groundPoint(e.clientX, e.clientY);
-      dragOffsetX  = topObj.position.x - pt.x;
-      dragOffsetZ  = topObj.position.z - pt.z;
-
-      controls.enabled = false; // disable orbit while dragging
+      draggingId  = topObj.userData.uid;
+      dragArmed   = false;
+      dragStartX  = e.clientX;
+      dragStartY  = e.clientY;
+      const pt    = groundPoint(e.clientX, e.clientY);
+      dragOffsetX = topObj.position.x - pt.x;
+      dragOffsetZ = topObj.position.z - pt.z;
+      controls.enabled = false;
     };
 
-    // ── Pointer move — hover + drag ──────────────────────────
+    // ── Pointer move ─────────────────────────────────────────
     const onPointerMove = (e) => {
-      // Hover
-      if (!draggingId) {
+      // Detect orbit — if mouse moved while no dragging item, it's orbiting
+      if (!draggingId && e.buttons === 1) {
+        isOrbiting = true;
+      }
+      if (!draggingId && e.buttons === 0) {
+        isOrbiting = false;
+      }
+
+      // Hover — only when not orbiting
+      if (!draggingId && !isOrbiting) {
         const rect = canvas.getBoundingClientRect();
         pointer.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
         pointer.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
         raycaster.setFromCamera(pointer, camera);
         const hits = raycaster.intersectObjects(itemGroup.children, true)
           .filter(h => !h.object.userData.isOutline && !h.object.userData.isXray && !h.object.userData.isStencil);
-        const hitObj  = hits.length ? getItemObj(hits[0].object) : null;
-        const hitId   = hitObj?.userData.modelId || null;
+        const hitObj = hits.length ? getItemObj(hits[0].object) : null;
+        const hitId  = hitObj?.userData.uid || null;
 
         if (hitId !== hoveredId) {
           if (hoveredId && hoveredId !== selectedId) {
@@ -282,6 +304,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         return;
       }
 
+      if (!draggingId) return;
+
       // Drag threshold
       if (!dragArmed) {
         if (Math.hypot(e.clientX - dragStartX, e.clientY - dragStartY) < SETTINGS.DRAG_THRESHOLD) return;
@@ -289,31 +313,34 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         canvas.style.cursor = 'grabbing';
       }
 
-      // Move object
+      // Move object with snap + floor clamp
       const obj = modelObjects.get(draggingId);
       if (!obj) return;
-      const pt = groundPoint(e.clientX, e.clientY);
-      obj.position.x = pt.x + dragOffsetX;
-      obj.position.z = pt.z + dragOffsetZ;
+      const pt  = groundPoint(e.clientX, e.clientY);
+      const box = new THREE.Box3().setFromObject(obj);
+      const hw  = (box.max.x - box.min.x) / 2;
+      const hd  = (box.max.z - box.min.z) / 2;
+      const rawX = pt.x + dragOffsetX;
+      const rawZ = pt.z + dragOffsetZ;
+      const snapped = clampToFloor(snap(rawX), snap(rawZ), hw, hd);
+      obj.position.x = snapped.x;
+      obj.position.z = snapped.z;
       updateDot(obj);
     };
 
-    // ── Pointer up — finalize drag or select ─────────────────
+    // ── Pointer up ───────────────────────────────────────────
     const onPointerUp = (e) => {
       controls.enabled = true;
       if (!draggingId) return;
 
       if (!dragArmed) {
-        // It was a click — select
+        // Click — select / deselect
         if (selectedId && selectedId !== draggingId) {
           const prev = modelObjects.get(selectedId);
           if (prev) setOutlineVisible(prev, selectedId === hoveredId);
         }
-        if (selectedId === draggingId) {
-          // Deselect
-          selectedId = null;
-        } else {
-          selectedId = draggingId;
+        selectedId = selectedId === draggingId ? null : draggingId;
+        if (selectedId) {
           const obj = modelObjects.get(selectedId);
           if (obj) setOutlineVisible(obj, true);
         }
@@ -332,8 +359,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       if (!selectedId) return;
       const obj = modelObjects.get(selectedId);
       if (obj) { itemGroup.remove(obj); modelObjects.delete(selectedId); }
-      // Update React state
-      const next = sceneItemsRef.current.filter(i => i.modelId !== selectedId);
+      const next = sceneItemsRef.current.filter(i => i.uid !== selectedId);
       onChangeRef.current?.(next);
       selectedId = null;
       dot.visible = false;
@@ -346,7 +372,15 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       const modelId = e.dataTransfer?.getData('modelId');
       if (!modelId) return;
       const pt = groundPoint(e.clientX, e.clientY);
-      addObjectToScene(modelId, pt.x, pt.z);
+      const uid = `${modelId}_${Date.now()}`;
+      addObjectToScene(modelId, uid, snap(pt.x), snap(pt.z));
+      // Update React state
+      const prev = sceneItemsRef.current;
+      const existing = prev.find(i => i.modelId === modelId);
+      const next = existing
+        ? prev.map(i => i.modelId === modelId ? { ...i, count: i.count + 1 } : i)
+        : [...prev, { uid, modelId, count: 1 }];
+      onChangeRef.current?.(next);
     };
 
     canvas.addEventListener('pointerdown',  onPointerDown);
@@ -357,40 +391,35 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     canvas.addEventListener('drop',         onDrop);
 
     // ── Add object to scene ───────────────────────────────────
-    function addObjectToScene(modelId, x = 0, z = 0) {
-      if (modelObjects.has(modelId)) {
-        // Already exists — just add another instance with offset
-        const existingCount = [...modelObjects.keys()].filter(k => k.startsWith(modelId)).length;
-        modelId = `${modelId}_${existingCount}`;
-      }
-      const manifestItem = catalogFlatRef.current.find(m => m.id === modelId.split('_')[0]);
+    function addObjectToScene(modelId, uid, x = 0, z = 0) {
+      const manifestItem = catalogFlatRef.current.find(m => m.id === modelId);
       const w = manifestItem?.w || 1, h = manifestItem?.h || 1, d = manifestItem?.d || 0.2;
 
       const createObj = (obj) => {
+        obj.userData.uid     = uid;
         obj.userData.modelId = modelId;
         obj.traverse(child => {
           if (child.isMesh && !child.userData.isOutline && !child.userData.isXray && !child.userData.isStencil) {
+            child.userData.uid     = uid;
             child.userData.modelId = modelId;
             child.castShadow = child.receiveShadow = true;
           }
         });
-        obj.position.set(x, h / 2, z);
+        // Clamp initial position to floor
+        const clamped = clampToFloor(x, z, w/2, d/2);
+        obj.position.set(clamped.x, h / 2, clamped.z);
         addOutline(obj);
         itemGroup.add(obj);
-        modelObjects.set(modelId, obj);
+        modelObjects.set(uid, obj);
       };
 
       if (manifestItem?.file) {
-        loadModel(manifestItem.file).then(original => {
-          const obj = original.clone(true);
-          createObj(obj);
-        });
+        loadModel(manifestItem.file).then(original => createObj(original.clone(true)));
       } else {
-        const obj = new THREE.Mesh(
+        createObj(new THREE.Mesh(
           new THREE.BoxGeometry(w, h, d),
           new THREE.MeshStandardMaterial({ color: 0x3a6ea5, roughness: 0.5 })
-        );
-        createObj(obj);
+        ));
       }
     }
 
@@ -443,26 +472,26 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     };
   }, []);
 
-  // ── Sync sceneItems → 3D (only for items not yet in scene) ──
+  // ── Sync sceneItems → 3D ────────────────────────────────
   useEffect(() => {
     const eng = engRef.current;
     if (!eng) return;
-    const { modelObjects, addObjectToScene, itemGroup, scene } = eng;
-    const currentIds = new Set(sceneItems.map(i => i.modelId));
+    const { modelObjects, addObjectToScene, itemGroup } = eng;
+    const currentUids = new Set(sceneItems.map(i => i.uid));
 
-    // Remove
-    modelObjects.forEach((obj, id) => {
-      if (!currentIds.has(id)) {
+    // Remove objects no longer in scene
+    modelObjects.forEach((obj, uid) => {
+      if (!currentUids.has(uid)) {
         itemGroup.remove(obj);
-        modelObjects.delete(id);
+        modelObjects.delete(uid);
       }
     });
 
-    // Add new
+    // Add new objects
     sceneItems.forEach((item, idx) => {
-      if (modelObjects.has(item.modelId)) return;
+      if (modelObjects.has(item.uid)) return;
       const col = idx % 5, row = Math.floor(idx / 5);
-      addObjectToScene(item.modelId, (col - 2) * 3, -row * 3);
+      addObjectToScene(item.modelId, item.uid, (col - 2) * 3, -row * 3);
     });
   }, [sceneItems]);
 
