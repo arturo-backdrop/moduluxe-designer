@@ -1,4 +1,142 @@
-// BottomBar — placeholder, to be implemented
-export default function BottomBar() {
-  return null;
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import styles from './BottomBar.module.css';
+
+// ── Config ────────────────────────────────────────────────────
+const BAR_TITLE = 'Your build'; // exposed here for easy change
+const CARD_W    = 165;          // card width + gap in px
+
+// ── Thumbnail placeholder ─────────────────────────────────────
+function ThumbPlaceholder() {
+  return (
+    <div className={styles.cardThumb}>
+      <svg width="18" height="26" viewBox="0 0 18 26" fill="none">
+        <rect x="1" y="1" width="16" height="24" rx="3" stroke="#bbb" strokeWidth="1.2"/>
+        <line x1="4" y1="8"  x2="14" y2="8"  stroke="#bbb" strokeWidth="1"/>
+        <line x1="4" y1="13" x2="14" y2="13" stroke="#bbb" strokeWidth="1"/>
+      </svg>
+    </div>
+  );
+}
+
+// ── Product card ──────────────────────────────────────────────
+function ProductCard({ item, modelData, selected, onClick }) {
+  return (
+    <div
+      className={`${styles.productCard} ${selected ? styles.productCardSelected : ''}`}
+      onClick={onClick}
+    >
+      {modelData?.thumbnail
+        ? <img src={modelData.thumbnail} alt={modelData.name} className={styles.cardThumbImg} />
+        : <ThumbPlaceholder />
+      }
+      <div className={styles.cardInfo}>
+        <div className={styles.cardName}>{modelData?.name || item.modelId}</div>
+        <div className={styles.cardDims}>{modelData?.dims || modelData?.category || ''}</div>
+      </div>
+      <div className={styles.cardCount}>x{item.count}</div>
+    </div>
+  );
+}
+
+// ── BottomBar ─────────────────────────────────────────────────
+export default function BottomBar({ config, sceneItems, catalog, onSelectModel }) {
+  const [selectedId,   setSelectedId]   = useState(null);
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const viewportRef = useRef(null);
+  const trackRef    = useRef(null);
+
+  // Reset selection when items change
+  useEffect(() => {
+    if (sceneItems.length === 0) setSelectedId(null);
+  }, [sceneItems]);
+
+  // ── Scroll helpers ───────────────────────────────────────────
+  const viewportWidth = useCallback(() =>
+    viewportRef.current?.offsetWidth || 0, []);
+
+  const maxOffset = useCallback(() =>
+    Math.max(0, sceneItems.length * CARD_W - viewportWidth()), [sceneItems.length, viewportWidth]);
+
+  const shiftScroll = useCallback((dir) => {
+    setScrollOffset(prev => {
+      const next = prev + dir * CARD_W;
+      return Math.max(0, Math.min(maxOffset(), next));
+    });
+  }, [maxOffset]);
+
+  // Auto-scroll to newly added item
+  useEffect(() => {
+    if (sceneItems.length === 0) return;
+    const lastIdx    = sceneItems.length - 1;
+    const cardOffset = lastIdx * CARD_W;
+    const vw         = viewportWidth();
+    if (cardOffset + CARD_W > scrollOffset + vw) {
+      setScrollOffset(Math.max(0, cardOffset + CARD_W - vw));
+    }
+  }, [sceneItems.length]);
+
+  // Apply scroll to track
+  useEffect(() => {
+    if (trackRef.current) {
+      trackRef.current.style.transform = `translateX(-${scrollOffset}px)`;
+    }
+  }, [scrollOffset]);
+
+  const canScrollLeft  = scrollOffset > 0;
+  const canScrollRight = scrollOffset < maxOffset();
+
+  // ── Select ───────────────────────────────────────────────────
+  function handleSelect(modelId) {
+    const next = selectedId === modelId ? null : modelId;
+    setSelectedId(next);
+    onSelectModel?.(next);
+  }
+
+  return (
+    <div className={styles.bottomBar} style={{ pointerEvents: 'all' }}>
+      <div className={styles.barTitle}>{BAR_TITLE}</div>
+
+      <div className={styles.scrollRow}>
+        <button
+          className={`${styles.arrowBtn} ${!canScrollLeft ? styles.arrowDisabled : ''}`}
+          onClick={() => shiftScroll(-1)}
+          disabled={!canScrollLeft}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+
+        <div className={styles.cardsViewport} ref={viewportRef}>
+          {sceneItems.length === 0 ? (
+            <div className={styles.emptyMsg}>
+              Drag products from the catalog to start building your booth
+            </div>
+          ) : (
+            <div className={styles.cardsTrack} ref={trackRef}>
+              {sceneItems.map(item => (
+                <ProductCard
+                  key={item.modelId}
+                  item={item}
+                  modelData={catalog?.[item.modelId]}
+                  selected={selectedId === item.modelId}
+                  onClick={() => handleSelect(item.modelId)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <button
+          className={`${styles.arrowBtn} ${!canScrollRight ? styles.arrowDisabled : ''}`}
+          onClick={() => shiftScroll(1)}
+          disabled={!canScrollRight}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
 }
