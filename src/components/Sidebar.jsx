@@ -133,7 +133,9 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
           {loading && <div className={styles.emptyState}>Loading catalog...</div>}
           {!loading && tabs.length === 0 && <div className={styles.emptyState}>No products available.</div>}
           {!loading && activeTab && (catalog[activeTab] || []).map(item => (
-            <ProductItem key={item.id} item={item} onDragStart={i => onAddProduct(i.id)} />
+            <ProductItem key={item.id} item={item} onDragStart={i => {
+              // Only set dataTransfer — drop handler in canvas manages the rest
+            }} />
           ))}
         </div>
       </div>

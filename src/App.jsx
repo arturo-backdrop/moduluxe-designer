@@ -116,10 +116,10 @@ export default function App() {
   }, []);
 
   const addSceneItem = useCallback((modelId) => {
+    // Used only for non-viewport additions (future use)
+    const uid = `${modelId}_${Date.now()}`;
     setSceneItems(prev => {
-      const next = prev.find(x => x.modelId === modelId)
-        ? prev.map(x => x.modelId === modelId ? { ...x, count: x.count + 1 } : x)
-        : [...prev, { id: `${modelId}_${Date.now()}`, modelId, count: 1 }];
+      const next = [...prev, { uid, modelId, count: 1 }];
       pushHistory(next);
       return next;
     });
@@ -136,7 +136,7 @@ export default function App() {
         floorSize={floorSize}
         activePreset={activePreset}
         sceneItems={sceneItems}
-        onSceneItemsChange={setSceneItems}
+        onSceneItemsChange={items => { setSceneItems(items); pushHistory(items); }}
         mode={mode}
         activeTool={activeTool}
       />

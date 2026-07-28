@@ -258,6 +258,9 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       return hits.length ? getContainer(hits[0].object) : null;
     }
 
+    // Pending drop positions — uid -> {x, z}
+    const pendingPositions = new Map();
+
     // ── Events ────────────────────────────────────────────────
     const onPointerDown = e => {
       if (e.button !== 0) return;
@@ -349,10 +352,10 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       if (!modelId) return;
       const pt  = groundPt(e.clientX, e.clientY);
       const uid = `${modelId}_${Date.now()}`;
-      spawnContainer(modelId, uid, snap(pt.x), snap(pt.z));
-      // Update React state
-      const prev = itemsRef.current;
-      const next = [...prev, { uid, modelId, count: 1 }];
+      // Store drop position in uid so sync effect can use it
+      pendingPositions.set(uid, { x: snap(pt.x), z: snap(pt.z) });
+      // Only update React state — sync effect will create the Three.js object
+      const next = [...itemsRef.current, { uid, modelId, count: 1 }];
       onChangeRef.current?.(next);
     };
 
@@ -406,7 +409,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     }
 
     // Expose for sync effect
-    engRef.current = { itemGroup, spawnContainer };
+    engRef.current = { itemGroup, spawnContainer, pendingPositions };
 
     // ── Zoom from toolbar ──────────────────────────────────────
     const onZoom = e => {
@@ -469,7 +472,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
   useEffect(() => {
     const eng = engRef.current;
     if (!eng) return;
-    const { itemGroup, spawnContainer } = eng;
+    const { itemGroup, spawnContainer, pendingPositions } = eng;
 
     // Remove containers no longer in items
     const currentUids = new Set(sceneItems.map(i=>i.uid));
@@ -477,11 +480,19 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       if (!currentUids.has(c.userData.uid)) itemGroup.remove(c);
     });
 
-    // Add new items
+    // Add new items — use pending drop position if available, else grid layout
     sceneItems.forEach((item, idx) => {
       if (itemGroup.children.find(c=>c.userData.uid===item.uid)) return;
-      const col = idx%5, row = Math.floor(idx/5);
-      spawnContainer(item.modelId, item.uid, (col-2)*3, -row*3);
+      let x, z;
+      if (pendingPositions.has(item.uid)) {
+        const pos = pendingPositions.get(item.uid);
+        x = pos.x; z = pos.z;
+        pendingPositions.delete(item.uid);
+      } else {
+        const col = idx%5, row = Math.floor(idx/5);
+        x = (col-2)*3; z = -row*3;
+      }
+      spawnContainer(item.modelId, item.uid, x, z);
     });
   }, [sceneItems]);
 
