@@ -136,6 +136,7 @@ export default function App() {
         floorSize={floorSize}
         activePreset={activePreset}
         sceneItems={sceneItems}
+        onSceneItemsChange={setSceneItems}
         mode={mode}
         activeTool={activeTool}
       />

@@ -39,7 +39,11 @@ function ProductItem({ item, onDragStart }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div className={`${styles.productItem} ${hovered ? styles.productItemHovered : ''}`}
-      draggable onDragStart={() => onDragStart(item)}
+      draggable
+      onDragStart={e => {
+        e.dataTransfer.setData('modelId', item.id);
+        onDragStart(item);
+      }}
       onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
       {item.thumbnail
         ? <img src={item.thumbnail} alt={item.name} className={styles.thumbImg} />
