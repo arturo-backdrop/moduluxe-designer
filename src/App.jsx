@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { CONFIG } from './config.js';
 import { useAutoSave, loadSavedProject, clearSavedProject } from './hooks/useAutoSave.js';
 
@@ -25,7 +25,8 @@ const DEFAULT_STATE = {
 };
 
 export default function App() {
-  const [onboardingDone, setOnboardingDone] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(352);
+  const sidebarRef = useRef(null);
   const [projectName,    setProjectName]    = useState(DEFAULT_STATE.projectName);
   const [floorSize,      setFloorSize]      = useState(DEFAULT_STATE.floorSize);
   const [activePreset,   setActivePreset]   = useState(DEFAULT_STATE.activePreset);
@@ -83,7 +84,15 @@ export default function App() {
     return () => window.removeEventListener('keydown', handler);
   }, [undo, redo]);
 
-  // ── New project ───────────────────────────────────────────────
+  // Measure sidebar width for BottomBar offset
+  useEffect(() => {
+    if (!sidebarRef.current) return;
+    const ro = new ResizeObserver(entries => {
+      setSidebarWidth(entries[0].contentRect.width + 16 + 20); // width + left margin + right gap
+    });
+    ro.observe(sidebarRef.current);
+    return () => ro.disconnect();
+  }, [onboardingDone]);
   const handleNew = useCallback(() => {
     if (sceneItems.length > 0) {
       if (!window.confirm('Start a new design? Your current work will be cleared.')) return;
@@ -146,6 +155,7 @@ export default function App() {
           onNew={handleNew}
         />
         <Sidebar
+          ref={sidebarRef}
           config={CONFIG}
           mode={mode}
           activeTool={activeTool}
@@ -153,7 +163,7 @@ export default function App() {
           onAddProduct={addSceneItem}
         />
         <QuotePanel config={CONFIG} sceneItems={sceneItems} />
-        <BottomBar config={CONFIG} sceneItems={sceneItems} />
+        <BottomBar config={CONFIG} sceneItems={sceneItems} offsetLeft={sidebarWidth} />
         {CONFIG.youtubeId && <VideoWidget config={CONFIG} />}
       </div>
     </div>

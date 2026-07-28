@@ -39,7 +39,7 @@ function ProductCard({ item, modelData, selected, onClick }) {
 }
 
 // ── BottomBar ─────────────────────────────────────────────────
-export default function BottomBar({ config, sceneItems, catalog, onSelectModel }) {
+export default function BottomBar({ config, sceneItems, catalog, onSelectModel, offsetLeft = 352 }) {
   const [selectedId,   setSelectedId]   = useState(null);
   const [scrollOffset, setScrollOffset] = useState(0);
   const viewportRef = useRef(null);
@@ -93,7 +93,7 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel }
   }
 
   return (
-    <div className={styles.bottomBar} style={{ pointerEvents: 'all' }}>
+    <div className={styles.bottomBar} style={{ pointerEvents: 'all', left: offsetLeft }}>
       <div className={styles.barTitle}>{BAR_TITLE}</div>
 
       <div className={styles.scrollRow}>

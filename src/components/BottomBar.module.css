@@ -2,7 +2,7 @@
 .bottomBar {
   position: absolute;
   bottom: 20px;
-  left: 20px;
+  left: 352px;  /* sidebar panel(260) + gap(10) + toolbar(66) + margin(16) */
   right: 20px;
   background: white;
   border-radius: 20px;
