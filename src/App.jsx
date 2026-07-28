@@ -25,8 +25,7 @@ const DEFAULT_STATE = {
 };
 
 export default function App() {
-  const [sidebarWidth, setSidebarWidth] = useState(352);
-  const sidebarRef = useRef(null);
+  const [onboardingDone, setOnboardingDone] = useState(false);
   const [projectName,    setProjectName]    = useState(DEFAULT_STATE.projectName);
   const [floorSize,      setFloorSize]      = useState(DEFAULT_STATE.floorSize);
   const [activePreset,   setActivePreset]   = useState(DEFAULT_STATE.activePreset);
@@ -36,7 +35,7 @@ export default function App() {
   const [history,        setHistory]        = useState([[]]);
   const [historyIdx,     setHistoryIdx]     = useState(0);
 
-  // ── Restore from localStorage on mount ──────────────────────
+  // Restore from localStorage
   useEffect(() => {
     const saved = loadSavedProject();
     if (saved) {
@@ -48,18 +47,13 @@ export default function App() {
     }
   }, []);
 
-  // ── Autosave ─────────────────────────────────────────────────
   useAutoSave({ projectName, floorSize, activePreset, sceneItems });
 
-  // ── History ──────────────────────────────────────────────────
   const canUndo = historyIdx > 0;
   const canRedo = historyIdx < history.length - 1;
 
   const pushHistory = useCallback((items) => {
-    setHistory(prev => {
-      const next = [...prev.slice(0, historyIdx + 1), items].slice(-50);
-      return next;
-    });
+    setHistory(prev => [...prev.slice(0, historyIdx + 1), items].slice(-50));
     setHistoryIdx(prev => Math.min(prev + 1, 49));
   }, [historyIdx]);
 
@@ -84,15 +78,6 @@ export default function App() {
     return () => window.removeEventListener('keydown', handler);
   }, [undo, redo]);
 
-  // Measure sidebar width for BottomBar offset
-  useEffect(() => {
-    if (!sidebarRef.current) return;
-    const ro = new ResizeObserver(entries => {
-      setSidebarWidth(entries[0].contentRect.width + 16 + 20); // width + left margin + right gap
-    });
-    ro.observe(sidebarRef.current);
-    return () => ro.disconnect();
-  }, [onboardingDone]);
   const handleNew = useCallback(() => {
     if (sceneItems.length > 0) {
       if (!window.confirm('Start a new design? Your current work will be cleared.')) return;
@@ -109,14 +94,12 @@ export default function App() {
     setOnboardingDone(false);
   }, [sceneItems]);
 
-  // ── Onboarding complete ───────────────────────────────────────
   const handleOnboardingComplete = useCallback(({ floorSize, preset }) => {
     setFloorSize(floorSize);
     setActivePreset(preset);
     setOnboardingDone(true);
   }, []);
 
-  // ── Scene items ───────────────────────────────────────────────
   const addSceneItem = useCallback((modelId) => {
     setSceneItems(prev => {
       const next = prev.find(x => x.modelId === modelId)
@@ -155,7 +138,6 @@ export default function App() {
           onNew={handleNew}
         />
         <Sidebar
-          ref={sidebarRef}
           config={CONFIG}
           mode={mode}
           activeTool={activeTool}
@@ -163,7 +145,7 @@ export default function App() {
           onAddProduct={addSceneItem}
         />
         <QuotePanel config={CONFIG} sceneItems={sceneItems} />
-        <BottomBar config={CONFIG} sceneItems={sceneItems} offsetLeft={sidebarWidth} />
+        <BottomBar config={CONFIG} sceneItems={sceneItems} />
         {CONFIG.youtubeId && <VideoWidget config={CONFIG} />}
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styles from './Sidebar.module.css';
 
 const Icons = {
@@ -58,7 +58,7 @@ function ProductItem({ item, onDragStart }) {
   );
 }
 
-const Sidebar = forwardRef(function Sidebar({ config, mode, activeTool, onToolChange, onAddProduct }, ref) {
+export default function Sidebar({ config, mode, activeTool, onToolChange, onAddProduct }) {
   const [catalog,      setCatalog]      = useState({});
   const [activeTab,    setActiveTab]    = useState(null);
   const [loading,      setLoading]      = useState(true);
@@ -103,7 +103,7 @@ const Sidebar = forwardRef(function Sidebar({ config, mode, activeTool, onToolCh
   }
 
   return (
-    <div className={styles.sidebarWrap} ref={ref} style={{ pointerEvents: "all" }}>
+    <div className={styles.sidebarWrap} style={{ pointerEvents: "all" }}>
 
       {/* ── Panel — slides out in Draw mode ── */}
       <div className={`${styles.panel} ${isPlace ? styles.panelVisible : styles.panelHidden}`}>
@@ -167,6 +167,6 @@ const Sidebar = forwardRef(function Sidebar({ config, mode, activeTool, onToolCh
 
     </div>
   );
-});
+}
 
-export default Sidebar;
+
