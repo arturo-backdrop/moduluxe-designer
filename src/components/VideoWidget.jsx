@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import styles from './VideoWidget.module.css';
 
 // ── Config ────────────────────────────────────────────────────
-const MINIMIZED_LABEL = 'Watch tutorial';
+const MINIMIZED_LABEL = 'NY Toy Fair Trade Show Booth Awards';
 
 export default function VideoWidget({ config }) {
   const [minimized, setMinimized] = useState(false);
