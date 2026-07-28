@@ -14,7 +14,7 @@ const SETTINGS = {
   topLight:  0.5,
   sideLight: 0.25,
   hemi:      0.3,
-  floor: { roughness: 0.19, normalScale: 1.1, tiling: 4 },
+  floor: { roughness: 0.19, normalScale: 1.1, tiling: 2 },
   outline: { color: 0xffffff, thickness: 0.004, xrayOpacity: 0.4 },
   shadow: { mapSize: 2048, radius: 3, bias: -0.001 },
 };
