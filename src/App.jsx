@@ -132,7 +132,7 @@ export default function App() {
   return (
     <div style={styles.root}>
       <Viewport
-        config={CONFIG}
+        config={{ ...CONFIG, _catalogFlat: Object.values(catalog) }}
         floorSize={floorSize}
         activePreset={activePreset}
         sceneItems={sceneItems}
