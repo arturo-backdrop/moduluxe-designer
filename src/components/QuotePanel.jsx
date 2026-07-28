@@ -155,11 +155,9 @@ export default function QuotePanel({ config, sceneItems, catalog }) {
           <div className={styles.totalValue}>
             {hasPrice ? formatPrice(total) : 'Contact for pricing'}
           </div>
-          {hasPrice && (
-            <div className={styles.rentText}>
-              Or rent for 1/3 of the price
-            </div>
-          )}
+          <div className={styles.rentText}>
+            Or rent for 1/3 of the price
+          </div>
         </div>
 
         <button
