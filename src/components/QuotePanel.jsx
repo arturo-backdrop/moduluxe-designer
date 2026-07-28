@@ -3,46 +3,32 @@ import styles from './QuotePanel.module.css';
 
 // ── Quote Modal ───────────────────────────────────────────────
 function QuoteModal({ config, sceneItems, onClose }) {
-  const [step,     setStep]     = useState(1); // 1=form, 2=confirm
-  const [form,     setForm]     = useState({
-    reseller:  '',
-    client:    '',
-    eventName: '',
-    eventDate: '',
-    comments:  '',
-    privacy:   false,
-  });
+  const [step,    setStep]    = useState(1);
+  const [form,    setForm]    = useState({ reseller:'', client:'', eventName:'', eventDate:'', comments:'', privacy:false });
   const [sending, setSending] = useState(false);
   const [sent,    setSent]    = useState(false);
-
-  const total = sceneItems.reduce((sum, item) => sum + (item.price || 0) * item.count, 0);
 
   function handleField(e) {
     const { name, value, type, checked } = e.target;
     setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   }
 
-  function canSubmit() {
-    return form.client.trim() && form.eventName.trim() && form.privacy;
-  }
+  function canSubmit() { return form.client.trim() && form.eventName.trim() && form.privacy; }
 
   async function handleSubmit() {
     setSending(true);
-    // HubSpot submit if configured
     if (config.hubspotPortalId && config.hubspotFormId) {
       try {
         await fetch(`https://api.hsforms.com/submissions/v3/integration/submit/${config.hubspotPortalId}/${config.hubspotFormId}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fields: [
-              { name: 'company',    value: form.reseller },
-              { name: 'firstname',  value: form.client },
-              { name: 'event_name', value: form.eventName },
-              { name: 'event_date', value: form.eventDate },
-              { name: 'message',    value: form.comments },
-            ],
-          }),
+          body: JSON.stringify({ fields: [
+            { name: 'company',    value: form.reseller },
+            { name: 'firstname',  value: form.client },
+            { name: 'event_name', value: form.eventName },
+            { name: 'event_date', value: form.eventDate },
+            { name: 'message',    value: form.comments },
+          ]}),
         });
       } catch(e) { console.warn('HubSpot submit failed:', e); }
     }
@@ -86,32 +72,26 @@ function QuoteModal({ config, sceneItems, onClose }) {
             <div className={styles.fieldGrid}>
               <div className={styles.field}>
                 <label className={styles.fieldLabel}>Reseller / Company</label>
-                <input className={styles.fieldInput} name="reseller" value={form.reseller}
-                  onChange={handleField} placeholder="Your company name" />
+                <input className={styles.fieldInput} name="reseller" value={form.reseller} onChange={handleField} placeholder="Your company name" />
               </div>
               <div className={styles.field}>
                 <label className={styles.fieldLabel}>Client name <span className={styles.req}>*</span></label>
-                <input className={styles.fieldInput} name="client" value={form.client}
-                  onChange={handleField} placeholder="End client name" required />
+                <input className={styles.fieldInput} name="client" value={form.client} onChange={handleField} placeholder="End client name" />
               </div>
               <div className={styles.field}>
                 <label className={styles.fieldLabel}>Event name <span className={styles.req}>*</span></label>
-                <input className={styles.fieldInput} name="eventName" value={form.eventName}
-                  onChange={handleField} placeholder="e.g. CES 2025" required />
+                <input className={styles.fieldInput} name="eventName" value={form.eventName} onChange={handleField} placeholder="e.g. CES 2025" />
               </div>
               <div className={styles.field}>
                 <label className={styles.fieldLabel}>Event date</label>
-                <input className={styles.fieldInput} name="eventDate" value={form.eventDate}
-                  onChange={handleField} type="date" />
+                <input className={styles.fieldInput} name="eventDate" value={form.eventDate} onChange={handleField} type="date" />
               </div>
             </div>
-            <div className={styles.field} style={{ marginTop: 12 }}>
+            <div className={styles.field} style={{ marginTop:12 }}>
               <label className={styles.fieldLabel}>Comments</label>
-              <textarea className={styles.fieldTextarea} name="comments" value={form.comments}
-                onChange={handleField} placeholder="Any special requirements..." rows={3} />
+              <textarea className={styles.fieldTextarea} name="comments" value={form.comments} onChange={handleField} placeholder="Any special requirements..." rows={3} />
             </div>
-            <button className={styles.btnPrimary} style={{ marginTop: 16 }}
-              onClick={() => setStep(2)}>
+            <button className={styles.btnPrimary} style={{ marginTop:16 }} onClick={() => setStep(2)}>
               Review my quote →
             </button>
           </>
@@ -127,22 +107,17 @@ function QuoteModal({ config, sceneItems, onClose }) {
                 </div>
               ))}
             </div>
-
             <div className={styles.totalRow}>
               <span>Estimated total</span>
               <span className={styles.totalAmt}>Contact for pricing</span>
             </div>
-
             <label className={styles.privacyRow}>
-              <input type="checkbox" name="privacy" checked={form.privacy}
-                onChange={handleField} className={styles.privacyCheck} />
+              <input type="checkbox" name="privacy" checked={form.privacy} onChange={handleField} className={styles.privacyCheck} />
               <span>I agree to the <a href="#" className={styles.privacyLink}>Privacy Policy</a></span>
             </label>
-
             <div className={styles.modalFooter}>
               <button className={styles.btnSecondary} onClick={() => setStep(1)}>← Back</button>
-              <button className={styles.btnPrimary} disabled={!canSubmit() || sending}
-                onClick={handleSubmit}>
+              <button className={styles.btnPrimary} disabled={!canSubmit() || sending} onClick={handleSubmit}>
                 {sending ? 'Sending...' : 'Send quote request'}
               </button>
             </div>
@@ -161,10 +136,14 @@ export default function QuotePanel({ config, sceneItems }) {
   return (
     <>
       <div className={styles.quotePill} style={{ pointerEvents: 'all' }}>
-        <div className={styles.quoteInfo}>
-          <div className={styles.quoteLabel}>Your build</div>
-          <div className={styles.quoteCount}>{count} item{count !== 1 ? 's' : ''}</div>
+
+        <div className={styles.itemCount}>{count} item{count !== 1 ? 's' : ''}</div>
+
+        <div className={styles.totalBlock}>
+          <div className={styles.totalLabel}>Estimated Total</div>
+          <div className={styles.totalValue}>Contact for pricing</div>
         </div>
+
         <button
           className={styles.quoteBtn}
           onClick={() => setOpen(true)}
@@ -176,6 +155,16 @@ export default function QuotePanel({ config, sceneItems }) {
             <polyline points="12 5 19 12 12 19"/>
           </svg>
         </button>
+
+        {config.phone && (
+          <div className={styles.phoneRow}>
+            or call us at<br />
+            <a href={`tel:${config.phoneHref}`} className={styles.phoneLink}>
+              {config.phone}
+            </a>
+          </div>
+        )}
+
       </div>
 
       {open && (

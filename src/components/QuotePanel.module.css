@@ -4,50 +4,71 @@
   top: 20px;
   right: 20px;
   background: white;
-  border-radius: 16px;
+  border-radius: 20px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.10);
-  padding: 12px 14px;
+  padding: 16px 18px;
   display: flex;
-  align-items: center;
-  gap: 14px;
-  min-width: 200px;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 220px;
 }
 
-.quoteInfo { flex: 1; }
-.quoteLabel {
-  font-size: 10px;
+.itemCount {
+  font-size: 12px;
   font-weight: 500;
-  color: #bbb;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 2px;
-}
-.quoteCount {
-  font-size: 15px;
-  font-weight: 700;
-  color: #1a1a1a;
+  color: #aaa;
 }
 
+.totalBlock { display: flex; flex-direction: column; gap: 2px; }
+.totalLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: #888;
+}
+.totalValue {
+  font-size: 22px;
+  font-weight: 900;
+  color: #1a1a1a;
+  line-height: 1.1;
+}
+
+/* ── Get a quote button ───────────────────────────────────── */
 .quoteBtn {
   display: flex;
   align-items: center;
-  gap: 7px;
+  justify-content: center;
+  gap: 8px;
   background: #b48b31;
   color: white;
   font-family: 'Figtree', sans-serif;
   font-weight: 700;
-  font-size: 13px;
-  padding: 9px 16px;
-  border-radius: 10px;
+  font-size: 15px;
+  padding: 13px 18px;
+  border-radius: 14px;
   border: none;
   cursor: pointer;
-  white-space: nowrap;
+  width: 100%;
   transition: background 0.15s, transform 0.15s;
-  flex-shrink: 0;
 }
-.quoteBtn svg { width: 14px; height: 14px; }
-.quoteBtn:hover:not(:disabled) { background: #9a7628; transform: scale(1.02); }
-.quoteBtn:disabled { opacity: 0.35; cursor: default; }
+.quoteBtn svg { width: 16px; height: 16px; }
+.quoteBtn:hover:not(:disabled) { background: #9a7628; transform: scale(1.01); }
+.quoteBtn:disabled { opacity: 0.35; cursor: default; transform: none; }
+
+/* ── Phone ───────────────────────────────────────────────── */
+.phoneRow {
+  font-size: 11px;
+  color: #bbb;
+  text-align: center;
+  line-height: 1.8;
+}
+.phoneLink {
+  font-size: 14px;
+  font-weight: 700;
+  color: #b48b31;
+  text-decoration: none;
+  display: block;
+}
+.phoneLink:hover { text-decoration: underline; }
 
 /* ── Modal overlay ───────────────────────────────────────── */
 .modalOverlay {
@@ -61,7 +82,6 @@
   z-index: 1000;
   pointer-events: all;
 }
-
 .modal {
   background: white;
   border-radius: 20px;
@@ -74,18 +94,13 @@
   from { transform: scale(0.92) translateY(16px); opacity: 0; }
   to   { transform: scale(1) translateY(0); opacity: 1; }
 }
-
 .modalHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 22px;
 }
-.modalTitle {
-  font-weight: 900;
-  font-size: 20px;
-  color: #1a1a1a;
-}
+.modalTitle { font-weight: 900; font-size: 20px; color: #1a1a1a; }
 .closeBtn {
   width: 32px; height: 32px;
   border-radius: 50%;
@@ -98,11 +113,7 @@
 .closeBtn:hover { background: #eee; color: #333; }
 
 /* ── Form ────────────────────────────────────────────────── */
-.fieldGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
+.fieldGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .field { display: flex; flex-direction: column; gap: 5px; }
 .fieldLabel { font-size: 12px; font-weight: 500; color: #888; }
 .req { color: #b48b31; }
@@ -121,7 +132,7 @@
 .fieldInput:focus, .fieldTextarea:focus { border-color: #b48b31; background: white; }
 .fieldTextarea { resize: none; }
 
-/* ── Quote items ─────────────────────────────────────────── */
+/* ── Items list ──────────────────────────────────────────── */
 .itemsList {
   background: #fafafa;
   border-radius: 12px;
@@ -154,7 +165,6 @@
 }
 .totalAmt { font-weight: 700; color: #1a1a1a; font-size: 15px; }
 
-/* ── Privacy ─────────────────────────────────────────────── */
 .privacyRow {
   display: flex;
   align-items: center;
@@ -168,13 +178,8 @@
 .privacyLink  { color: #b48b31; text-decoration: none; }
 .privacyLink:hover { text-decoration: underline; }
 
-/* ── Footer ──────────────────────────────────────────────── */
-.modalFooter {
-  display: flex;
-  gap: 10px;
-}
+.modalFooter { display: flex; gap: 10px; }
 
-/* ── Buttons ─────────────────────────────────────────────── */
 .btnPrimary {
   flex: 1;
   padding: 13px;
