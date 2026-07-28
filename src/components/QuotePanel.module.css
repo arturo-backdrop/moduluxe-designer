@@ -31,6 +31,12 @@
   color: #1a1a1a;
   line-height: 1.1;
 }
+.rentText {
+  font-size: 8px;
+  font-weight: 500;
+  color: #5f5f5f;
+  margin-top: 3px;
+}
 
 /* ── Get a quote button ───────────────────────────────────── */
 .quoteBtn {
