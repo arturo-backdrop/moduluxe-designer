@@ -76,7 +76,7 @@ export default function Viewport({ config, floorSize, sceneItems, mode, activeTo
 
     // Renderer
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, stencil: true });
-    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
@@ -105,7 +105,7 @@ export default function Viewport({ config, floorSize, sceneItems, mode, activeTo
     scene.fog    = new THREE.FogExp2(SETTINGS.fog.color, SETTINGS.fog.density);
 
     // Camera
-    const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 200);
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 200);
     camera.position.set(8, 6, 10);
 
     // Controls
@@ -244,10 +244,12 @@ export default function Viewport({ config, floorSize, sceneItems, mode, activeTo
 
     function updateDot(obj) {
       if (!obj) { dot.visible = false; return; }
+      obj.updateWorldMatrix(true, true);
       const box = new THREE.Box3().setFromObject(obj);
       const center = new THREE.Vector3();
       box.getCenter(center);
-      dot.position.set(center.x, box.max.y + 0.22, center.z);
+      dotBaseY = box.max.y + 0.22;
+      dot.position.set(center.x, dotBaseY, center.z);
       dot.visible = true;
     }
 
@@ -300,11 +302,12 @@ export default function Viewport({ config, floorSize, sceneItems, mode, activeTo
 
     // Resize
     const handleResize = () => {
-      const w = canvas.clientWidth, h = canvas.clientHeight;
+      const w = window.innerWidth, h = window.innerHeight;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h, false);
     };
+    window.addEventListener('resize', handleResize);
     const ro = new ResizeObserver(handleResize);
     ro.observe(canvas);
 
@@ -334,6 +337,7 @@ export default function Viewport({ config, floorSize, sceneItems, mode, activeTo
     return () => {
       cancelAnimationFrame(animId);
       ro.disconnect();
+      window.removeEventListener('resize', handleResize);
       window.removeEventListener('viewport:zoom', handleZoom);
       renderer.dispose();
     };
