@@ -135,7 +135,7 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
       </div>
 
       {/* ── Toolbar — always visible, right of panel ── */}
-      <div className={styles.rightCol} style={{ paddingTop: logoHeight }}>
+      <div className={styles.rightCol} style={{ paddingTop: logoHeight + 8 }}>
         {/* Spacer that matches logo header height */}
 
         {/* Zoom */}
