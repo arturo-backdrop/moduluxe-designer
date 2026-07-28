@@ -26,6 +26,7 @@ const DEFAULT_STATE = {
 
 export default function App() {
   const [onboardingDone, setOnboardingDone] = useState(false);
+  const [catalog,        setCatalog]        = useState({}); // modelId -> item
   const [projectName,    setProjectName]    = useState(DEFAULT_STATE.projectName);
   const [floorSize,      setFloorSize]      = useState(DEFAULT_STATE.floorSize);
   const [activePreset,   setActivePreset]   = useState(DEFAULT_STATE.activePreset);
@@ -34,6 +35,20 @@ export default function App() {
   const [activeTool,     setActiveTool]     = useState(DEFAULT_STATE.activeTool);
   const [history,        setHistory]        = useState([[]]);
   const [historyIdx,     setHistoryIdx]     = useState(0);
+
+  // Load catalog
+  useEffect(() => {
+    if (!CONFIG.manifestUrl) return;
+    fetch(CONFIG.manifestUrl)
+      .then(r => r.json())
+      .then(data => {
+        const items = Array.isArray(data) ? data : (data.models || []);
+        const map = {};
+        items.forEach(item => { map[item.id] = item; });
+        setCatalog(map);
+      })
+      .catch(e => console.warn('Catalog load failed:', e));
+  }, []);
 
   // Restore from localStorage
   useEffect(() => {
@@ -144,9 +159,9 @@ export default function App() {
           onToolChange={setActiveTool}
           onAddProduct={addSceneItem}
         />
-        <QuotePanel config={CONFIG} sceneItems={sceneItems} />
-        <BottomBar config={CONFIG} sceneItems={sceneItems} />
-        {CONFIG.youtubeId && <VideoWidget config={CONFIG} />}
+        <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
+        <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
+        <VideoWidget config={CONFIG} />
       </div>
     </div>
   );
