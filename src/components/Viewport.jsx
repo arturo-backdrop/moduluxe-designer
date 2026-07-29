@@ -19,9 +19,9 @@ function springEase(t) {
 // ── Settings ──────────────────────────────────────────────────
 const S = {
   bg:   { top: 0xebebeb, bottom: 0xd6d6d6 },
-  fog:  { color: 0xdedede, density: 0.0 },
-  ambient: 0.1, key: 1.1, fill: 0.2, rim: 0.1, top: 0.15, side: 0.20, hemi: 0.2,
-  floor: { roughness: 0.19, normalScale: 1.1, tiling: 2, tilingRough: 3.5 },
+  fog:  { color: 0xdedede, density: 0.018 },
+  ambient: 0.1, key: 1.5, fill: 0.2, rim: 0.1, top: 0.15, side: 0.20, hemi: 0.2,
+  floor: { roughness: 0.25, normalScale: 1.1, tiling: 2, tilingRough: 3.5 },
   shadow: { size: 2048, radius: 8, bias: -0.001 },
 };
 
@@ -183,14 +183,18 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       t.rotation=0.3; t.center.set(0.5,0.5);
       floorMat.roughnessMap=t; floorMat.roughness=0.5; floorMat.needsUpdate=true;
     });
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(floorW,floorD), floorMat);
-    floor.rotation.x=-Math.PI/2; floor.receiveShadow=true; scene.add(floor);
+    const FLOOR_H = 0.1;
+    const floor = new THREE.Mesh(new THREE.BoxGeometry(floorW, FLOOR_H, floorD), floorMat);
+    floor.position.y = -FLOOR_H / 2;
+    floor.receiveShadow = true; scene.add(floor);
 
     // Floor border
-    scene.add(new THREE.LineSegments(
-      new THREE.EdgesGeometry(new THREE.BoxGeometry(floorW,0.01,floorD)),
+    const border = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(floorW,FLOOR_H,floorD)),
       new THREE.LineBasicMaterial({ color:0xaaaaaa, opacity:0.5, transparent:true })
-    ));
+    );
+    border.position.y = -FLOOR_H / 2;
+    scene.add(border);
 
     // Grid
     const grid = new THREE.GridHelper(Math.max(floorW,floorD)*3, 40, 0xbbbbbb, 0xbbbbbb);
