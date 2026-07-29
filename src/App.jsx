@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { CONFIG } from './config.js';
 import { useAutoSave, loadSavedProject, clearSavedProject } from './hooks/useAutoSave.js';
+import { loadModel } from './three/glbParser.js';
 
 import Onboarding  from './components/Onboarding.jsx';
 import Viewport    from './components/Viewport.jsx';
@@ -25,7 +26,8 @@ const DEFAULT_STATE = {
 };
 
 export default function App() {
-  const [onboardingDone, setOnboardingDone] = useState(false);
+  const [catalogReady,   setCatalogReady]   = useState(false);
+  const [loadProgress,   setLoadProgress]   = useState({ loaded: 0, total: 0 });
   const [catalog,        setCatalog]        = useState({}); // modelId -> item
   const [projectName,    setProjectName]    = useState(DEFAULT_STATE.projectName);
   const [floorSize,      setFloorSize]      = useState(DEFAULT_STATE.floorSize);
@@ -33,21 +35,33 @@ export default function App() {
   const [sceneItems,     setSceneItems]     = useState(DEFAULT_STATE.sceneItems);
   const [mode,           setMode]           = useState(DEFAULT_STATE.mode);
   const [activeTool,     setActiveTool]     = useState(DEFAULT_STATE.activeTool);
+  const [onboardingDone, setOnboardingDone] = useState(false);
   const [history,        setHistory]        = useState([[]]);
   const [historyIdx,     setHistoryIdx]     = useState(0);
 
-  // Load catalog
+  // Load catalog + prefetch all GLBs
   useEffect(() => {
-    if (!CONFIG.manifestUrl) return;
+    if (!CONFIG.manifestUrl) { setCatalogReady(true); return; }
     fetch(CONFIG.manifestUrl)
       .then(r => r.json())
-      .then(data => {
+      .then(async data => {
         const items = Array.isArray(data) ? data : (data.models || []);
         const map = {};
         items.forEach(item => { map[item.id] = item; });
         setCatalog(map);
+
+        // Prefetch all GLBs — primes glbParser cache so drag is instant
+        const withFile = items.filter(i => i.file);
+        setLoadProgress({ loaded: 0, total: withFile.length });
+        let loaded = 0;
+        await Promise.all(withFile.map(item =>
+          loadModel(item.file)
+            .then(() => { loaded++; setLoadProgress({ loaded, total: withFile.length }); })
+            .catch(() => { loaded++; setLoadProgress({ loaded, total: withFile.length }); })
+        ));
+        setCatalogReady(true);
       })
-      .catch(e => console.warn('Catalog load failed:', e));
+      .catch(e => { console.warn('Catalog load failed:', e); setCatalogReady(true); });
   }, []);
 
   // Restore from localStorage
@@ -124,6 +138,22 @@ export default function App() {
       return next;
     });
   }, [pushHistory]);
+
+  if (!catalogReady) {
+    const { loaded, total } = loadProgress;
+    const pct = total > 0 ? Math.round((loaded / total) * 100) : 0;
+    return (
+      <div style={{ position:'fixed', inset:0, background:'#f0f0f0', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16 }}>
+        <img src="/moduluxe-designer/backdrop-logo-inverse.png" style={{ height:48, filter:'invert(1)' }} alt="backdrop" />
+        <div style={{ fontFamily:'Figtree,sans-serif', fontSize:14, color:'#888', marginTop:8 }}>
+          {total > 0 ? `Loading models… ${loaded}/${total}` : 'Loading catalog…'}
+        </div>
+        <div style={{ width:200, height:4, background:'#e0e0e0', borderRadius:4, overflow:'hidden' }}>
+          <div style={{ height:'100%', width:`${pct}%`, background:'#b48b31', borderRadius:4, transition:'width 0.3s ease' }} />
+        </div>
+      </div>
+    );
+  }
 
   if (!onboardingDone) {
     return <Onboarding config={CONFIG} onComplete={handleOnboardingComplete} />;

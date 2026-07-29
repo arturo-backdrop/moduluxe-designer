@@ -329,6 +329,14 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           if (c) setOutlineVisible(c, true);
         }
       } else {
+        // drag ended — save position to React state
+        const c = itemGroup.children.find(x=>x.userData.uid===draggingUid);
+        if (c) {
+          const next = itemsRef.current.map(i =>
+            i.uid === draggingUid ? { ...i, x: c.position.x, z: c.position.z } : i
+          );
+          onChangeRef.current?.(next);
+        }
         canvas.style.cursor = hoveredUid ? 'grab' : 'default';
       }
       draggingUid = null; dragArmed = false;
@@ -352,10 +360,9 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       if (!modelId) return;
       const pt  = groundPt(e.clientX, e.clientY);
       const uid = `${modelId}_${Date.now()}`;
-      // Store drop position in uid so sync effect can use it
-      pendingPositions.set(uid, { x: snap(pt.x), z: snap(pt.z) });
-      // Only update React state — sync effect will create the Three.js object
-      const next = [...itemsRef.current, { uid, modelId, count: 1 }];
+      const x   = snap(pt.x), z = snap(pt.z);
+      pendingPositions.set(uid, { x, z });
+      const next = [...itemsRef.current, { uid, modelId, count: 1, x, z, rotY: 0 }];
       onChangeRef.current?.(next);
     };
 
@@ -379,7 +386,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       // Placeholder box (shown while GLB loads)
       const ph = new THREE.Mesh(
         new THREE.BoxGeometry(w, h, d),
-        new THREE.MeshStandardMaterial({ color: def?.color || 0x3a6ea5, roughness: 0.45, metalness: 0.15 })
+        new THREE.MeshStandardMaterial({ color: new THREE.Color(def?.color || '#3a6ea5'), roughness: 0.45, metalness: 0.15 })
       );
       ph.position.y = h/2;
       ph.castShadow = ph.receiveShadow = true;
@@ -472,6 +479,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
   useEffect(() => {
     const eng = engRef.current;
     if (!eng) return;
+    // Don't sync until catalog is loaded — otherwise we get permanent placeholders
+    if (!config._catalogFlat?.length) return;
     const { itemGroup, spawnContainer, pendingPositions } = eng;
 
     // Remove containers no longer in items
@@ -480,7 +489,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       if (!currentUids.has(c.userData.uid)) itemGroup.remove(c);
     });
 
-    // Add new items — use pending drop position if available, else grid layout
+    // Add new items — use pending drop position or saved state position
     sceneItems.forEach((item, idx) => {
       if (itemGroup.children.find(c=>c.userData.uid===item.uid)) return;
       let x, z;
@@ -488,13 +497,17 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         const pos = pendingPositions.get(item.uid);
         x = pos.x; z = pos.z;
         pendingPositions.delete(item.uid);
+      } else if (item.x != null && item.z != null) {
+        // Restore from saved state
+        x = item.x; z = item.z;
       } else {
+        // Fallback grid layout
         const col = idx%5, row = Math.floor(idx/5);
         x = (col-2)*3; z = -row*3;
       }
       spawnContainer(item.modelId, item.uid, x, z);
     });
-  }, [sceneItems]);
+  }, [sceneItems, config._catalogFlat]);
 
   return (
     <canvas
