@@ -378,8 +378,15 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           if (c) setOutlineVisible(c, true);
         }
       } else {
-        // drag ended — save position to React state
-        const c = itemGroup.children.find(x=>x.userData.uid===draggingUid);
+        // drag ended — object stays selected
+        if (selectedUid && selectedUid !== draggingUid) {
+          const prev = itemGroup.children.find(x=>x.userData.uid===selectedUid);
+          if (prev) setOutlineVisible(prev, selectedUid===hoveredUid);
+        }
+        selectedUid = draggingUid;
+        const c = itemGroup.children.find(x=>x.userData.uid===selectedUid);
+        if (c) setOutlineVisible(c, true);
+        // save position
         if (c) {
           const next = itemsRef.current.map(i =>
             i.uid === draggingUid ? { ...i, x: c.position.x, z: c.position.z } : i
