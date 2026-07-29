@@ -200,12 +200,12 @@ export default function App() {
         <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
         <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
         <VideoWidget config={CONFIG} />
-        {/* Radial menu — last in DOM so it renders above other UI */}
+        {/* Radial menu — z-index 50: above panels (20) but below quote modal (1000) */}
         {radialMenu && (() => {
           const item    = catalog[radialMenu.modelId];
           const sockets = item?.sockets || [];
           return (
-            <div style={{ position:'absolute', inset:0, pointerEvents:'none' }}>
+            <div style={{ position:'absolute', inset:0, pointerEvents:'none', zIndex:50 }}>
               <RadialMenu
                 x={radialMenu.x}
                 y={radialMenu.y}
