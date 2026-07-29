@@ -143,12 +143,12 @@ export default function App() {
     const { loaded, total } = loadProgress;
     const pct = total > 0 ? Math.round((loaded / total) * 100) : 0;
     return (
-      <div style={{ position:'fixed', inset:0, background:'#111111', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16 }}>
-        <img src="/moduluxe-designer/backdrop-logo-inverse.png" style={{ height:48 }} alt="backdrop" />
-        <div style={{ fontFamily:'Figtree,sans-serif', fontSize:14, color:'#666', marginTop:8 }}>
+      <div style={{ position:'fixed', inset:0, background:'#ffffff', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16 }}>
+        <img src="/moduluxe-designer/backdrop-logo.png" style={{ height:48 }} alt="backdrop" />
+        <div style={{ fontFamily:'Figtree,sans-serif', fontSize:14, color:'#aaa', marginTop:8 }}>
           {total > 0 ? `Loading models… ${loaded}/${total}` : 'Loading catalog…'}
         </div>
-        <div style={{ width:200, height:4, background:'#222', borderRadius:4, overflow:'hidden' }}>
+        <div style={{ width:200, height:4, background:'#e8e8e8', borderRadius:4, overflow:'hidden' }}>
           <div style={{ height:'100%', width:`${pct}%`, background:'#b48b31', borderRadius:4, transition:'width 0.3s ease' }} />
         </div>
       </div>
