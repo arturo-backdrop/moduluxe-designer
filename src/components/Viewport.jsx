@@ -121,13 +121,14 @@ function applyPaintColor(root, color) {
   });
 }
 
-export default function Viewport({ config, floorSize, sceneItems, onSceneItemsChange }) {
+export default function Viewport({ config, floorSize, sceneItems, onSceneItemsChange, onRadialMenu }) {
   const canvasRef = useRef(null);
   const engRef    = useRef(null);
   // Refs so event handlers always see latest values
   const itemsRef    = useRef(sceneItems);
   const onChangeRef = useRef(onSceneItemsChange);
-  const catalogRef  = useRef(config._catalogFlat || []);
+  const onRadialMenuRef = useRef(onRadialMenu);
+  useEffect(() => { onRadialMenuRef.current = onRadialMenu; }, [onRadialMenu]);
 
   useEffect(() => { itemsRef.current    = sceneItems; }, [sceneItems]);
   useEffect(() => { onChangeRef.current = onSceneItemsChange; }, [onSceneItemsChange]);
@@ -303,16 +304,31 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     const pendingPositions = new Map();
 
     // ── Events ────────────────────────────────────────────────
+    // Project 3D position to screen coords
+    function project3D(obj) {
+      obj.updateWorldMatrix(true, true);
+      const box = new THREE.Box3().setFromObject(obj);
+      const top = new THREE.Vector3();
+      box.getCenter(top);
+      top.y = box.max.y + 0.1;
+      top.project(camera);
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (top.x + 1) / 2 * rect.width  + rect.left,
+        y: (-top.y + 1) / 2 * rect.height + rect.top,
+      };
+    }
+
     const onPointerDown = e => {
       if (e.button !== 0) return;
       const c = getHitContainer(e.clientX, e.clientY);
       if (!c) {
-        // Click on empty space — deselect
         if (selectedUid) {
           const prev = itemGroup.children.find(x=>x.userData.uid===selectedUid);
           if (prev) setOutlineVisible(prev, selectedUid===hoveredUid);
           selectedUid = null;
         }
+        onRadialMenuRef.current?.(null);
         return;
       }
       draggingUid  = c.userData.uid;
@@ -322,6 +338,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       dragOffX     = c.position.x - pt.x;
       dragOffZ     = c.position.z - pt.z;
       controls.enabled = false;
+      // Hide radial menu while dragging
+      onRadialMenuRef.current?.(null);
     };
 
     const onPointerMove = e => {
@@ -372,22 +390,28 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         }
         if (selectedUid === draggingUid) {
           selectedUid = null;
+          onRadialMenuRef.current?.(null);
         } else {
           selectedUid = draggingUid;
           const c = itemGroup.children.find(x=>x.userData.uid===selectedUid);
-          if (c) setOutlineVisible(c, true);
+          if (c) {
+            setOutlineVisible(c, true);
+            const sp = project3D(c);
+            onRadialMenuRef.current?.({ x:sp.x, y:sp.y, uid:selectedUid, modelId:c.userData.modelId });
+          }
         }
       } else {
-        // drag ended — object stays selected
+        // drag ended — keep selected, reshow menu at new position
         if (selectedUid && selectedUid !== draggingUid) {
           const prev = itemGroup.children.find(x=>x.userData.uid===selectedUid);
           if (prev) setOutlineVisible(prev, selectedUid===hoveredUid);
         }
         selectedUid = draggingUid;
         const c = itemGroup.children.find(x=>x.userData.uid===selectedUid);
-        if (c) setOutlineVisible(c, true);
-        // save position
         if (c) {
+          setOutlineVisible(c, true);
+          const sp = project3D(c);
+          onRadialMenuRef.current?.({ x:sp.x, y:sp.y, uid:selectedUid, modelId:c.userData.modelId });
           const next = itemsRef.current.map(i =>
             i.uid === draggingUid ? { ...i, x: c.position.x, z: c.position.z } : i
           );

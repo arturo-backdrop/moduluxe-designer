@@ -5,6 +5,7 @@ import { loadModel } from './three/glbParser.js';
 
 import Onboarding  from './components/Onboarding.jsx';
 import Viewport    from './components/Viewport.jsx';
+import RadialMenu  from './components/RadialMenu.jsx';
 import Sidebar     from './components/Sidebar.jsx';
 import Header      from './components/Header.jsx';
 import BottomBar   from './components/BottomBar.jsx';
@@ -35,7 +36,7 @@ export default function App() {
   const [sceneItems,     setSceneItems]     = useState(DEFAULT_STATE.sceneItems);
   const [mode,           setMode]           = useState(DEFAULT_STATE.mode);
   const [activeTool,     setActiveTool]     = useState(DEFAULT_STATE.activeTool);
-  const [onboardingDone, setOnboardingDone] = useState(false);
+  const [radialMenu, setRadialMenu] = useState(null); // { x, y, uid, modelId }
   const [history,        setHistory]        = useState([[]]);
   const [historyIdx,     setHistoryIdx]     = useState(0);
 
@@ -169,8 +170,32 @@ export default function App() {
         onSceneItemsChange={items => { setSceneItems(items); pushHistory(items); }}
         mode={mode}
         activeTool={activeTool}
+        onRadialMenu={setRadialMenu}
       />
       <div style={styles.ui}>
+        {/* Radial menu — rendered over viewport */}
+        {radialMenu && (() => {
+          const item    = catalog[radialMenu.modelId];
+          const sockets = item?.sockets || [];
+          return (
+            <div style={{ position:'absolute', inset:0, pointerEvents:'none' }}>
+              <RadialMenu
+                x={radialMenu.x}
+                y={radialMenu.y}
+                modelName={item?.name || radialMenu.modelId}
+                sockets={sockets}
+                accentColor={CONFIG.accentColor}
+                onAction={(action, data) => {
+                  if (action === 'del') {
+                    setSceneItems(prev => prev.filter(i => i.uid !== radialMenu.uid));
+                    setRadialMenu(null);
+                  }
+                }}
+                onClose={() => setRadialMenu(null)}
+              />
+            </div>
+          );
+        })()}
         <Header
           config={CONFIG}
           projectName={projectName}
