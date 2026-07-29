@@ -304,7 +304,12 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     // Pending drop positions — uid -> {x, z}
     const pendingPositions = new Map();
 
-    // ── Events ────────────────────────────────────────────────
+    // Close radial menu with animation if possible
+    function closeRadialMenu() {
+      const wrapper = radialMenuWrapperRef?.current;
+      if (wrapper?._triggerClose) wrapper._triggerClose();
+      else closeRadialMenu();
+    }
     // Project 3D position to screen coords
     function project3D(obj) {
       obj.updateWorldMatrix(true, true);
@@ -329,7 +334,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           if (prev) setOutlineVisible(prev, selectedUid===hoveredUid);
           selectedUid = null; if(engRef.current) engRef.current.selectedUidRef.current = null;
         }
-        onRadialMenuRef.current?.(null);
+        closeRadialMenu();
         return;
       }
       draggingUid  = c.userData.uid;
