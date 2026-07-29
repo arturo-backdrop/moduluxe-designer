@@ -128,6 +128,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
   const itemsRef    = useRef(sceneItems);
   const onChangeRef = useRef(onSceneItemsChange);
   const onRadialMenuRef = useRef(onRadialMenu);
+  const catalogRef  = useRef(config._catalogFlat || []);
   useEffect(() => { onRadialMenuRef.current = onRadialMenu; }, [onRadialMenu]);
 
   useEffect(() => { itemsRef.current    = sceneItems; }, [sceneItems]);
