@@ -121,7 +121,7 @@ function applyPaintColor(root, color) {
   });
 }
 
-export default function Viewport({ config, floorSize, sceneItems, onSceneItemsChange, onRadialMenu }) {
+export default function Viewport({ config, floorSize, sceneItems, onSceneItemsChange, onRadialMenu, radialMenuWrapperRef }) {
   const canvasRef = useRef(null);
   const engRef    = useRef(null);
   // Refs so event handlers always see latest values
@@ -327,7 +327,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         if (selectedUid) {
           const prev = itemGroup.children.find(x=>x.userData.uid===selectedUid);
           if (prev) setOutlineVisible(prev, selectedUid===hoveredUid);
-          selectedUid = null;
+          selectedUid = null; if(engRef.current) engRef.current.selectedUidRef.current = null;
         }
         onRadialMenuRef.current?.(null);
         return;
@@ -390,10 +390,10 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           if (prev) setOutlineVisible(prev, selectedUid===hoveredUid);
         }
         if (selectedUid === draggingUid) {
-          selectedUid = null;
+          selectedUid = null; if(engRef.current) engRef.current.selectedUidRef.current = null;
           onRadialMenuRef.current?.(null);
         } else {
-          selectedUid = draggingUid;
+          selectedUid = draggingUid; if(engRef.current) engRef.current.selectedUidRef.current = draggingUid;
           const c = itemGroup.children.find(x=>x.userData.uid===selectedUid);
           if (c) {
             setOutlineVisible(c, true);
@@ -407,7 +407,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           const prev = itemGroup.children.find(x=>x.userData.uid===selectedUid);
           if (prev) setOutlineVisible(prev, selectedUid===hoveredUid);
         }
-        selectedUid = draggingUid;
+        selectedUid = draggingUid; if(engRef.current) engRef.current.selectedUidRef.current = draggingUid;
         const c = itemGroup.children.find(x=>x.userData.uid===selectedUid);
         if (c) {
           setOutlineVisible(c, true);
@@ -498,7 +498,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     }
 
     // Expose for sync effect
-    engRef.current = { itemGroup, spawnContainer, pendingPositions };
+    engRef.current = { itemGroup, spawnContainer, pendingPositions, project3D, camera, selectedUidRef: { current: null } };
 
     // ── Zoom from toolbar ──────────────────────────────────────
     const onZoom = e => {
@@ -535,6 +535,16 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
       // Dot bob
       if (dot.visible) dot.position.y = dotBaseY + Math.sin(now*0.003)*0.04;
+
+      // Update radial menu position to follow selected object every frame
+      if (radialMenuWrapperRef?.current && engRef.current?.selectedUidRef?.current) {
+        const selObj = itemGroup.children.find(x => x.userData.uid === engRef.current.selectedUidRef.current);
+        if (selObj) {
+          const sp = project3D(selObj);
+          radialMenuWrapperRef.current.style.left = sp.x + 'px';
+          radialMenuWrapperRef.current.style.top  = sp.y + 'px';
+        }
+      }
 
       renderer.autoClear=true;
       renderer.render(bgScene, bgCam);

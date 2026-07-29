@@ -2,17 +2,17 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // ── Config ────────────────────────────────────────────────────
 const CFG = {
-  baseRadius:          90,
-  radiusPerBtn:        8,
-  radiusSpeed:         0.13,
-  closeAnimDuration:   280,
+  baseRadius:          80,
+  radiusPerBtn:        6,
+  radiusSpeed:         0.22,
+  closeAnimDuration:   180,
   closeMinScale:       0.3,
-  closeStagger:        30,
-  nudgeDistance:       14,
+  closeStagger:        20,
+  nudgeDistance:       12,
   nudgeAngleRange:     80,
-  selectPopScale:      1.28,
-  selectPopUpDuration: 120,
-  selectPopDownDuration: 320,
+  selectPopScale:      1.2,
+  selectPopUpDuration: 80,
+  selectPopDownDuration: 220,
 };
 
 const BEHAVIOR_ICONS = {
@@ -110,12 +110,13 @@ const S = {
 };
 
 // ── Main RadialMenu component ─────────────────────────────────
-export default function RadialMenu({ x, y, modelName, sockets=[], accentColor='#b48b31', onAction, onClose }) {
+export default function RadialMenu({ x, y, modelName, sockets=[], accentColor='#b48b31', onAction, onClose, wrapperRef }) {
   const [activeBtn,     setActiveBtn]     = useState(null);
   const [currentR,      setCurrentR]      = useState(0);
   const [targetR,       setTargetR]       = useState(0);
   const [btnOpacity,    setBtnOpacity]    = useState({});
   const [hoveredBtn,    setHoveredBtn]    = useState(null);
+  const [mounted,       setMounted]       = useState(false); // for fade-in
   const [socketStates,  setSocketStates]  = useState(() => {
     const s = {};
     sockets.forEach(sock => { s[sock.name] = { ...(sock.state || {}) }; });
@@ -151,16 +152,16 @@ export default function RadialMenu({ x, y, modelName, sockets=[], accentColor='#
     return () => cancelAnimationFrame(rafRef.current);
   }, [targetR]);
 
-  // Initial open animation
+  // Initial open animation + fade in
   useEffect(() => {
     const r = getRadius(null);
     setTargetR(r);
-    const ops = {};
+    // Fade in after one frame
+    requestAnimationFrame(() => setMounted(true));
     buttons.forEach((b, i) => {
       setTimeout(() => {
-        ops[b.id] = 1;
         setBtnOpacity(prev => ({ ...prev, [b.id]: 1 }));
-      }, 60 + i * 35);
+      }, 20 + i * 20);
     });
   }, []);
 
@@ -200,7 +201,10 @@ export default function RadialMenu({ x, y, modelName, sockets=[], accentColor='#
   }
 
   return (
-    <div style={{ position:'absolute', left: x, top: y, pointerEvents:'all', zIndex:100 }}
+    <div ref={wrapperRef} style={{
+      position:'absolute', left: x, top: y, pointerEvents:'all', zIndex:100,
+      opacity: mounted ? 1 : 0, transition:'opacity 0.18s ease',
+    }}
       onClick={e => e.stopPropagation()}>
 
       {/* Dashed ring */}

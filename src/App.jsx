@@ -37,7 +37,8 @@ export default function App() {
   const [sceneItems,     setSceneItems]     = useState(DEFAULT_STATE.sceneItems);
   const [mode,           setMode]           = useState(DEFAULT_STATE.mode);
   const [activeTool,     setActiveTool]     = useState(DEFAULT_STATE.activeTool);
-  const [radialMenu, setRadialMenu] = useState(null); // { x, y, uid, modelId }
+  const [radialMenu, setRadialMenu] = useState(null);
+  const radialMenuWrapperRef = useRef(null);
   const [history,        setHistory]        = useState([[]]);
   const [historyIdx,     setHistoryIdx]     = useState(0);
 
@@ -172,6 +173,7 @@ export default function App() {
         mode={mode}
         activeTool={activeTool}
         onRadialMenu={setRadialMenu}
+        radialMenuWrapperRef={radialMenuWrapperRef}
       />
       <div style={styles.ui}>
         {/* Radial menu — rendered over viewport */}
@@ -186,6 +188,7 @@ export default function App() {
                 modelName={item?.name || radialMenu.modelId}
                 sockets={sockets}
                 accentColor={CONFIG.accentColor}
+                wrapperRef={radialMenuWrapperRef}
                 onAction={(action, data) => {
                   if (action === 'del') {
                     setSceneItems(prev => prev.filter(i => i.uid !== radialMenu.uid));
