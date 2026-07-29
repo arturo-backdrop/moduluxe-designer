@@ -306,7 +306,15 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     const onPointerDown = e => {
       if (e.button !== 0) return;
       const c = getHitContainer(e.clientX, e.clientY);
-      if (!c) return;
+      if (!c) {
+        // Click on empty space — deselect
+        if (selectedUid) {
+          const prev = itemGroup.children.find(x=>x.userData.uid===selectedUid);
+          if (prev) setOutlineVisible(prev, selectedUid===hoveredUid);
+          selectedUid = null;
+        }
+        return;
+      }
       draggingUid  = c.userData.uid;
       dragArmed    = false;
       dragStartX   = e.clientX; dragStartY = e.clientY;
