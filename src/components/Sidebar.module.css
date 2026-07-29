@@ -252,3 +252,4 @@
 .toolBtn:hover .toolLabel { color: #444; }
 .toolBtnActive .toolLabel { color: white; }
 .toolDivider      { width: 36px; height: 1px; background: #f0f0f0; margin: 4px auto; }
+.sidebarWrap { z-index: 10; }

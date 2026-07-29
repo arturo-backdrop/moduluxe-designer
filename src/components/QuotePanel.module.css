@@ -21,7 +21,7 @@
 
 .totalBlock { display: flex; flex-direction: column; gap: 2px; }
 .totalLabel {
-  font-size: 18px;
+  font-size: 12px;
   font-weight: 500;
   color: #888;
 }
@@ -34,7 +34,7 @@
 .rentText {
   font-size: 12px;
   font-weight: 500;
-  color: #5f5f5f;
+  color: #b48b31;
   margin-top: 3px;
 }
 
@@ -235,3 +235,4 @@
 .successIcon svg { width: 28px; height: 28px; }
 .successTitle { font-weight: 900; font-size: 20px; color: #1a1a1a; }
 .successSub   { font-size: 13px; color: #aaa; margin-bottom: 8px; }
+.quotePill { z-index: 10; }

@@ -140,3 +140,4 @@
   color: #b48b31;
   flex-shrink: 0;
 }
+.bottomBar { z-index: 10; }
