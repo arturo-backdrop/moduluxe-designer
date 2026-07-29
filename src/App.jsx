@@ -29,6 +29,7 @@ const DEFAULT_STATE = {
 export default function App() {
   const [catalogReady,   setCatalogReady]   = useState(false);
   const [loadProgress,   setLoadProgress]   = useState({ loaded: 0, total: 0 });
+  const [onboardingDone, setOnboardingDone] = useState(false);
   const [catalog,        setCatalog]        = useState({}); // modelId -> item
   const [projectName,    setProjectName]    = useState(DEFAULT_STATE.projectName);
   const [floorSize,      setFloorSize]      = useState(DEFAULT_STATE.floorSize);
