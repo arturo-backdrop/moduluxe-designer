@@ -178,34 +178,6 @@ export default function App() {
         engRef={viewportEngRef}
       />
       <div style={styles.ui}>
-        {/* Radial menu — rendered over viewport */}
-        {radialMenu && (() => {
-          const item    = catalog[radialMenu.modelId];
-          const sockets = item?.sockets || [];
-          return (
-            <div style={{ position:'absolute', inset:0, pointerEvents:'none' }}>
-              <RadialMenu
-                x={radialMenu.x}
-                y={radialMenu.y}
-                modelName={item?.name || radialMenu.modelId}
-                sockets={sockets}
-                accentColor={CONFIG.accentColor}
-                wrapperRef={radialMenuWrapperRef}
-                onAction={(action, data) => {
-                  if (action === 'del') {
-                    // Animate out then remove from state
-                    viewportEngRef.current?.deleteContainer(radialMenu.uid);
-                    setTimeout(() => { // wait for delete animation
-                      setSceneItems(prev => prev.filter(i => i.uid !== radialMenu.uid));
-                    }, 380);
-                    setRadialMenu(null);
-                  }
-                }}
-                onClose={() => setRadialMenu(null)}
-              />
-            </div>
-          );
-        })()}
         <Header
           config={CONFIG}
           projectName={projectName}
@@ -228,6 +200,33 @@ export default function App() {
         <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
         <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
         <VideoWidget config={CONFIG} />
+        {/* Radial menu — last in DOM so it renders above other UI */}
+        {radialMenu && (() => {
+          const item    = catalog[radialMenu.modelId];
+          const sockets = item?.sockets || [];
+          return (
+            <div style={{ position:'absolute', inset:0, pointerEvents:'none' }}>
+              <RadialMenu
+                x={radialMenu.x}
+                y={radialMenu.y}
+                modelName={item?.name || radialMenu.modelId}
+                sockets={sockets}
+                accentColor={CONFIG.accentColor}
+                wrapperRef={radialMenuWrapperRef}
+                onAction={(action, data) => {
+                  if (action === 'del') {
+                    viewportEngRef.current?.deleteContainer(radialMenu.uid);
+                    setTimeout(() => {
+                      setSceneItems(prev => prev.filter(i => i.uid !== radialMenu.uid));
+                    }, 380);
+                    setRadialMenu(null);
+                  }
+                }}
+                onClose={() => setRadialMenu(null)}
+              />
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
