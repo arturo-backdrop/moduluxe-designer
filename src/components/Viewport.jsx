@@ -91,6 +91,36 @@ function setOutlineVisible(container, v) {
   });
 }
 
+// ── Paint color system ────────────────────────────────────────
+const PAINT_MAT = 'paint_color';
+
+function applyPaintColor(root, color) {
+  const paintColor = new THREE.Color(color || '#3a6ea5');
+  const allMatNames = new Set();
+  root.traverse(c => {
+    if (!c.isMesh || !c.material) return;
+    const mats = Array.isArray(c.material) ? c.material : [c.material];
+    mats.forEach(m => { if (m.name) allMatNames.add(m.name); });
+  });
+  const hasPaint = allMatNames.has(PAINT_MAT);
+  root.traverse(c => {
+    if (!c.isMesh || !c.material) return;
+    const mats = Array.isArray(c.material) ? c.material : [c.material];
+    mats.forEach(mat => {
+      if (hasPaint && mat.name !== PAINT_MAT) return;
+      const enhanced = new THREE.MeshStandardMaterial({
+        name: mat.name, color: paintColor,
+        roughness: 0.55, metalness: 0.05, envMapIntensity: 1.2,
+        map: mat.map||null, normalMap: mat.normalMap||null,
+        roughnessMap: mat.roughnessMap||null, metalnessMap: mat.metalnessMap||null,
+        aoMap: mat.aoMap||null,
+      });
+      if (Array.isArray(c.material)) c.material[c.material.indexOf(mat)] = enhanced;
+      else c.material = enhanced;
+    });
+  });
+}
+
 export default function Viewport({ config, floorSize, sceneItems, onSceneItemsChange }) {
   const canvasRef = useRef(null);
   const engRef    = useRef(null);
@@ -384,48 +414,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     canvas.addEventListener('dragover',    onDragOver);
     canvas.addEventListener('drop',        onDrop);
 
-    // ── Spawn container (same pattern as Booth Planner) ───────
-const PAINT_MAT = 'paint_color';
-
-// Enhance paint_color material with full PBR properties
-function applyPaintColor(root, color) {
-  const paintColor = new THREE.Color(color || '#3a6ea5');
-  const allMatNames = new Set();
-  root.traverse(c => {
-    if (!c.isMesh || !c.material) return;
-    const mats = Array.isArray(c.material) ? c.material : [c.material];
-    mats.forEach(m => { if (m.name) allMatNames.add(m.name); });
-  });
-  const hasPaint = allMatNames.has(PAINT_MAT);
-
-  root.traverse(c => {
-    if (!c.isMesh || !c.material) return;
-    const mats = Array.isArray(c.material) ? c.material : [c.material];
-    mats.forEach(mat => {
-      if (hasPaint && mat.name !== PAINT_MAT) return;
-      // Replace with enhanced PBR material
-      const enhanced = new THREE.MeshStandardMaterial({
-        name:             mat.name,
-        color:            paintColor,
-        roughness:        0.55,
-        metalness:        0.05,
-        envMapIntensity:  1.2,
-        // preserve original maps if any
-        map:              mat.map          || null,
-        normalMap:        mat.normalMap    || null,
-        roughnessMap:     mat.roughnessMap || null,
-        metalnessMap:     mat.metalnessMap || null,
-        aoMap:            mat.aoMap        || null,
-      });
-      if (Array.isArray(c.material)) {
-        const idx = c.material.indexOf(mat);
-        c.material[idx] = enhanced;
-      } else {
-        c.material = enhanced;
-      }
-    });
-  });
-}
+    // ── Spawn container ───────────────────────────────────────
+    function spawnContainer(modelId, uid, x, z) {
       const def = catalogRef.current.find(m=>m.id===modelId);
       const w   = def?.w||1, h = def?.h||1, d = def?.d||0.2;
 
