@@ -103,7 +103,7 @@ function CardContent({ modelName, activeBtn, buttons, socketStates, onSocketChan
 // ── Styles ────────────────────────────────────────────────────
 const S = {
   cardName:  { fontSize:9, color:'#999', marginBottom:4 },
-  cardTitle: { fontWeight:900, fontSize:12, color:'#1a1a1a' },
+  cardTitle: { fontWeight:900, fontSize:12, color:'#ffffff' },
   toggleSw:  { width:34, height:18, borderRadius:9, position:'relative', cursor:'pointer', transition:'background 0.2s', flexShrink:0 },
   toggleKnob:{ position:'absolute', width:14, height:14, borderRadius:50, background:'white', top:2, transition:'left 0.2s' },
   countBtn:  { width:26, height:26, borderRadius:'50%', border:'none', background:'#f0f0f0', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' },
