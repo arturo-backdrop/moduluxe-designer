@@ -39,6 +39,7 @@ export default function App() {
   const [activeTool,     setActiveTool]     = useState(DEFAULT_STATE.activeTool);
   const [radialMenu, setRadialMenu] = useState(null);
   const radialMenuWrapperRef = useRef(null);
+  const viewportEngRef       = useRef(null);
   const [history,        setHistory]        = useState([[]]);
   const [historyIdx,     setHistoryIdx]     = useState(0);
 
@@ -174,6 +175,7 @@ export default function App() {
         activeTool={activeTool}
         onRadialMenu={setRadialMenu}
         radialMenuWrapperRef={radialMenuWrapperRef}
+        engRef={viewportEngRef}
       />
       <div style={styles.ui}>
         {/* Radial menu — rendered over viewport */}
@@ -191,7 +193,11 @@ export default function App() {
                 wrapperRef={radialMenuWrapperRef}
                 onAction={(action, data) => {
                   if (action === 'del') {
-                    setSceneItems(prev => prev.filter(i => i.uid !== radialMenu.uid));
+                    // Animate out then remove from state
+                    viewportEngRef.current?.deleteContainer(radialMenu.uid);
+                    setTimeout(() => { // wait for delete animation
+                      setSceneItems(prev => prev.filter(i => i.uid !== radialMenu.uid));
+                    }, 380);
                     setRadialMenu(null);
                   }
                 }}

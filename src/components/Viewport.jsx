@@ -121,7 +121,7 @@ function applyPaintColor(root, color) {
   });
 }
 
-export default function Viewport({ config, floorSize, sceneItems, onSceneItemsChange, onRadialMenu, radialMenuWrapperRef }) {
+export default function Viewport({ config, floorSize, sceneItems, onSceneItemsChange, onRadialMenu, radialMenuWrapperRef, engRef: externalEngRef }) {
   const canvasRef = useRef(null);
   const engRef    = useRef(null);
   // Refs so event handlers always see latest values
@@ -498,7 +498,34 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     }
 
     // Expose for sync effect
-    engRef.current = { itemGroup, spawnContainer, pendingPositions, project3D, camera, selectedUidRef: { current: null } };
+    // Delete with exit animation
+    function deleteContainer(uid) {
+      const c = itemGroup.children.find(x=>x.userData.uid===uid);
+      if (!c) return;
+      const POP_DUR    = 150;
+      const SHRINK_DUR = 220;
+      const startPop   = performance.now();
+      function animPop() {
+        const t = Math.min((performance.now()-startPop)/POP_DUR, 1);
+        const s = 1 + Math.sin(t * Math.PI) * 0.28;
+        c.scale.set(s, s, s);
+        if (t < 1) { requestAnimationFrame(animPop); return; }
+        // Phase 2 — shrink
+        const startShrink = performance.now();
+        function animShrink() {
+          const t2 = Math.min((performance.now()-startShrink)/SHRINK_DUR, 1);
+          const s2 = Math.max(0, 1 - springEase(t2));
+          c.scale.set(s2, s2, s2);
+          if (t2 < 1) requestAnimationFrame(animShrink);
+          else itemGroup.remove(c);
+        }
+        requestAnimationFrame(animShrink);
+      }
+      requestAnimationFrame(animPop);
+    }
+
+    engRef.current = { itemGroup, spawnContainer, pendingPositions, project3D, camera, selectedUidRef: { current: null }, deleteContainer };
+    if (externalEngRef) externalEngRef.current = engRef.current;
 
     // ── Zoom from toolbar ──────────────────────────────────────
     const onZoom = e => {
