@@ -205,7 +205,7 @@ export default function App() {
           const item    = catalog[radialMenu.modelId];
           const sockets = item?.sockets || [];
           return (
-            <div style={{ position:'absolute', inset:0, pointerEvents:'none', zIndex:50 }}>
+            <div style={{ position:'absolute', inset:0, pointerEvents:'none', zIndex:15 }}>
               <RadialMenu
                 x={radialMenu.x}
                 y={radialMenu.y}
