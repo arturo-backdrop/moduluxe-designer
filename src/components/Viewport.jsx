@@ -537,12 +537,13 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
     // ── Resize ────────────────────────────────────────────────
     const onResize = () => {
-      const w=window.innerWidth, h=window.innerHeight;
-      camera.aspect=w/h; camera.updateProjectionMatrix();
-      renderer.setSize(w,h,false);
+      const w = window.innerWidth, h = window.innerHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     };
     window.addEventListener('resize', onResize);
-    new ResizeObserver(onResize).observe(canvas);
 
     // ── Render loop ───────────────────────────────────────────
     let raf;

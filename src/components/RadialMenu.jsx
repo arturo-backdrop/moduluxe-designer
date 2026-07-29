@@ -319,7 +319,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
 
   return (
     <div ref={el => { rootRef.current=el; if(wrapperRef) wrapperRef.current=el; }}
-      style={{ position:'absolute', left:x, top:y, pointerEvents:'all', zIndex:100 }}
+      style={{ position:'absolute', left:x, top:y, pointerEvents:'all', zIndex:5 }}
       onClick={e=>e.stopPropagation()} />
   );
 }
