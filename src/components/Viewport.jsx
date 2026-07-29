@@ -20,7 +20,7 @@ function springEase(t) {
 const S = {
   bg:   { top: 0xebebeb, bottom: 0xd6d6d6 },
   fog:  { color: 0xdedede, density: 0.018 },
-  ambient: 0.9, key: 0.1.5, fill: 0.7, rim: 0.6, top: 0.4, side: 0.25, hemi: 0.6,
+  ambient: 0.9, key: 1.5, fill: 0.7, rim: 0.6, top: 0.4, side: 0.25, hemi: 0.6,
   floor: { roughness: 0.19, normalScale: 1.1, tiling: 2, tilingRough: 3.5 },
   shadow: { size: 2048, radius: 3, bias: -0.001 },
 };
