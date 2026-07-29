@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
 import { loadModel } from '../three/glbParser.js';
 
 // ── Constants ─────────────────────────────────────────────────
@@ -154,6 +155,12 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       const l=new THREE.DirectionalLight(c,i); l.position.set(...p); scene.add(l);
     });
     scene.add(new THREE.HemisphereLight(0xfff8f0, 0xd0d0d0, S.hemi));
+
+    // Environment map (EXR) — affects reflections and ambient lighting
+    new EXRLoader().load(`${import.meta.env.BASE_URL}textures/environment.exr`, texture => {
+      texture.mapping = THREE.EquirectangularReflectionMapping;
+      scene.environment = texture; // no scene.background — keep gradient
+    });
 
     // Floor
     const tl      = new THREE.TextureLoader();
