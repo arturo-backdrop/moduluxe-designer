@@ -48,8 +48,7 @@ const PRESET_COLORS = [
 
 function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentColor='#3a6ea5', currentRotY=0) {
   if (!activeBtnId) return `
-    <div style="font-size:9px;color:#999;margin-bottom:4px;">${modelName}</div>
-    <div style="font-weight:900;font-size:13px;color:#1a1a1a;margin-top:4px;">Object</div>`;
+    <div style="font-size:9px;color:#999;">${modelName}</div>`;
 
   const btn = buttons.find(b=>b.id===activeBtnId);
 
