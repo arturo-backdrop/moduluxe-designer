@@ -1,7 +1,9 @@
 // ─────────────────────────────────────────────────────────────
 //  MODULUXE DESIGNER — App Configuration
-//  Edit this file to customize the app for different clients
+//  Edit this file to customize the app for different clients.
+//  For host/URL changes, edit deploy.config.js instead.
 // ─────────────────────────────────────────────────────────────
+import { DEPLOY } from '../deploy.config.js';
 
 export const CONFIG = {
 
@@ -16,8 +18,8 @@ export const CONFIG = {
   phoneHref: '8887652711',
 
   // ── Catalog ────────────────────────────────────────────────
-  // URL to the manifest.json for the product catalog
-  manifestUrl: 'https://raw.githubusercontent.com/Abacus-Arturo/booth-planner-library/main/models/manifest.json',
+  // Loaded from deploy.config.js — change it there
+  manifestUrl: DEPLOY.manifestUrl,
 
   // ── HubSpot ────────────────────────────────────────────────
   // Leave null to skip HubSpot and just show a confirmation message
@@ -55,9 +57,9 @@ export const CONFIG = {
 
   // ── Video tutorial ─────────────────────────────────────────
   // Leave null to hide the video widget entirely
-  youtubeId:    'fQNPDMpov2M', // ← replace with your actual video ID
-  videoTitle:   ' NY Toy Fair Trade Show Booth Awards',
-  videoDuration: '1:59',
+  youtubeId:    'dQw4w9WgXcQ', // ← replace with your actual video ID
+  videoTitle:   'How to use Moduluxe Designer',
+  videoDuration: '5:21',
 
   // ── Floor sizes ────────────────────────────────────────────
   floorSizes: [
