@@ -325,6 +325,58 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       };
     }
 
+    // Pan camera so radial menu stays fully visible on screen
+    const PAN_MARGIN = 150; // px — radial menu radius + padding
+    const PAN_DUR    = 400; // ms
+    let panAnim = null;
+    function panCameraToShowMenu(sp) {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      let dx = 0, dy = 0;
+      if (sp.x - PAN_MARGIN < 0)        dx = sp.x - PAN_MARGIN;
+      if (sp.x + PAN_MARGIN > vw)       dx = sp.x + PAN_MARGIN - vw;
+      if (sp.y - PAN_MARGIN < 0)        dy = sp.y - PAN_MARGIN;
+      if (sp.y + PAN_MARGIN > vh)       dy = sp.y + PAN_MARGIN - vh;
+      if (dx === 0 && dy === 0) return;
+
+      // Convert screen delta to world-space pan delta
+      // Project two screen points to the ground plane (y=0) and get the difference
+      function screenToGround(sx, sy) {
+        const ndc = new THREE.Vector2(
+          (sx / window.innerWidth)  * 2 - 1,
+          -(sy / window.innerHeight) * 2 + 1
+        );
+        const ray = new THREE.Raycaster();
+        ray.setFromCamera(ndc, camera);
+        const plane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
+        const hit = new THREE.Vector3();
+        ray.ray.intersectPlane(plane, hit);
+        return hit;
+      }
+      const cx = vw / 2, cy = vh / 2;
+      const before = screenToGround(cx, cy);
+      const after  = screenToGround(cx + dx, cy + dy);
+      if (!before || !after) return;
+      const worldDelta = new THREE.Vector3().subVectors(after, before);
+
+      // Animate pan
+      const startTarget = controls.target.clone();
+      const startCamPos = camera.position.clone();
+      const endTarget   = startTarget.clone().sub(worldDelta);
+      const endCamPos   = startCamPos.clone().sub(worldDelta);
+      const startTime   = performance.now();
+      if (panAnim) cancelAnimationFrame(panAnim);
+      function doPan() {
+        const t = Math.min((performance.now() - startTime) / PAN_DUR, 1);
+        const e = t < 0.5 ? 2*t*t : -1+(4-2*t)*t; // ease in-out quad
+        camera.position.lerpVectors(startCamPos, endCamPos, e);
+        controls.target.lerpVectors(startTarget, endTarget, e);
+        controls.update();
+        if (t < 1) panAnim = requestAnimationFrame(doPan);
+      }
+      doPan();
+    }
+
     const onPointerDown = e => {
       if (e.button !== 0) return;
       const c = getHitContainer(e.clientX, e.clientY);
@@ -403,6 +455,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           if (c) {
             setOutlineVisible(c, true);
             const sp = project3D(c);
+            panCameraToShowMenu(sp);
             // Read current rotation and color from object
             const savedItem = itemsRef.current.find(i=>i.uid===selectedUid);
             onRadialMenuRef.current?.({
@@ -424,6 +477,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         if (c) {
           setOutlineVisible(c, true);
           const sp = project3D(c);
+          panCameraToShowMenu(sp);
           onRadialMenuRef.current?.({ x:sp.x, y:sp.y, uid:selectedUid, modelId:c.userData.modelId, initialRotY: c.rotation.y });
           const next = itemsRef.current.map(i =>
             i.uid === draggingUid ? { ...i, x: c.position.x, z: c.position.z } : i
@@ -776,3 +830,4 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
