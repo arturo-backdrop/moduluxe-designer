@@ -25,7 +25,7 @@ const BEHAVIOR_ICONS = {
 
 const FIXED_ACTIONS = [
   { id:'color',  icon:'ti-palette',           label:'Color',     hasProps:true,  size:42 },
-  { id:'rotate', icon:'ti-rotate-clockwise',  label:'Rotate',    hasProps:true,  size:42 },
+  { id:'rotate', icon:'ti-rotate-clockwise',  label:'Rotate',    hasProps:false, size:42 },
   { id:'dup',    icon:'ti-copy',              label:'Duplicate', hasProps:false, size:42 },
   { id:'del',    icon:'ti-trash',             label:'Delete',    hasProps:false, size:42 },
 ];
@@ -318,8 +318,13 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       el.addEventListener('click', e => {
         e.stopPropagation();
         if (!b.hasProps) {
-          if (b.id === 'del') { onAction?.('del'); triggerClose(); }
-          else { popScale(circle); onAction?.(b.id); }
+          if (b.id === 'del')    { onAction?.('del'); triggerClose(); }
+          else if (b.id === 'rotate') {
+            state.currentRotY += Math.PI / 2; // 90°
+            onAction?.('rotate', { rotY: state.currentRotY });
+            popScale(circle);
+          }
+          else if (b.id === 'dup') { popScale(circle); onAction?.('dup'); }
           return;
         }
         setActiveBtn(state.activeBtn===b.id ? null : b.id, circle);
