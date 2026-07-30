@@ -593,38 +593,46 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       onChangeRef.current?.(next);
     }
 
-    // Array — distribute copies in +X, keep as separate objects in same group
-    const arrayGroups = new Map(); // uid -> [cloneUids]
+    // Array — distribute copies in +X with gap between bounding boxes
+    const arrayGroups = new Map(); // sourceUid -> [cloneUids]
 
-    function applyArray(uid, count, spacing) {
+    function applyArray(uid, count, gap) {
       const source = itemGroup.children.find(x=>x.userData.uid===uid);
       if (!source) return;
 
-      // Remove previous array copies for this uid
+      // Remove previous clones for this uid
       const prevClones = arrayGroups.get(uid) || [];
       prevClones.forEach(cuid => {
         const c = itemGroup.children.find(x=>x.userData.uid===cuid);
         if (c) itemGroup.remove(c);
       });
 
-      // Get source size from bounding box
+      if (count <= 1) { arrayGroups.set(uid, []); return; }
+
+      // Get object width from bounding box
       source.updateWorldMatrix(true, true);
-      const box = new THREE.Box3().setFromObject(source);
+      const box  = new THREE.Box3().setFromObject(source);
       const objW = box.max.x - box.min.x;
-      const step  = objW + spacing;
+      const step = objW + gap; // center-to-center distance
+
+      // Direction based on object's Y rotation (+X local)
+      const rotY = source.rotation.y;
+      const dir  = new THREE.Vector3(Math.sin(rotY + Math.PI/2), 0, Math.cos(rotY + Math.PI/2));
 
       const newClones = [];
       for (let i = 1; i < count; i++) {
         const cuid = `${source.userData.modelId}_arr_${uid}_${i}`;
-        // Create copy at +X offset in local space
         const clone = source.clone(true);
-        clone.userData.uid     = cuid;
-        clone.userData.modelId = source.userData.modelId;
+        clone.userData.uid          = cuid;
+        clone.userData.modelId      = source.userData.modelId;
         clone.userData.isArrayClone = true;
-        // Position in world space using source rotation
-        const offset = new THREE.Vector3(step * i, 0, 0);
-        offset.applyEuler(source.rotation);
-        clone.position.copy(source.position).add(offset);
+        clone.userData.arrayParent  = uid;
+
+        clone.position.set(
+          source.position.x + dir.x * step * i,
+          source.position.y,
+          source.position.z + dir.z * step * i,
+        );
         clone.rotation.copy(source.rotation);
         itemGroup.add(clone);
         newClones.push(cuid);
@@ -635,15 +643,15 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       }
       arrayGroups.set(uid, newClones);
 
-      // Update React state — add clones as scene items
-      const sourceItem = itemsRef.current.find(i=>i.uid===uid);
-      const filtered   = itemsRef.current.filter(i=>!i.uid.startsWith(`${source.userData.modelId}_arr_${uid}_`));
-      const cloneItems = newClones.map((cuid, i) => {
-        const offset = new THREE.Vector3(step * (i+1), 0, 0).applyEuler(source.rotation);
-        return { uid: cuid, modelId: source.userData.modelId, count: 1,
-          x: source.position.x + offset.x, z: source.position.z + offset.z,
-          rotY: source.rotation.y, isArrayClone: true };
-      });
+      // Update React state
+      const filtered   = itemsRef.current.filter(i => !(i.isArrayClone && i.arrayParent === uid));
+      const cloneItems = newClones.map((cuid, i) => ({
+        uid: cuid, modelId: source.userData.modelId, count: 1,
+        x: source.position.x + dir.x * step * (i+1),
+        z: source.position.z + dir.z * step * (i+1),
+        rotY: source.rotation.y,
+        isArrayClone: true, arrayParent: uid,
+      }));
       onChangeRef.current?.([...filtered, ...cloneItems]);
     }
 
