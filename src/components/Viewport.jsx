@@ -327,44 +327,43 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
     // Pan camera so radial menu stays fully visible on screen
     const PAN_MARGIN = 150; // px — radial menu radius + padding
-    const PAN_DUR    = 400; // ms
+    const PAN_DUR    = 380; // ms
     let panAnim = null;
     function panCameraToShowMenu(sp) {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       let dx = 0, dy = 0;
-      if (sp.x - PAN_MARGIN < 0)        dx = sp.x - PAN_MARGIN;
-      if (sp.x + PAN_MARGIN > vw)       dx = sp.x + PAN_MARGIN - vw;
-      if (sp.y - PAN_MARGIN < 0)        dy = sp.y - PAN_MARGIN;
-      if (sp.y + PAN_MARGIN > vh)       dy = sp.y + PAN_MARGIN - vh;
+      if (sp.x - PAN_MARGIN < 0)   dx = sp.x - PAN_MARGIN;
+      if (sp.x + PAN_MARGIN > vw)  dx = sp.x + PAN_MARGIN - vw;
+      if (sp.y - PAN_MARGIN < 0)   dy = sp.y - PAN_MARGIN;
+      if (sp.y + PAN_MARGIN > vh)  dy = sp.y + PAN_MARGIN - vh;
       if (dx === 0 && dy === 0) return;
 
-      // Convert screen delta to world-space pan delta
-      // Project two screen points to the ground plane (y=0) and get the difference
-      function screenToGround(sx, sy) {
-        const ndc = new THREE.Vector2(
-          (sx / window.innerWidth)  * 2 - 1,
-          -(sy / window.innerHeight) * 2 + 1
-        );
-        const ray = new THREE.Raycaster();
-        ray.setFromCamera(ndc, camera);
-        const plane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
-        const hit = new THREE.Vector3();
-        ray.ray.intersectPlane(plane, hit);
-        return hit;
-      }
-      const cx = vw / 2, cy = vh / 2;
-      const before = screenToGround(cx, cy);
-      const after  = screenToGround(cx + dx, cy + dy);
-      if (!before || !after) return;
-      const worldDelta = new THREE.Vector3().subVectors(after, before);
+      // Convert pixel delta → world-space delta using camera right & up vectors
+      // Same approach OrbitControls uses internally for panning
+      const dist = camera.position.distanceTo(controls.target);
+      const fovRad = camera.fov * Math.PI / 180;
+      // world units per pixel at the target distance
+      const unitsPerPx = 2 * Math.tan(fovRad / 2) * dist / vh;
 
-      // Animate pan
+      const right = new THREE.Vector3();
+      const up    = new THREE.Vector3();
+      camera.getWorldDirection(up); // temp
+      right.crossVectors(up, camera.up).normalize();
+      camera.getWorldDirection(up);
+      up.crossVectors(right, up).normalize(); // true screen-up in world space
+
+      // dx pixels right → move target right; dy pixels down → move target down
+      const worldDelta = new THREE.Vector3()
+        .addScaledVector(right, dx * unitsPerPx)
+        .addScaledVector(up,   -dy * unitsPerPx);
+
       const startTarget = controls.target.clone();
       const startCamPos = camera.position.clone();
-      const endTarget   = startTarget.clone().sub(worldDelta);
-      const endCamPos   = startCamPos.clone().sub(worldDelta);
+      const endTarget   = startTarget.clone().add(worldDelta);
+      const endCamPos   = startCamPos.clone().add(worldDelta);
       const startTime   = performance.now();
+
       if (panAnim) cancelAnimationFrame(panAnim);
       function doPan() {
         const t = Math.min((performance.now() - startTime) / PAN_DUR, 1);
@@ -830,4 +829,5 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
