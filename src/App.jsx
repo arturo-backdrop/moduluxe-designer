@@ -124,6 +124,7 @@ export default function App() {
     setHistoryIdx(0);
     setMode('place');
     setActiveTool('select');
+    setRadialMenu(null);
     setOnboardingDone(false);
   }, [sceneItems]);
 
