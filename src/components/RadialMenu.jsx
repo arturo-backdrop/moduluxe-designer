@@ -2,8 +2,8 @@ import React, { useEffect, useRef } from 'react';
 
 // ── Config (identical to prototype) ──────────────────────────
 const CFG = {
-  baseRadius:           90,
-  radiusPerBtn:         8,
+  baseRadius:           65,
+  radiusPerBtn:         5,
   radiusSpeed:          0.13,
   closeAnimDuration:    280,
   closeMinScale:        0.3,
@@ -451,3 +451,4 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       onClick={e=>e.stopPropagation()} />
   );
 }
+
