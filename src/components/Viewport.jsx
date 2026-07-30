@@ -593,7 +593,61 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       onChangeRef.current?.(next);
     }
 
-    engRef.current = { itemGroup, spawnContainer, pendingPositions, project3D, camera, selectedUidRef: { current: null }, deleteContainer, rotateObject, applyColor, duplicateObject };
+    // Array — distribute copies in +X, keep as separate objects in same group
+    const arrayGroups = new Map(); // uid -> [cloneUids]
+
+    function applyArray(uid, count, spacing) {
+      const source = itemGroup.children.find(x=>x.userData.uid===uid);
+      if (!source) return;
+
+      // Remove previous array copies for this uid
+      const prevClones = arrayGroups.get(uid) || [];
+      prevClones.forEach(cuid => {
+        const c = itemGroup.children.find(x=>x.userData.uid===cuid);
+        if (c) itemGroup.remove(c);
+      });
+
+      // Get source size from bounding box
+      source.updateWorldMatrix(true, true);
+      const box = new THREE.Box3().setFromObject(source);
+      const objW = box.max.x - box.min.x;
+      const step  = objW + spacing;
+
+      const newClones = [];
+      for (let i = 1; i < count; i++) {
+        const cuid = `${source.userData.modelId}_arr_${uid}_${i}`;
+        // Create copy at +X offset in local space
+        const clone = source.clone(true);
+        clone.userData.uid     = cuid;
+        clone.userData.modelId = source.userData.modelId;
+        clone.userData.isArrayClone = true;
+        // Position in world space using source rotation
+        const offset = new THREE.Vector3(step * i, 0, 0);
+        offset.applyEuler(source.rotation);
+        clone.position.copy(source.position).add(offset);
+        clone.rotation.copy(source.rotation);
+        itemGroup.add(clone);
+        newClones.push(cuid);
+
+        // Spawn animation
+        clone.scale.set(0.01, 0.01, 0.01);
+        spawnAnims.push({ container: clone, startTime: performance.now() });
+      }
+      arrayGroups.set(uid, newClones);
+
+      // Update React state — add clones as scene items
+      const sourceItem = itemsRef.current.find(i=>i.uid===uid);
+      const filtered   = itemsRef.current.filter(i=>!i.uid.startsWith(`${source.userData.modelId}_arr_${uid}_`));
+      const cloneItems = newClones.map((cuid, i) => {
+        const offset = new THREE.Vector3(step * (i+1), 0, 0).applyEuler(source.rotation);
+        return { uid: cuid, modelId: source.userData.modelId, count: 1,
+          x: source.position.x + offset.x, z: source.position.z + offset.z,
+          rotY: source.rotation.y, isArrayClone: true };
+      });
+      onChangeRef.current?.([...filtered, ...cloneItems]);
+    }
+
+    engRef.current = { itemGroup, spawnContainer, pendingPositions, project3D, camera, selectedUidRef: { current: null }, deleteContainer, rotateObject, applyColor, duplicateObject, applyArray };
     if (externalEngRef) externalEngRef.current = engRef.current;
 
     // ── Zoom from toolbar ──────────────────────────────────────

@@ -24,6 +24,7 @@ const BEHAVIOR_ICONS = {
 };
 
 const FIXED_ACTIONS = [
+  { id:'array',  icon:'ti-layout-columns',    label:'Array',     hasProps:true,  size:42 },
   { id:'color',  icon:'ti-palette',           label:'Color',     hasProps:true,  size:42 },
   { id:'rotate', icon:'ti-rotate-clockwise',  label:'Rotate',    hasProps:false, size:42 },
   { id:'dup',    icon:'ti-copy',              label:'Duplicate', hasProps:false, size:42 },
@@ -46,21 +47,43 @@ const PRESET_COLORS = [
   '#4a7c5e','#8b4a6b','#d4a843','#6b6b6b','#1a3a5c',
 ];
 
-function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentColor='#3a6ea5', currentRotY=0) {
-  if (!activeBtnId) return `
-    <div style="font-size:9px;color:#999;">${modelName}</div>`;
+function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentColor='#3a6ea5', currentRotY=0, arrayState={count:1,spacing:0.1}, units='ft') {
+  const UNITS_MAP = { m:{label:'m',factor:1}, ft:{label:'ft',factor:3.28084}, cm:{label:'cm',factor:100}, inch:{label:'in',factor:39.3701} };
+  const u = UNITS_MAP[units] || UNITS_MAP.m;
+  const spacingDisplay = (arrayState.spacing * u.factor).toFixed(units==='m'?2:1);
 
-  const btn = buttons.find(b=>b.id===activeBtnId);
+  if (!activeBtnId) return `<div style="font-size:9px;color:#999;">${modelName}</div>`;
+
+  if (activeBtnId === 'array') return `
+    <div style="font-size:9px;color:#999;margin-bottom:6px;">${modelName}</div>
+    <div style="font-weight:900;font-size:12px;color:#1a1a1a;margin-bottom:8px;">Array</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div>
+        <div style="font-size:9px;color:#999;margin-bottom:4px;">Count</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button id="rm_arr_dec" style="width:26px;height:26px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;">&#8722;</button>
+          <span id="rm_arr_count" style="font-weight:900;font-size:20px;color:#1a1a1a;min-width:24px;text-align:center;">${arrayState.count}</span>
+          <button id="rm_arr_inc" style="width:26px;height:26px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;">+</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:9px;color:#999;margin-bottom:4px;">Spacing (${u.label})</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button id="rm_sp_dec" style="width:26px;height:26px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;">&#8722;</button>
+          <span id="rm_sp_val" style="font-weight:900;font-size:16px;color:#1a1a1a;min-width:32px;text-align:center;">${spacingDisplay}</span>
+          <button id="rm_sp_inc" style="width:26px;height:26px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;">+</button>
+        </div>
+      </div>
+    </div>`;
 
   if (activeBtnId === 'rotate') return `
     <div style="font-size:9px;color:#999;margin-bottom:4px;">${modelName}</div>
     <div style="font-weight:900;font-size:12px;color:#1a1a1a;margin-bottom:8px;">Rotate</div>
     <div style="display:flex;align-items:center;gap:8px;">
-      <button id="rm_rot_left"  style="width:32px;height:32px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;">↺</button>
-      <div id="rm_rot_val" style="font-weight:900;font-size:14px;color:#1a1a1a;min-width:44px;text-align:center;">${Math.round(currentRotY * 180/Math.PI)}°</div>
-      <button id="rm_rot_right" style="width:32px;height:32px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;">↻</button>
-    </div>
-    <div style="font-size:9px;color:#bbb;margin-top:6px;">45° increments</div>`;
+      <button id="rm_rot_left"  style="width:32px;height:32px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;">&#8635;</button>
+      <div id="rm_rot_val" style="font-weight:900;font-size:14px;color:#1a1a1a;min-width:44px;text-align:center;">${Math.round(currentRotY * 180/Math.PI)}&#176;</div>
+      <button id="rm_rot_right" style="width:32px;height:32px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;">&#8634;</button>
+    </div>`;
 
   if (activeBtnId === 'color') return `
     <div style="font-size:9px;color:#999;margin-bottom:6px;">${modelName}</div>
@@ -79,6 +102,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
       <span style="font-size:9px;color:#999;">Custom</span>
     </div>`;
 
+  const btn = buttons.find(b=>b.id===activeBtnId);
   if (!btn?.socket) return `<div style="font-size:9px;color:#999;">${modelName}</div>`;
   const s = btn.socket, state = socketStates[s.name] || s.state || {};
 
@@ -100,7 +124,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
       <div style="font-size:9px;color:#999;margin-bottom:4px;">${modelName}</div>
       <div style="font-weight:900;font-size:12px;color:#1a1a1a;">${s.label}</div>
       <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
-        <button id="rm_dec_${s.name}" style="width:26px;height:26px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;">−</button>
+        <button id="rm_dec_${s.name}" style="width:26px;height:26px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;">&#8722;</button>
         <span id="rm_count_${s.name}" style="font-weight:900;font-size:22px;color:#1a1a1a;">${count}</span>
         <button id="rm_inc_${s.name}" style="width:26px;height:26px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;">+</button>
       </div>`;
@@ -108,8 +132,9 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
   return `<div style="font-size:9px;color:#999;">${modelName}</div>`;
 }
 
+
 // ── React wrapper — pure DOM inside ──────────────────────────
-export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onClose, wrapperRef, initialColor='#3a6ea5', initialRotY=0 }) {
+export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onClose, wrapperRef, initialColor='#3a6ea5', initialRotY=0, units='ft' }) {
   const rootRef     = useRef(null);
   const stateRef    = useRef({
     open:false, closing:false, activeBtn:null,
@@ -118,6 +143,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
     buttons:[], btnEls:{}, circleEls:{}, cardEl:null,
     currentColor: initialColor,
     currentRotY:  initialRotY,
+    arrayState: { count: 1, spacing: 0.1 },
     socketStates: Object.fromEntries(sockets.map(s=>[s.name,{...(s.state||{})}])),
   });
 
@@ -188,7 +214,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       cancelAnimationFrame(state.radiusRaf);
       animateRadius();
       if (state.cardEl) {
-        state.cardEl.innerHTML = buildCardHTML(modelName, state.activeBtn, state.buttons, state.socketStates, state.currentColor, state.currentRotY);
+        state.cardEl.innerHTML = buildCardHTML(modelName, state.activeBtn, state.buttons, state.socketStates, state.currentColor, state.currentRotY, state.arrayState, units);
         bindCardEvents();
       }
       Object.entries(state.circleEls).forEach(([btnId, cel]) => {
@@ -207,13 +233,42 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
 
     function refreshCard() {
       if (state.cardEl) {
-        state.cardEl.innerHTML = buildCardHTML(modelName, state.activeBtn, state.buttons, state.socketStates, state.currentColor, state.currentRotY);
+        state.cardEl.innerHTML = buildCardHTML(modelName, state.activeBtn, state.buttons, state.socketStates, state.currentColor, state.currentRotY, state.arrayState, units);
         bindCardEvents();
       }
     }
 
     function bindCardEvents() {
-      // Rotate
+      // Array
+      const UNITS_MAP = { m:{factor:1}, ft:{factor:3.28084}, cm:{factor:100}, inch:{factor:39.3701} };
+      const uf = UNITS_MAP[units]?.factor || 1;
+      const SPACING_STEP = 1 / uf; // 1 unit in meters
+
+      const arrDec = document.getElementById('rm_arr_dec');
+      const arrInc = document.getElementById('rm_arr_inc');
+      const spDec  = document.getElementById('rm_sp_dec');
+      const spInc  = document.getElementById('rm_sp_inc');
+
+      if (arrDec) arrDec.onclick = () => {
+        state.arrayState.count = Math.max(1, state.arrayState.count - 1);
+        onAction?.('array', { ...state.arrayState });
+        refreshCard();
+      };
+      if (arrInc) arrInc.onclick = () => {
+        state.arrayState.count = Math.min(20, state.arrayState.count + 1);
+        onAction?.('array', { ...state.arrayState });
+        refreshCard();
+      };
+      if (spDec) spDec.onclick = () => {
+        state.arrayState.spacing = Math.max(0, parseFloat((state.arrayState.spacing - SPACING_STEP).toFixed(4)));
+        onAction?.('array', { ...state.arrayState });
+        refreshCard();
+      };
+      if (spInc) spInc.onclick = () => {
+        state.arrayState.spacing = parseFloat((state.arrayState.spacing + SPACING_STEP).toFixed(4));
+        onAction?.('array', { ...state.arrayState });
+        refreshCard();
+      };
       const rotLeft  = document.getElementById('rm_rot_left');
       const rotRight = document.getElementById('rm_rot_right');
       if (rotLeft) rotLeft.onclick = () => {
@@ -279,7 +334,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       display:flex;flex-direction:column;align-items:center;gap:5px;
       font-family:Figtree,sans-serif;cursor:default;z-index:10;
       opacity:0;transition:opacity 0.22s ease, transform 0.25s cubic-bezier(0.34,1.2,0.64,1);`;
-    card.innerHTML = buildCardHTML(modelName, null, state.buttons, state.socketStates, state.currentColor, state.currentRotY);
+    card.innerHTML = buildCardHTML(modelName, null, state.buttons, state.socketStates, state.currentColor, state.currentRotY, state.arrayState, units);
     root.appendChild(card);
     state.cardEl = card;
 
@@ -302,7 +357,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
 
       const label = document.createElement('span');
       label.textContent = b.label;
-      label.style.cssText = `font-family:Figtree,sans-serif;font-weight:500;font-size:9px;color:#999;white-space:nowrap;`;
+      label.style.cssText = `font-family:Figtree,sans-serif;font-weight:500;font-size:9px;color:white;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,0.4);`;
 
       el.appendChild(circle);
       el.appendChild(label);

@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { CONFIG } from './config.js';
 import { useAutoSave, loadSavedProject, clearSavedProject } from './hooks/useAutoSave.js';
 import { loadModel } from './three/glbParser.js';
+import { toDisplay, fromDisplay } from './units.js';
 
 import Onboarding  from './components/Onboarding.jsx';
 import Viewport    from './components/Viewport.jsx';
@@ -37,7 +38,7 @@ export default function App() {
   const [sceneItems,     setSceneItems]     = useState(DEFAULT_STATE.sceneItems);
   const [mode,           setMode]           = useState(DEFAULT_STATE.mode);
   const [activeTool,     setActiveTool]     = useState(DEFAULT_STATE.activeTool);
-  const [radialMenu, setRadialMenu] = useState(null);
+  const [units, setUnits] = useState('ft'); // m | ft | cm | inch
   const radialMenuWrapperRef = useRef(null);
   const viewportEngRef       = useRef(null);
   const [history,        setHistory]        = useState([[]]);
@@ -190,6 +191,8 @@ export default function App() {
           onUndo={undo}
           onRedo={redo}
           onNew={handleNew}
+          units={units}
+          onUnitsChange={setUnits}
         />
         <Sidebar
           config={CONFIG}
@@ -212,6 +215,7 @@ export default function App() {
                 modelName={item?.name || radialMenu.modelId}
                 sockets={sockets}
                 accentColor={CONFIG.accentColor}
+                units={units}
                 initialRotY={radialMenu.initialRotY || 0}
                 initialColor={radialMenu.initialColor || '#3a6ea5'}
                 wrapperRef={radialMenuWrapperRef}
@@ -232,6 +236,8 @@ export default function App() {
                     setSceneItems(prev => prev.map(i =>
                       i.uid === radialMenu.uid ? { ...i, color: data.color } : i
                     ));
+                  } else if (action === 'array') {
+                    viewportEngRef.current?.applyArray(radialMenu.uid, data.count, data.spacing);
                   } else if (action === 'dup') {
                     viewportEngRef.current?.duplicateObject(radialMenu.uid);
                   }
