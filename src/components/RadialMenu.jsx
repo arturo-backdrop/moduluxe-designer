@@ -343,7 +343,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       const el = document.createElement('div');
       el.style.cssText = `position:absolute;left:0;top:0;transform:translate(-50%,-50%);
         display:flex;flex-direction:column;align-items:center;gap:3px;
-        cursor:pointer;opacity:0;z-index:1;`;
+        cursor:pointer;opacity:0;z-index:1;transition:left 0s, top 0s;`;
 
       const circle = document.createElement('div');
       circle.style.cssText = `width:${b.size}px;height:${b.size}px;border-radius:50%;
@@ -407,6 +407,14 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       }, 60 + i*35);
     });
 
+    // Enable smooth nudge transition after open animation completes
+    const nudgeDelay = 60 + state.buttons.length * 35 + 80;
+    setTimeout(() => {
+      Object.values(state.btnEls).forEach(el => {
+        if (el) el.style.transition = 'left 0.22s cubic-bezier(0.34,1.1,0.64,1), top 0.22s cubic-bezier(0.34,1.1,0.64,1)';
+      });
+    }, nudgeDelay);
+
     // ── Close animation ───────────────────────────────────
     function triggerClose() {
       if (state.closing) return;
@@ -451,4 +459,5 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       onClick={e=>e.stopPropagation()} />
   );
 }
+
 
