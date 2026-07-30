@@ -325,35 +325,43 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       };
     }
 
-    // Pan camera so radial menu stays fully visible on screen
-    const PAN_MARGIN = 150; // px — radial menu radius + padding
-    const PAN_DUR    = 380; // ms
+    // Pan camera so radial menu stays fully visible inside the usable viewport
+    // (accounting for sidebar, quote panel, header, bottom bar)
+    const PAN_DUR = 520; // ms — slower = smoother feel
+    const SAFE_AREA = {
+      left:   350, // sidebar panel (260) + toolbar (~48) + gaps
+      right:  260, // quote panel min-width + margin
+      top:    110, // header pill + margin
+      bottom: 110, // bottom bar + margin
+    };
+    const MENU_RADIUS = 140; // px — radial menu radius + small padding
     let panAnim = null;
     function panCameraToShowMenu(sp) {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
+      const minX = SAFE_AREA.left   + MENU_RADIUS;
+      const maxX = vw - SAFE_AREA.right  - MENU_RADIUS;
+      const minY = SAFE_AREA.top    + MENU_RADIUS;
+      const maxY = vh - SAFE_AREA.bottom - MENU_RADIUS;
+
       let dx = 0, dy = 0;
-      if (sp.x - PAN_MARGIN < 0)   dx = sp.x - PAN_MARGIN;
-      if (sp.x + PAN_MARGIN > vw)  dx = sp.x + PAN_MARGIN - vw;
-      if (sp.y - PAN_MARGIN < 0)   dy = sp.y - PAN_MARGIN;
-      if (sp.y + PAN_MARGIN > vh)  dy = sp.y + PAN_MARGIN - vh;
+      if (sp.x < minX) dx = sp.x - minX;
+      if (sp.x > maxX) dx = sp.x - maxX;
+      if (sp.y < minY) dy = sp.y - minY;
+      if (sp.y > maxY) dy = sp.y - maxY;
       if (dx === 0 && dy === 0) return;
 
-      // Convert pixel delta → world-space delta using camera right & up vectors
-      // Same approach OrbitControls uses internally for panning
+      // Convert pixel delta → world-space using camera right & up vectors
       const dist = camera.position.distanceTo(controls.target);
       const fovRad = camera.fov * Math.PI / 180;
-      // world units per pixel at the target distance
       const unitsPerPx = 2 * Math.tan(fovRad / 2) * dist / vh;
 
       const right = new THREE.Vector3();
-      const up    = new THREE.Vector3();
-      camera.getWorldDirection(up); // temp
-      right.crossVectors(up, camera.up).normalize();
-      camera.getWorldDirection(up);
-      up.crossVectors(right, up).normalize(); // true screen-up in world space
+      const forward = new THREE.Vector3();
+      camera.getWorldDirection(forward);
+      right.crossVectors(forward, camera.up).normalize();
+      const up = new THREE.Vector3().crossVectors(right, forward).normalize();
 
-      // dx pixels right → move target right; dy pixels down → move target down
       const worldDelta = new THREE.Vector3()
         .addScaledVector(right, dx * unitsPerPx)
         .addScaledVector(up,   -dy * unitsPerPx);
@@ -367,7 +375,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       if (panAnim) cancelAnimationFrame(panAnim);
       function doPan() {
         const t = Math.min((performance.now() - startTime) / PAN_DUR, 1);
-        const e = t < 0.5 ? 2*t*t : -1+(4-2*t)*t; // ease in-out quad
+        // Cubic ease in-out: smooth start and end
+        const e = t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3) / 2;
         camera.position.lerpVectors(startCamPos, endCamPos, e);
         controls.target.lerpVectors(startTarget, endTarget, e);
         controls.update();
