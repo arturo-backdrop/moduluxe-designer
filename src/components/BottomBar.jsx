@@ -45,6 +45,19 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel, 
   const viewportRef = useRef(null);
   const trackRef    = useRef(null);
 
+  // Group sceneItems by modelId, summing count
+  const groupedItems = React.useMemo(() => {
+    const map = new Map();
+    sceneItems.forEach(item => {
+      if (map.has(item.modelId)) {
+        map.get(item.modelId).count += (item.count || 1);
+      } else {
+        map.set(item.modelId, { modelId: item.modelId, count: item.count || 1 });
+      }
+    });
+    return Array.from(map.values());
+  }, [sceneItems]);
+
   // Reset selection when items change
   useEffect(() => {
     if (sceneItems.length === 0) setSelectedId(null);
@@ -55,7 +68,7 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel, 
     viewportRef.current?.offsetWidth || 0, []);
 
   const maxOffset = useCallback(() =>
-    Math.max(0, sceneItems.length * CARD_W - viewportWidth()), [sceneItems.length, viewportWidth]);
+    Math.max(0, groupedItems.length * CARD_W - viewportWidth()), [groupedItems.length, viewportWidth]);
 
   const shiftScroll = useCallback((dir) => {
     setScrollOffset(prev => {
@@ -64,16 +77,16 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel, 
     });
   }, [maxOffset]);
 
-  // Auto-scroll to newly added item
+  // Auto-scroll to newly added model type
   useEffect(() => {
-    if (sceneItems.length === 0) return;
-    const lastIdx    = sceneItems.length - 1;
+    if (groupedItems.length === 0) return;
+    const lastIdx    = groupedItems.length - 1;
     const cardOffset = lastIdx * CARD_W;
     const vw         = viewportWidth();
     if (cardOffset + CARD_W > scrollOffset + vw) {
       setScrollOffset(Math.max(0, cardOffset + CARD_W - vw));
     }
-  }, [sceneItems.length]);
+  }, [groupedItems.length]);
 
   // Apply scroll to track
   useEffect(() => {
@@ -108,13 +121,13 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel, 
         </button>
 
         <div className={styles.cardsViewport} ref={viewportRef}>
-          {sceneItems.length === 0 ? (
+          {groupedItems.length === 0 ? (
             <div className={styles.emptyMsg}>
               Drag products from the catalog to start building your booth
             </div>
           ) : (
             <div className={styles.cardsTrack} ref={trackRef}>
-              {sceneItems.map(item => (
+              {groupedItems.map(item => (
                 <ProductCard
                   key={item.modelId}
                   item={item}
@@ -140,3 +153,4 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel, 
     </div>
   );
 }
+
