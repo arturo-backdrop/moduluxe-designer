@@ -58,7 +58,7 @@ export const CONFIG = {
   // ── Video tutorial ─────────────────────────────────────────
   // Leave null to hide the video widget entirely
   youtubeId:    'fQNPDMpov2M', // ← replace with your actual video ID
-  videoTitle:   'How to use Moduluxe Designer',
+  videoTitle:   'NY Toy Fair Awards',
   videoDuration: '5:21',
 
   // ── Floor sizes ────────────────────────────────────────────
