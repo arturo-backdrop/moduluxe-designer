@@ -219,6 +219,18 @@ export default function App() {
                       setSceneItems(prev => prev.filter(i => i.uid !== radialMenu.uid));
                     }, 380);
                     setRadialMenu(null);
+                  } else if (action === 'rotate') {
+                    viewportEngRef.current?.rotateObject(radialMenu.uid, data.rotY);
+                    setSceneItems(prev => prev.map(i =>
+                      i.uid === radialMenu.uid ? { ...i, rotY: data.rotY } : i
+                    ));
+                  } else if (action === 'color') {
+                    viewportEngRef.current?.applyColor(radialMenu.uid, data.color);
+                    setSceneItems(prev => prev.map(i =>
+                      i.uid === radialMenu.uid ? { ...i, color: data.color } : i
+                    ));
+                  } else if (action === 'dup') {
+                    viewportEngRef.current?.duplicateObject(radialMenu.uid);
                   }
                 }}
                 onClose={() => setRadialMenu(null)}

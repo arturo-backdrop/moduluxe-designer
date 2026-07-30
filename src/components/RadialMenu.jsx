@@ -24,9 +24,10 @@ const BEHAVIOR_ICONS = {
 };
 
 const FIXED_ACTIONS = [
-  { id:'rotate', icon:'ti-rotate-clockwise', label:'Rotate',    hasProps:false, size:42 },
-  { id:'dup',    icon:'ti-copy',             label:'Duplicate', hasProps:false, size:42 },
-  { id:'del',    icon:'ti-trash',            label:'Delete',    hasProps:false, size:42 },
+  { id:'color',  icon:'ti-palette',           label:'Color',     hasProps:true,  size:42 },
+  { id:'rotate', icon:'ti-rotate-clockwise',  label:'Rotate',    hasProps:true,  size:42 },
+  { id:'dup',    icon:'ti-copy',              label:'Duplicate', hasProps:false, size:42 },
+  { id:'del',    icon:'ti-trash',             label:'Delete',    hasProps:false, size:42 },
 ];
 
 function buildButtons(sockets=[]) {
@@ -40,12 +41,45 @@ function buildButtons(sockets=[]) {
 
 function angleDiff(a,b) { let d=((b-a)+180)%360-180; return d<-180?d+360:d; }
 
-function buildCardHTML(modelName, activeBtnId, buttons, socketStates) {
+const PRESET_COLORS = [
+  '#3a6ea5','#e8e0d0','#2d2d2d','#ffffff','#c4622d',
+  '#4a7c5e','#8b4a6b','#d4a843','#6b6b6b','#1a3a5c',
+];
+
+function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentColor='#3a6ea5', currentRotY=0) {
   if (!activeBtnId) return `
     <div style="font-size:9px;color:#999;margin-bottom:4px;">${modelName}</div>
     <div style="font-weight:900;font-size:13px;color:#1a1a1a;margin-top:4px;">Object</div>`;
 
   const btn = buttons.find(b=>b.id===activeBtnId);
+
+  if (activeBtnId === 'rotate') return `
+    <div style="font-size:9px;color:#999;margin-bottom:4px;">${modelName}</div>
+    <div style="font-weight:900;font-size:12px;color:#1a1a1a;margin-bottom:8px;">Rotate</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button id="rm_rot_left"  style="width:32px;height:32px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;">↺</button>
+      <div id="rm_rot_val" style="font-weight:900;font-size:14px;color:#1a1a1a;min-width:44px;text-align:center;">${Math.round(currentRotY * 180/Math.PI)}°</div>
+      <button id="rm_rot_right" style="width:32px;height:32px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;">↻</button>
+    </div>
+    <div style="font-size:9px;color:#bbb;margin-top:6px;">45° increments</div>`;
+
+  if (activeBtnId === 'color') return `
+    <div style="font-size:9px;color:#999;margin-bottom:6px;">${modelName}</div>
+    <div style="font-weight:900;font-size:12px;color:#1a1a1a;margin-bottom:8px;">Color</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center;max-width:120px;">
+      ${PRESET_COLORS.map(c=>`
+        <div id="rm_color_${c.replace('#','')}" data-color="${c}"
+          style="width:20px;height:20px;border-radius:50%;background:${c};cursor:pointer;
+          border:2px solid ${c===currentColor?'#1a1a1a':'transparent'};
+          transform:scale(${c===currentColor?1.15:1});transition:transform 0.15s;"></div>
+      `).join('')}
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;margin-top:8px;">
+      <input id="rm_color_custom" type="color" value="${currentColor}"
+        style="width:24px;height:24px;border:none;border-radius:4px;cursor:pointer;padding:0;">
+      <span style="font-size:9px;color:#999;">Custom</span>
+    </div>`;
+
   if (!btn?.socket) return `<div style="font-size:9px;color:#999;">${modelName}</div>`;
   const s = btn.socket, state = socketStates[s.name] || s.state || {};
 
@@ -76,13 +110,15 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates) {
 }
 
 // ── React wrapper — pure DOM inside ──────────────────────────
-export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onClose, wrapperRef }) {
+export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onClose, wrapperRef, initialColor='#3a6ea5', initialRotY=0 }) {
   const rootRef     = useRef(null);
   const stateRef    = useRef({
     open:false, closing:false, activeBtn:null,
     currentR:0, targetR:0,
     radiusRaf:null, closeTimeout:null,
     buttons:[], btnEls:{}, circleEls:{}, cardEl:null,
+    currentColor: initialColor,
+    currentRotY:  initialRotY,
     socketStates: Object.fromEntries(sockets.map(s=>[s.name,{...(s.state||{})}])),
   });
 
@@ -152,12 +188,10 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       state.targetR   = getRadius(id);
       cancelAnimationFrame(state.radiusRaf);
       animateRadius();
-      // Update card content
       if (state.cardEl) {
-        state.cardEl.innerHTML = buildCardHTML(modelName, state.activeBtn, state.buttons, state.socketStates);
+        state.cardEl.innerHTML = buildCardHTML(modelName, state.activeBtn, state.buttons, state.socketStates, state.currentColor, state.currentRotY);
         bindCardEvents();
       }
-      // Update active circle styles
       Object.entries(state.circleEls).forEach(([btnId, cel]) => {
         if (!cel) return;
         cel.style.background = btnId === id ? ACCENT : 'white';
@@ -172,19 +206,54 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       return active ? base+20 : base;
     }
 
+    function refreshCard() {
+      if (state.cardEl) {
+        state.cardEl.innerHTML = buildCardHTML(modelName, state.activeBtn, state.buttons, state.socketStates, state.currentColor, state.currentRotY);
+        bindCardEvents();
+      }
+    }
+
     function bindCardEvents() {
-      // Toggle
+      // Rotate
+      const rotLeft  = document.getElementById('rm_rot_left');
+      const rotRight = document.getElementById('rm_rot_right');
+      if (rotLeft) rotLeft.onclick = () => {
+        state.currentRotY -= Math.PI/4;
+        onAction?.('rotate', { rotY: state.currentRotY });
+        refreshCard();
+      };
+      if (rotRight) rotRight.onclick = () => {
+        state.currentRotY += Math.PI/4;
+        onAction?.('rotate', { rotY: state.currentRotY });
+        refreshCard();
+      };
+
+      // Color presets
+      PRESET_COLORS.forEach(c => {
+        const el = document.getElementById(`rm_color_${c.replace('#','')}`);
+        if (el) el.onclick = () => {
+          state.currentColor = c;
+          onAction?.('color', { color: c });
+          refreshCard();
+        };
+      });
+      // Custom color
+      const customInput = document.getElementById('rm_color_custom');
+      if (customInput) customInput.oninput = () => {
+        state.currentColor = customInput.value;
+        onAction?.('color', { color: customInput.value });
+      };
+
+      // Socket toggles
       state.buttons.forEach(b => {
         if (!b.socket) return;
         const s = b.socket;
         const toggle = document.getElementById(`rm_toggle_${s.name}`);
-        if (toggle) {
-          toggle.onclick = () => {
-            state.socketStates[s.name] = { ...state.socketStates[s.name], on: !state.socketStates[s.name].on };
-            onAction?.('socket', { name:s.name, state:state.socketStates[s.name] });
-            if (state.cardEl) { state.cardEl.innerHTML = buildCardHTML(modelName, state.activeBtn, state.buttons, state.socketStates); bindCardEvents(); }
-          };
-        }
+        if (toggle) toggle.onclick = () => {
+          state.socketStates[s.name] = { ...state.socketStates[s.name], on: !state.socketStates[s.name].on };
+          onAction?.('socket', { name:s.name, state:state.socketStates[s.name] });
+          refreshCard();
+        };
         const dec = document.getElementById(`rm_dec_${s.name}`);
         const inc = document.getElementById(`rm_inc_${s.name}`);
         if (dec) dec.onclick = () => {
@@ -211,7 +280,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       display:flex;flex-direction:column;align-items:center;gap:5px;
       font-family:Figtree,sans-serif;cursor:default;z-index:10;
       opacity:0;transition:opacity 0.22s ease, transform 0.25s cubic-bezier(0.34,1.2,0.64,1);`;
-    card.innerHTML = buildCardHTML(modelName, null, state.buttons, state.socketStates);
+    card.innerHTML = buildCardHTML(modelName, null, state.buttons, state.socketStates, state.currentColor, state.currentRotY);
     root.appendChild(card);
     state.cardEl = card;
 

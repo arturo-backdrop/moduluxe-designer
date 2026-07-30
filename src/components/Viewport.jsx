@@ -487,15 +487,24 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       spawnAnims.push({ container, startTime: performance.now() });
 
       // Load real GLB if available
+      function createObj(root) {
+        root.userData.uid     = uid;
+        root.userData.modelId = modelId;
+        root.traverse(c => { if (c.isMesh) { c.castShadow=c.receiveShadow=true; } });
+        applyPaintColor(root, def?.color);
+        container.remove(ph);
+        container.add(root);
+        attachOutlines(root);
+        // Restore saved state
+        const saved = itemsRef.current.find(i=>i.uid===uid);
+        if (saved?.rotY) container.rotation.y = saved.rotY;
+        if (saved?.color) applyColor(uid, saved.color);
+      }
+
       if (def?.file) {
         loadModel(def.file).then(original => {
           if (!itemGroup.children.includes(container)) return;
-          const root = original.clone(true);
-          root.traverse(c => { if (c.isMesh) { c.castShadow=c.receiveShadow=true; } });
-          applyPaintColor(root, def.color);
-          container.remove(ph);
-          container.add(root);
-          attachOutlines(root);
+          createObj(original.clone(true));
         }).catch(err => console.warn('GLB load failed:', err));
       }
 
@@ -529,7 +538,36 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       requestAnimationFrame(animPop);
     }
 
-    engRef.current = { itemGroup, spawnContainer, pendingPositions, project3D, camera, selectedUidRef: { current: null }, deleteContainer };
+    function rotateObject(uid, rotY) {
+      const c = itemGroup.children.find(x=>x.userData.uid===uid);
+      if (c) c.rotation.y = rotY;
+    }
+
+    function applyColor(uid, color) {
+      const c = itemGroup.children.find(x=>x.userData.uid===uid);
+      if (!c) return;
+      c.traverse(child => {
+        if (!child.isMesh || !child.material || child.userData.isMeta) return;
+        const mats = Array.isArray(child.material) ? child.material : [child.material];
+        mats.forEach(mat => {
+          if (mat.name === 'paint_color' || !c.userData.hasPaintColor) {
+            mat.color.set(color);
+          }
+        });
+      });
+    }
+
+    function duplicateObject(uid) {
+      const c = itemGroup.children.find(x=>x.userData.uid===uid);
+      if (!c) return;
+      const newUid = `${c.userData.modelId}_${Date.now()}`;
+      const offset = 1.5;
+      spawnContainer(c.userData.modelId, newUid, c.position.x + offset, c.position.z + offset);
+      const next = [...itemsRef.current, { uid: newUid, modelId: c.userData.modelId, count: 1, x: c.position.x + offset, z: c.position.z + offset, rotY: c.rotation.y }];
+      onChangeRef.current?.(next);
+    }
+
+    engRef.current = { itemGroup, spawnContainer, pendingPositions, project3D, camera, selectedUidRef: { current: null }, deleteContainer, rotateObject, applyColor, duplicateObject };
     if (externalEngRef) externalEngRef.current = engRef.current;
 
     // ── Zoom from toolbar ──────────────────────────────────────
