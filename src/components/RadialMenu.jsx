@@ -210,13 +210,17 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
 
     function setActiveBtn(id, circleEl) {
       state.activeBtn = id;
-      state.targetR   = getRadius(id);
-      cancelAnimationFrame(state.radiusRaf);
-      animateRadius();
+      // Update card HTML first so we can measure it
       if (state.cardEl) {
         state.cardEl.innerHTML = buildCardHTML(modelName, state.activeBtn, state.buttons, state.socketStates, state.currentColor, state.currentRotY, state.arrayState, units);
         bindCardEvents();
       }
+      // Measure after browser renders the new card content
+      requestAnimationFrame(() => {
+        state.targetR = getRadius(id);
+        cancelAnimationFrame(state.radiusRaf);
+        animateRadius();
+      });
       Object.entries(state.circleEls).forEach(([btnId, cel]) => {
         if (!cel) return;
         cel.style.background = btnId === id ? ACCENT : 'white';
@@ -228,7 +232,14 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
 
     function getRadius(active) {
       const base = CFG.baseRadius + Math.max(0, state.buttons.length-4)*CFG.radiusPerBtn;
-      return active ? base+20 : base;
+      if (!active) return base;
+      // Measure actual card size to ensure buttons clear it
+      if (state.cardEl) {
+        const rect = state.cardEl.getBoundingClientRect();
+        const halfDiag = Math.sqrt(rect.width*rect.width + rect.height*rect.height) / 2;
+        return Math.max(base + 20, halfDiag + 30);
+      }
+      return base + 20;
     }
 
     function refreshCard() {
