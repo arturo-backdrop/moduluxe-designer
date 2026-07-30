@@ -58,8 +58,8 @@ export const CONFIG = {
   // ── Video tutorial ─────────────────────────────────────────
   // Leave null to hide the video widget entirely
   youtubeId:    'fQNPDMpov2M', // ← replace with your actual video ID
-  videoTitle:   'NY Toy Fair Awards',
-  videoDuration: '5:21',
+  videoTitle:   'NY Toy Fair TSB Awards',
+  videoDuration: '1:59',
 
   // ── Floor sizes ────────────────────────────────────────────
   floorSizes: [
