@@ -38,7 +38,8 @@ export default function App() {
   const [sceneItems,     setSceneItems]     = useState(DEFAULT_STATE.sceneItems);
   const [mode,           setMode]           = useState(DEFAULT_STATE.mode);
   const [activeTool,     setActiveTool]     = useState(DEFAULT_STATE.activeTool);
-  const [units, setUnits] = useState('ft'); // m | ft | cm | inch
+  const [units,          setUnits]          = useState('ft');
+  const [radialMenu,     setRadialMenu]     = useState(null);
   const radialMenuWrapperRef = useRef(null);
   const viewportEngRef       = useRef(null);
   const [history,        setHistory]        = useState([[]]);
