@@ -316,7 +316,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       const box = new THREE.Box3().setFromObject(obj);
       const top = new THREE.Vector3();
       box.getCenter(top);
-      top.y = box.max.y + 0.1;
+      top.y = box.max.y + 1.2;
       top.project(camera);
       const rect = canvas.getBoundingClientRect();
       return {
@@ -403,7 +403,14 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           if (c) {
             setOutlineVisible(c, true);
             const sp = project3D(c);
-            onRadialMenuRef.current?.({ x:sp.x, y:sp.y, uid:selectedUid, modelId:c.userData.modelId });
+            // Read current rotation and color from object
+            const savedItem = itemsRef.current.find(i=>i.uid===selectedUid);
+            onRadialMenuRef.current?.({
+              x:sp.x, y:sp.y, uid:selectedUid,
+              modelId:c.userData.modelId,
+              initialRotY: c.rotation.y,
+              initialColor: savedItem?.color || null,
+            });
           }
         }
       } else {
@@ -417,7 +424,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         if (c) {
           setOutlineVisible(c, true);
           const sp = project3D(c);
-          onRadialMenuRef.current?.({ x:sp.x, y:sp.y, uid:selectedUid, modelId:c.userData.modelId });
+          onRadialMenuRef.current?.({ x:sp.x, y:sp.y, uid:selectedUid, modelId:c.userData.modelId, initialRotY: c.rotation.y });
           const next = itemsRef.current.map(i =>
             i.uid === draggingUid ? { ...i, x: c.position.x, z: c.position.z } : i
           );
@@ -538,9 +545,14 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       requestAnimationFrame(animPop);
     }
 
+    // Lerp rotation animations
+    const rotAnims = new Map(); // uid -> { from, to, startTime }
+    const ROT_DUR  = 300; // ms
+
     function rotateObject(uid, rotY) {
       const c = itemGroup.children.find(x=>x.userData.uid===uid);
-      if (c) c.rotation.y = rotY;
+      if (!c) return;
+      rotAnims.set(uid, { from: c.rotation.y, to: rotY, startTime: performance.now() });
     }
 
     function applyColor(uid, color) {
@@ -617,6 +629,15 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         container.scale.set(s,s,s);
         if (t>=1) { container.scale.set(1,1,1); spawnAnims.splice(i,1); }
       }
+
+      // Lerp rotations
+      rotAnims.forEach((anim, uid) => {
+        const t = Math.min((now - anim.startTime) / ROT_DUR, 1);
+        const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t; // ease in-out quad
+        const c = itemGroup.children.find(x=>x.userData.uid===uid);
+        if (c) c.rotation.y = anim.from + (anim.to - anim.from) * ease;
+        if (t >= 1) rotAnims.delete(uid);
+      });
 
       // Dot bob
       if (dot.visible) dot.position.y = dotBaseY + Math.sin(now*0.003)*0.04;

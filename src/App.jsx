@@ -211,6 +211,8 @@ export default function App() {
                 modelName={item?.name || radialMenu.modelId}
                 sockets={sockets}
                 accentColor={CONFIG.accentColor}
+                initialRotY={radialMenu.initialRotY || 0}
+                initialColor={radialMenu.initialColor || '#3a6ea5'}
                 wrapperRef={radialMenuWrapperRef}
                 onAction={(action, data) => {
                   if (action === 'del') {
