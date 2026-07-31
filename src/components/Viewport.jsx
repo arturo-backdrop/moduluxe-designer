@@ -260,11 +260,36 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     const pointer    = new THREE.Vector2();
     const planeY0    = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
     let hoveredUid   = null;
-    let selectedUid  = null;
+    let selectedUid  = null;   // the "anchor" uid (source of array)
+    let selectedUids = [];     // all uids in the selection (group)
     let draggingUid  = null;
     let dragArmed    = false;
     let dragStartX   = 0, dragStartY = 0;
-    let dragOffX     = 0, dragOffZ   = 0;
+    let dragOffsets  = {};     // uid -> {dx, dz}
+
+    // Get all uids in the same group as uid (or just [uid] if no group)
+    function getGroupUids(uid) {
+      const item = itemsRef.current.find(i => i.uid === uid);
+      if (!item?.groupId) return [uid];
+      return itemsRef.current
+        .filter(i => i.groupId === item.groupId)
+        .map(i => i.uid);
+    }
+
+    // Get the source uid of a group (the one that is not a clone)
+    function getSourceUid(uid) {
+      const item = itemsRef.current.find(i => i.uid === uid);
+      if (!item?.groupId) return uid;
+      const source = itemsRef.current.find(i => i.groupId === item.groupId && !i.isArrayClone);
+      return source?.uid || uid;
+    }
+
+    function setGroupOutline(uids, visible) {
+      uids.forEach(uid => {
+        const c = itemGroup.children.find(x => x.userData.uid === uid);
+        if (c) setOutlineVisible(c, visible);
+      });
+    }
 
     function snap(v) { return Math.round(v/GRID_SNAP)*GRID_SNAP; }
 
@@ -389,42 +414,48 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       if (e.button !== 0) return;
       const c = getHitContainer(e.clientX, e.clientY);
       if (!c) {
-        if (selectedUid) {
-          const prev = itemGroup.children.find(x=>x.userData.uid===selectedUid);
-          if (prev) setOutlineVisible(prev, selectedUid===hoveredUid);
-          selectedUid = null; if(engRef.current) engRef.current.selectedUidRef.current = null;
-        }
+        // Deselect
+        setGroupOutline(selectedUids, false);
+        selectedUid = null; selectedUids = [];
+        if(engRef.current) engRef.current.selectedUidRef.current = null;
         closeRadialMenu();
         return;
       }
-      draggingUid  = c.userData.uid;
-      dragArmed    = false;
-      dragStartX   = e.clientX; dragStartY = e.clientY;
-      const pt     = groundPt(e.clientX, e.clientY);
-      dragOffX     = c.position.x - pt.x;
-      dragOffZ     = c.position.z - pt.z;
+      draggingUid = c.userData.uid;
+      dragArmed   = false;
+      dragStartX  = e.clientX; dragStartY = e.clientY;
       controls.enabled = false;
-      // Hide radial menu while dragging
       onRadialMenuRef.current?.(null);
+      // Pre-compute drag offsets for the whole group
+      const pt   = groundPt(e.clientX, e.clientY);
+      const uids = selectedUids.includes(draggingUid) ? selectedUids : getGroupUids(draggingUid);
+      dragOffsets = {};
+      uids.forEach(uid => {
+        const obj = itemGroup.children.find(x => x.userData.uid === uid);
+        if (obj) dragOffsets[uid] = { dx: obj.position.x - pt.x, dz: obj.position.z - pt.z };
+      });
     };
 
     const onPointerMove = e => {
       if (!draggingUid) {
-        // Hover (only when not pressing mouse)
         if (e.buttons !== 0) return;
         const c   = getHitContainer(e.clientX, e.clientY);
         const uid = c?.userData.uid || null;
         if (uid !== hoveredUid) {
-          if (hoveredUid && hoveredUid !== selectedUid) {
-            const prev = itemGroup.children.find(x=>x.userData.uid===hoveredUid);
-            if (prev) { setOutlineVisible(prev, false); dot.visible=false; }
+          // Clear old hover outline (only if not selected)
+          if (hoveredUid) {
+            const hoverGroup = getGroupUids(hoveredUid);
+            const notSelected = hoverGroup.filter(u => !selectedUids.includes(u));
+            setGroupOutline(notSelected, false);
+            dot.visible = false;
           }
           hoveredUid = uid;
           if (uid) {
-            setOutlineVisible(c, true); updateDot(c);
+            setGroupOutline(getGroupUids(uid), true);
+            updateDot(c);
             canvas.style.cursor = 'grab';
           } else {
-            dot.visible=false;
+            dot.visible = false;
             canvas.style.cursor = 'default';
           }
         }
@@ -435,77 +466,97 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         dragArmed = true;
         canvas.style.cursor = 'grabbing';
       }
-      const c = itemGroup.children.find(x=>x.userData.uid===draggingUid);
-      if (!c) return;
-      const pt  = groundPt(e.clientX, e.clientY);
-      const box = new THREE.Box3().setFromObject(c);
-      const hw  = (box.max.x-box.min.x)/2, hd = (box.max.z-box.min.z)/2;
-      const cl  = clampFloor(snap(pt.x+dragOffX), snap(pt.z+dragOffZ), hw, hd);
-      c.position.x = cl.x; c.position.z = cl.z;
-      updateDot(c);
+      const pt = groundPt(e.clientX, e.clientY);
+      // Move all objects in dragOffsets
+      Object.entries(dragOffsets).forEach(([uid, off]) => {
+        const obj = itemGroup.children.find(x => x.userData.uid === uid);
+        if (!obj) return;
+        const box = new THREE.Box3().setFromObject(obj);
+        const hw  = (box.max.x-box.min.x)/2, hd = (box.max.z-box.min.z)/2;
+        const cl  = clampFloor(snap(pt.x+off.dx), snap(pt.z+off.dz), hw, hd);
+        obj.position.x = cl.x; obj.position.z = cl.z;
+      });
+      const anchor = itemGroup.children.find(x => x.userData.uid === draggingUid);
+      if (anchor) updateDot(anchor);
     };
 
     const onPointerUp = e => {
       controls.enabled = true;
       if (!draggingUid) return;
+
       if (!dragArmed) {
-        // click = select / deselect
-        if (selectedUid && selectedUid !== draggingUid) {
-          const prev = itemGroup.children.find(x=>x.userData.uid===selectedUid);
-          if (prev) setOutlineVisible(prev, selectedUid===hoveredUid);
-        }
-        if (selectedUid === draggingUid) {
-          selectedUid = null; if(engRef.current) engRef.current.selectedUidRef.current = null;
+        // Click = select group
+        const clickedGroupUids = getGroupUids(draggingUid);
+        const sourceUid = getSourceUid(draggingUid);
+
+        if (selectedUid === sourceUid) {
+          // Deselect
+          setGroupOutline(selectedUids, false);
+          selectedUid = null; selectedUids = [];
+          if(engRef.current) engRef.current.selectedUidRef.current = null;
           onRadialMenuRef.current?.(null);
         } else {
-          selectedUid = draggingUid; if(engRef.current) engRef.current.selectedUidRef.current = draggingUid;
-          const c = itemGroup.children.find(x=>x.userData.uid===selectedUid);
-          if (c) {
-            setOutlineVisible(c, true);
-            const sp = project3D(c);
+          // Select whole group, outline all
+          setGroupOutline(selectedUids, false); // clear old
+          selectedUid  = sourceUid;
+          selectedUids = clickedGroupUids;
+          if(engRef.current) engRef.current.selectedUidRef.current = sourceUid;
+          setGroupOutline(selectedUids, true);
+          // Show radial menu over the source object
+          const sourceObj = itemGroup.children.find(x => x.userData.uid === sourceUid);
+          if (sourceObj) {
+            const sp = project3D(sourceObj);
             panCameraToShowMenu(sp);
-            // Read current rotation and color from object
-            const savedItem = itemsRef.current.find(i=>i.uid===selectedUid);
+            const savedItem = itemsRef.current.find(i => i.uid === sourceUid);
             onRadialMenuRef.current?.({
-              x:sp.x, y:sp.y, uid:selectedUid,
-              modelId:c.userData.modelId,
-              initialRotY: c.rotation.y,
+              x: sp.x, y: sp.y, uid: sourceUid,
+              modelId: sourceObj.userData.modelId,
+              initialRotY: sourceObj.rotation.y,
               initialColor: savedItem?.color || null,
             });
           }
         }
       } else {
-        // drag ended — keep selected, reshow menu at new position
-        if (selectedUid && selectedUid !== draggingUid) {
-          const prev = itemGroup.children.find(x=>x.userData.uid===selectedUid);
-          if (prev) setOutlineVisible(prev, selectedUid===hoveredUid);
-        }
-        selectedUid = draggingUid; if(engRef.current) engRef.current.selectedUidRef.current = draggingUid;
-        const c = itemGroup.children.find(x=>x.userData.uid===selectedUid);
-        if (c) {
-          setOutlineVisible(c, true);
-          const sp = project3D(c);
+        // Drag ended — update positions in React state for all moved objects
+        const sourceUid = getSourceUid(draggingUid);
+        selectedUid  = sourceUid;
+        selectedUids = getGroupUids(draggingUid);
+        if(engRef.current) engRef.current.selectedUidRef.current = sourceUid;
+        setGroupOutline(selectedUids, true);
+
+        const next = itemsRef.current.map(i => {
+          const obj = itemGroup.children.find(x => x.userData.uid === i.uid);
+          if (obj && dragOffsets[i.uid]) return { ...i, x: obj.position.x, z: obj.position.z };
+          return i;
+        });
+        onChangeRef.current?.(next);
+
+        // Reshow menu over source
+        const sourceObj = itemGroup.children.find(x => x.userData.uid === sourceUid);
+        if (sourceObj) {
+          const sp = project3D(sourceObj);
           panCameraToShowMenu(sp);
-          onRadialMenuRef.current?.({ x:sp.x, y:sp.y, uid:selectedUid, modelId:c.userData.modelId, initialRotY: c.rotation.y });
-          const next = itemsRef.current.map(i =>
-            i.uid === draggingUid ? { ...i, x: c.position.x, z: c.position.z } : i
-          );
-          onChangeRef.current?.(next);
+          onRadialMenuRef.current?.({ x: sp.x, y: sp.y, uid: sourceUid, modelId: sourceObj.userData.modelId, initialRotY: sourceObj.rotation.y });
         }
         canvas.style.cursor = hoveredUid ? 'grab' : 'default';
       }
-      draggingUid = null; dragArmed = false;
+      draggingUid = null; dragArmed = false; dragOffsets = {};
     };
 
     const onKeyDown = e => {
       if (e.key!=='Delete' && e.key!=='Backspace') return;
       if (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
       if (!selectedUid) return;
-      const c = itemGroup.children.find(x=>x.userData.uid===selectedUid);
-      if (c) itemGroup.remove(c);
-      const next = itemsRef.current.filter(i=>i.uid!==selectedUid);
+      // Remove all selected group members
+      selectedUids.forEach(uid => {
+        const c = itemGroup.children.find(x=>x.userData.uid===uid);
+        if (c) itemGroup.remove(c);
+      });
+      const uidsToRemove = new Set(selectedUids);
+      const next = itemsRef.current.filter(i=>!uidsToRemove.has(i.uid));
       onChangeRef.current?.(next);
-      selectedUid=null; dot.visible=false;
+      selectedUid=null; selectedUids=[]; dot.visible=false;
+      onRadialMenuRef.current?.(null);
     };
 
     const onDragOver = e => e.preventDefault();
@@ -857,6 +908,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
 
