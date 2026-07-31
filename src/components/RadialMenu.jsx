@@ -152,9 +152,8 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
   useEffect(() => {
     unitsRef.current = units;
     const state = stateRef.current;
-    if (state.cardEl && state.open) {
-      state.cardEl.innerHTML = buildCardHTML(modelName, state.activeBtn, state.buttons, state.socketStates, state.currentColor, state.currentRotY, state.arrayState, unitsRef.current);
-      // rebind events after innerHTML change — call bindCardEvents via ref
+    if (state.cardEl && state.activeBtn) {
+      state.cardEl.innerHTML = buildCardHTML(modelName, state.activeBtn, state.buttons, state.socketStates, state.currentColor, state.currentRotY, state.arrayState, units);
       state._bindCardEvents?.();
     }
   }, [units]);
@@ -483,6 +482,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       onClick={e=>e.stopPropagation()} />
   );
 }
+
 
 
 
