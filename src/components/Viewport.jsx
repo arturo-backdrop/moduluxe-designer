@@ -669,7 +669,19 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         if (c) itemGroup.remove(c);
       });
 
-      if (count <= 1) { arrayGroups.set(uid, []); return; }
+      if (count <= 1) {
+        arrayGroups.set(uid, []);
+        // Remove groupId from source if no clones
+        source.userData.groupId = null;
+        const filtered = itemsRef.current.filter(i => !(i.isArrayClone && i.arrayParent === uid));
+        const updated  = filtered.map(i => i.uid === uid ? { ...i, groupId: null } : i);
+        onChangeRef.current?.(updated);
+        return;
+      }
+
+      // Assign groupId to source (use uid as group anchor)
+      const groupId = `group_${uid}`;
+      source.userData.groupId = groupId;
 
       // Get object width from bounding box
       source.updateWorldMatrix(true, true);
@@ -689,6 +701,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         clone.userData.modelId      = source.userData.modelId;
         clone.userData.isArrayClone = true;
         clone.userData.arrayParent  = uid;
+        clone.userData.groupId      = groupId;
 
         clone.position.set(
           source.position.x + dir.x * step * i,
@@ -705,16 +718,17 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       }
       arrayGroups.set(uid, newClones);
 
-      // Update React state
+      // Update React state — source gets groupId, clones are added
       const filtered   = itemsRef.current.filter(i => !(i.isArrayClone && i.arrayParent === uid));
+      const withSource = filtered.map(i => i.uid === uid ? { ...i, groupId } : i);
       const cloneItems = newClones.map((cuid, i) => ({
         uid: cuid, modelId: source.userData.modelId, count: 1,
         x: source.position.x + dir.x * step * (i+1),
         z: source.position.z + dir.z * step * (i+1),
         rotY: source.rotation.y,
-        isArrayClone: true, arrayParent: uid,
+        isArrayClone: true, arrayParent: uid, groupId,
       }));
-      onChangeRef.current?.([...filtered, ...cloneItems]);
+      onChangeRef.current?.([...withSource, ...cloneItems]);
     }
 
     engRef.current = { itemGroup, spawnContainer, pendingPositions, project3D, camera, selectedUidRef: { current: null }, deleteContainer, rotateObject, applyColor, duplicateObject, applyArray };
@@ -838,5 +852,6 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
