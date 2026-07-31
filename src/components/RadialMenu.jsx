@@ -144,7 +144,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
 
 
 // ── React wrapper — pure DOM inside ──────────────────────────
-export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onClose, wrapperRef, initialColor='#3a6ea5', initialRotY=0, units='ft' }) {
+export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onClose, wrapperRef, initialColor='#3a6ea5', initialRotY=0, units='ft', initialArrayState=null }) {
   const rootRef     = useRef(null);
   const unitsRef    = useRef(units);
   const stateRef    = useRef({
@@ -154,7 +154,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
     buttons:[], btnEls:{}, circleEls:{}, cardEl:null,
     currentColor: initialColor,
     currentRotY:  initialRotY,
-    arrayState: { count: 1, spacing: 0 },
+    arrayState: initialArrayState ? { count: initialArrayState.count, spacing: initialArrayState.spacing } : { count: 1, spacing: 0 },
     socketStates: Object.fromEntries(sockets.map(s=>[s.name,{...(s.state||{})}])),
   });
 
@@ -500,6 +500,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       onClick={e=>e.stopPropagation()} />
   );
 }
+
 
 
 
