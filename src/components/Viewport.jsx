@@ -807,6 +807,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     // Remove containers no longer in items
     const currentUids = new Set(sceneItems.map(i=>i.uid));
     [...itemGroup.children].forEach(c => {
+      // Keep array clones — they are managed by applyArray, not sceneItems
+      if (c.userData.isArrayClone) return;
       if (!currentUids.has(c.userData.uid)) itemGroup.remove(c);
     });
 
@@ -843,6 +845,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
 
