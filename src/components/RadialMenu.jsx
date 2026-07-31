@@ -47,7 +47,7 @@ const PRESET_COLORS = [
   '#4a7c5e','#8b4a6b','#d4a843','#6b6b6b','#1a3a5c',
 ];
 
-function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentColor='#3a6ea5', currentRotY=0, arrayState={count:1,spacing:0.1}, units='ft') {
+function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentColor='#3a6ea5', currentRotY=0, arrayState={count:1,spacing:0}, units='ft') {
   const UNITS_MAP = { m:{label:'m',factor:1}, ft:{label:'ft',factor:3.28084}, cm:{label:'cm',factor:100}, inch:{label:'in',factor:39.3701} };
   const u = UNITS_MAP[units] || UNITS_MAP.m;
   const spacingDisplay = (arrayState.spacing * u.factor).toFixed(units==='m'?2:1);
@@ -154,7 +154,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
     buttons:[], btnEls:{}, circleEls:{}, cardEl:null,
     currentColor: initialColor,
     currentRotY:  initialRotY,
-    arrayState: { count: 1, spacing: 0.1 },
+    arrayState: { count: 1, spacing: 0 },
     socketStates: Object.fromEntries(sockets.map(s=>[s.name,{...(s.state||{})}])),
   });
 
