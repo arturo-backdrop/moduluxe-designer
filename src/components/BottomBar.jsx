@@ -45,14 +45,24 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel, 
   const viewportRef = useRef(null);
   const trackRef    = useRef(null);
 
-  // Group sceneItems by modelId, summing count
+  // Group sceneItems by modelId, counting array groups as one unit
   const groupedItems = React.useMemo(() => {
     const map = new Map();
+    const seenGroups = new Set();
     sceneItems.forEach(item => {
+      // Skip array clones — the source already represents the group
+      if (item.isArrayClone) return;
+      // For grouped sources, count the whole group as count = group size
+      let count = item.count || 1;
+      if (item.groupId) {
+        if (seenGroups.has(item.groupId)) return;
+        seenGroups.add(item.groupId);
+        count = sceneItems.filter(i => i.groupId === item.groupId).length;
+      }
       if (map.has(item.modelId)) {
-        map.get(item.modelId).count += (item.count || 1);
+        map.get(item.modelId).count += count;
       } else {
-        map.set(item.modelId, { modelId: item.modelId, count: item.count || 1 });
+        map.set(item.modelId, { modelId: item.modelId, count });
       }
     });
     return Array.from(map.values());
@@ -153,4 +163,5 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel, 
     </div>
   );
 }
+
 
