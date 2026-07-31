@@ -518,6 +518,9 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
               modelId: sourceObj.userData.modelId,
               initialRotY: sourceObj.rotation.y,
               initialColor: savedItem?.color || null,
+              initialArrayState: savedItem?.groupId
+                ? { count: itemsRef.current.filter(i=>i.groupId===savedItem.groupId).length, spacing: savedItem?.arrayGap || 0 }
+                : null,
             });
           }
         }
@@ -541,7 +544,16 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         if (sourceObj) {
           const sp = project3D(sourceObj);
           panCameraToShowMenu(sp);
-          onRadialMenuRef.current?.({ x: sp.x, y: sp.y, uid: sourceUid, modelId: sourceObj.userData.modelId, initialRotY: sourceObj.rotation.y });
+          const savedItem2 = itemsRef.current.find(i => i.uid === sourceUid);
+          onRadialMenuRef.current?.({
+            x: sp.x, y: sp.y, uid: sourceUid,
+            modelId: sourceObj.userData.modelId,
+            initialRotY: sourceObj.rotation.y,
+            initialColor: savedItem2?.color || null,
+            initialArrayState: savedItem2?.groupId
+              ? { count: itemsRef.current.filter(i=>i.groupId===savedItem2.groupId).length, spacing: savedItem2?.arrayGap || 0 }
+              : null,
+          });
         }
         canvas.style.cursor = hoveredUid ? 'grab' : 'default';
       }
@@ -759,14 +771,16 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         const newX    = obj.position.x + offset;
         const newZ    = obj.position.z + offset;
         const newRotY = obj.rotation.y;
-        const newCont = spawnContainer(obj.userData.modelId, newUid, newX, newZ);
-        // Apply rotation and color immediately on the container
+        const capturedColor = orig.color || null;
+        const capturedUid   = newUid; // capture in closure
+        const newCont = spawnContainer(obj.userData.modelId, capturedUid, newX, newZ);
         if (newCont) newCont.rotation.y = newRotY;
+        // Use increasing delays so each item's timeout is unique
         setTimeout(() => {
-          const c = itemGroup.children.find(x=>x.userData.uid===newUid);
+          const c = itemGroup.children.find(x=>x.userData.uid===capturedUid);
           if (c) c.rotation.y = newRotY;
-          if (orig.color) _applyColorToContainer(newUid, orig.color);
-        }, 50);
+          if (capturedColor) _applyColorToContainer(capturedUid, capturedColor);
+        }, 80 + idx * 60);
         newItems.push({
           uid: newUid, modelId: obj.userData.modelId, count: 1,
           x: newX, z: newZ, rotY: newRotY,
@@ -1002,6 +1016,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
 
