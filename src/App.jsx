@@ -241,6 +241,8 @@ export default function App() {
                     viewportEngRef.current?.applyArray(radialMenu.uid, data.count, data.spacing);
                   } else if (action === 'dup') {
                     viewportEngRef.current?.duplicateObject(radialMenu.uid);
+                  } else if (action === 'units') {
+                    setUnits(data.units);
                   }
                 }}
                 onClose={() => setRadialMenu(null)}
@@ -252,3 +254,4 @@ export default function App() {
     </div>
   );
 }
+
