@@ -219,6 +219,7 @@ export default function App() {
                 units={units}
                 initialRotY={radialMenu.initialRotY || 0}
                 initialColor={radialMenu.initialColor || '#3a6ea5'}
+                initialArrayState={radialMenu.initialArrayState || null}
                 wrapperRef={radialMenuWrapperRef}
                 onAction={(action, data) => {
                   if (action === 'del') {
@@ -261,4 +262,5 @@ export default function App() {
     </div>
   );
 }
+
 
