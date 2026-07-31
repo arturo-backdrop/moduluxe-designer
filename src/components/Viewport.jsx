@@ -662,7 +662,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       const source = itemGroup.children.find(x=>x.userData.uid===uid);
       if (!source) return;
 
-      // Remove previous clones for this uid
+      // Remove previous Three.js clones for this uid
       const prevClones = arrayGroups.get(uid) || [];
       prevClones.forEach(cuid => {
         const c = itemGroup.children.find(x=>x.userData.uid===cuid);
@@ -671,38 +671,31 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
       if (count <= 1) {
         arrayGroups.set(uid, []);
-        // Remove groupId from source if no clones
-        source.userData.groupId = null;
-        const filtered = itemsRef.current.filter(i => !(i.isArrayClone && i.arrayParent === uid));
-        const updated  = filtered.map(i => i.uid === uid ? { ...i, groupId: null } : i);
+        // Reset count to 1 on source item
+        const updated = itemsRef.current.map(i => i.uid === uid ? { ...i, count: 1, arrayGap: undefined } : i);
         onChangeRef.current?.(updated);
         return;
       }
-
-      // Assign groupId to source (use uid as group anchor)
-      const groupId = `group_${uid}`;
-      source.userData.groupId = groupId;
 
       // Get object width from bounding box
       source.updateWorldMatrix(true, true);
       const box  = new THREE.Box3().setFromObject(source);
       const objW = box.max.x - box.min.x;
-      const step = objW + gap; // center-to-center distance
+      const step = objW + gap;
 
       // Direction based on object's Y rotation (+X local)
       const rotY = source.rotation.y;
       const dir  = new THREE.Vector3(Math.sin(rotY + Math.PI/2), 0, Math.cos(rotY + Math.PI/2));
 
+      // Create Three.js clones (visual only, not in sceneItems)
       const newClones = [];
       for (let i = 1; i < count; i++) {
-        const cuid = `${source.userData.modelId}_arr_${uid}_${i}`;
+        const cuid = `${uid}_arr_${i}`;
         const clone = source.clone(true);
         clone.userData.uid          = cuid;
         clone.userData.modelId      = source.userData.modelId;
         clone.userData.isArrayClone = true;
         clone.userData.arrayParent  = uid;
-        clone.userData.groupId      = groupId;
-
         clone.position.set(
           source.position.x + dir.x * step * i,
           source.position.y,
@@ -711,24 +704,16 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         clone.rotation.copy(source.rotation);
         itemGroup.add(clone);
         newClones.push(cuid);
-
-        // Spawn animation
         clone.scale.set(0.01, 0.01, 0.01);
         spawnAnims.push({ container: clone, startTime: performance.now() });
       }
       arrayGroups.set(uid, newClones);
 
-      // Update React state — source gets groupId, clones are added
-      const filtered   = itemsRef.current.filter(i => !(i.isArrayClone && i.arrayParent === uid));
-      const withSource = filtered.map(i => i.uid === uid ? { ...i, groupId } : i);
-      const cloneItems = newClones.map((cuid, i) => ({
-        uid: cuid, modelId: source.userData.modelId, count: 1,
-        x: source.position.x + dir.x * step * (i+1),
-        z: source.position.z + dir.z * step * (i+1),
-        rotY: source.rotation.y,
-        isArrayClone: true, arrayParent: uid, groupId,
-      }));
-      onChangeRef.current?.([...withSource, ...cloneItems]);
+      // Update only the source item's count — no separate clone items
+      const updated = itemsRef.current.map(i =>
+        i.uid === uid ? { ...i, count, arrayGap: gap } : i
+      );
+      onChangeRef.current?.(updated);
     }
 
     engRef.current = { itemGroup, spawnContainer, pendingPositions, project3D, camera, selectedUidRef: { current: null }, deleteContainer, rotateObject, applyColor, duplicateObject, applyArray };
@@ -842,6 +827,12 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         x = (col-2)*3; z = -row*3;
       }
       spawnContainer(item.modelId, item.uid, x, z);
+      // Restore array visuals if item has count > 1 (e.g. loading saved project)
+      if (item.count > 1 && item.arrayGap != null) {
+        setTimeout(() => {
+          if (eng.applyArray) eng.applyArray(item.uid, item.count, item.arrayGap);
+        }, 300); // wait for spawn animation
+      }
     });
   }, [sceneItems, config._catalogFlat]);
 
@@ -852,6 +843,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
 
