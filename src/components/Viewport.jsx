@@ -467,17 +467,22 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         canvas.style.cursor = 'grabbing';
       }
       const pt = groundPt(e.clientX, e.clientY);
-      // Move all objects in dragOffsets
+      // Snap only the anchor, others follow with exact relative offset
+      const anchorOff = dragOffsets[draggingUid];
+      const anchorObj = itemGroup.children.find(x => x.userData.uid === draggingUid);
+      if (!anchorOff || !anchorObj) return;
+      const anchorBox = new THREE.Box3().setFromObject(anchorObj);
+      const hw = (anchorBox.max.x-anchorBox.min.x)/2, hd = (anchorBox.max.z-anchorBox.min.z)/2;
+      const snapped = clampFloor(snap(pt.x+anchorOff.dx), snap(pt.z+anchorOff.dz), hw, hd);
+      const ddx = snapped.x - (pt.x + anchorOff.dx);
+      const ddz = snapped.z - (pt.z + anchorOff.dz);
       Object.entries(dragOffsets).forEach(([uid, off]) => {
         const obj = itemGroup.children.find(x => x.userData.uid === uid);
         if (!obj) return;
-        const box = new THREE.Box3().setFromObject(obj);
-        const hw  = (box.max.x-box.min.x)/2, hd = (box.max.z-box.min.z)/2;
-        const cl  = clampFloor(snap(pt.x+off.dx), snap(pt.z+off.dz), hw, hd);
-        obj.position.x = cl.x; obj.position.z = cl.z;
+        obj.position.x = pt.x + off.dx + ddx;
+        obj.position.z = pt.z + off.dz + ddz;
       });
-      const anchor = itemGroup.children.find(x => x.userData.uid === draggingUid);
-      if (anchor) updateDot(anchor);
+      updateDot(anchorObj);
     };
 
     const onPointerUp = e => {
@@ -663,12 +668,57 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     const ROT_DUR  = 300; // ms
 
     function rotateObject(uid, rotY) {
-      const c = itemGroup.children.find(x=>x.userData.uid===uid);
-      if (!c) return;
-      rotAnims.set(uid, { from: c.rotation.y, to: rotY, startTime: performance.now() });
+      const source = itemGroup.children.find(x=>x.userData.uid===uid);
+      if (!source) return;
+      // Get all group members
+      const item = itemsRef.current.find(i=>i.uid===uid);
+      const groupUids = item?.groupId
+        ? itemsRef.current.filter(i=>i.groupId===item.groupId).map(i=>i.uid)
+        : [uid];
+      // Rotate source
+      const prevRotY = source.rotation.y;
+      const delta = rotY - prevRotY;
+      rotAnims.set(uid, { from: prevRotY, to: rotY, startTime: performance.now() });
+      // Rotate clones around source position
+      const ox = source.position.x, oz = source.position.z;
+      groupUids.forEach(cuid => {
+        if (cuid === uid) return;
+        const clone = itemGroup.children.find(x=>x.userData.uid===cuid);
+        if (!clone) return;
+        // Rotate position around source
+        const dx = clone.position.x - ox, dz = clone.position.z - oz;
+        const cos = Math.cos(delta), sin = Math.sin(delta);
+        const nx = dx*cos - dz*sin + ox;
+        const nz = dx*sin + dz*cos + oz;
+        const fromRot = clone.rotation.y;
+        const toRot   = fromRot + delta;
+        rotAnims.set(cuid, { from: fromRot, to: toRot, startTime: performance.now(),
+          posAnim: { fromX: clone.position.x, fromZ: clone.position.z, toX: nx, toZ: nz } });
+      });
+      // Update React state positions for clones
+      const next = itemsRef.current.map(i => {
+        if (!groupUids.includes(i.uid) || i.uid === uid) return i;
+        const clone = itemGroup.children.find(x=>x.userData.uid===i.uid);
+        if (!clone) return i;
+        const dx = i.x - ox, dz = i.z - oz;
+        const cos = Math.cos(delta), sin = Math.sin(delta);
+        return { ...i, x: dx*cos - dz*sin + ox, z: dx*sin + dz*cos + oz, rotY: i.rotY + delta };
+      });
+      onChangeRef.current?.(next);
     }
 
     function applyColor(uid, color) {
+      // Apply to all group members
+      const item = itemsRef.current.find(i=>i.uid===uid);
+      const groupUids = item?.groupId
+        ? itemsRef.current.filter(i=>i.groupId===item.groupId).map(i=>i.uid)
+        : [uid];
+      groupUids.forEach(gid => _applyColorToContainer(gid, color));
+      // Update React state for all
+      const next = itemsRef.current.map(i => groupUids.includes(i.uid) ? { ...i, color } : i);
+      onChangeRef.current?.(next);
+    }
+    function _applyColorToContainer(uid, color) {
       const c = itemGroup.children.find(x=>x.userData.uid===uid);
       if (!c) return;
       const paintColor = new THREE.Color(color);
@@ -697,13 +747,31 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     }
 
     function duplicateObject(uid) {
-      const c = itemGroup.children.find(x=>x.userData.uid===uid);
-      if (!c) return;
-      const newUid = `${c.userData.modelId}_${Date.now()}`;
-      const offset = 1.5;
-      spawnContainer(c.userData.modelId, newUid, c.position.x + offset, c.position.z + offset);
-      const next = [...itemsRef.current, { uid: newUid, modelId: c.userData.modelId, count: 1, x: c.position.x + offset, z: c.position.z + offset, rotY: c.rotation.y }];
-      onChangeRef.current?.(next);
+      const item = itemsRef.current.find(i=>i.uid===uid);
+      const groupUids = item?.groupId
+        ? itemsRef.current.filter(i=>i.groupId===item.groupId).map(i=>i.uid)
+        : [uid];
+      const offset  = 1.5;
+      const newGroupId = item?.groupId ? `arr_dup_${Date.now()}` : null;
+      const newItems = [];
+      groupUids.forEach((gid, idx) => {
+        const obj  = itemGroup.children.find(x=>x.userData.uid===gid);
+        const orig = itemsRef.current.find(i=>i.uid===gid);
+        if (!obj || !orig) return;
+        const newUid = `${obj.userData.modelId}_dup_${Date.now()}_${idx}`;
+        spawnContainer(obj.userData.modelId, newUid, obj.position.x + offset, obj.position.z + offset);
+        // Apply same color after spawn
+        if (orig.color) setTimeout(() => _applyColorToContainer(newUid, orig.color), 50);
+        newItems.push({
+          uid: newUid, modelId: obj.userData.modelId, count: 1,
+          x: obj.position.x + offset, z: obj.position.z + offset,
+          rotY: obj.rotation.y, color: orig.color || null,
+          groupId: newGroupId,
+          isArrayClone: newGroupId ? orig.isArrayClone : false,
+          arrayParent: newGroupId && orig.isArrayClone ? newGroupId : undefined,
+        });
+      });
+      onChangeRef.current?.([...itemsRef.current, ...newItems]);
     }
 
     // Array — distribute copies in +X with gap between bounding boxes
@@ -822,7 +890,13 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         const t = Math.min((now - anim.startTime) / ROT_DUR, 1);
         const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t; // ease in-out quad
         const c = itemGroup.children.find(x=>x.userData.uid===uid);
-        if (c) c.rotation.y = anim.from + (anim.to - anim.from) * ease;
+        if (c) {
+          c.rotation.y = anim.from + (anim.to - anim.from) * ease;
+          if (anim.posAnim) {
+            c.position.x = anim.posAnim.fromX + (anim.posAnim.toX - anim.posAnim.fromX) * ease;
+            c.position.z = anim.posAnim.fromZ + (anim.posAnim.toZ - anim.posAnim.fromZ) * ease;
+          }
+        }
         if (t >= 1) rotAnims.delete(uid);
       });
 
@@ -908,6 +982,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
 
