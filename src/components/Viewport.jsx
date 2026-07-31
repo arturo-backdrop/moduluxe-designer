@@ -662,32 +662,38 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       const source = itemGroup.children.find(x=>x.userData.uid===uid);
       if (!source) return;
 
-      // Remove previous Three.js clones for this uid
+      // Remove previous Three.js clones
       const prevClones = arrayGroups.get(uid) || [];
       prevClones.forEach(cuid => {
         const c = itemGroup.children.find(x=>x.userData.uid===cuid);
         if (c) itemGroup.remove(c);
       });
 
-      if (count <= 1) {
-        arrayGroups.set(uid, []);
-        // Reset count to 1 on source item
-        const updated = itemsRef.current.map(i => i.uid === uid ? { ...i, count: 1, arrayGap: undefined } : i);
-        onChangeRef.current?.(updated);
-        return;
-      }
-
       // Get object width from bounding box
       source.updateWorldMatrix(true, true);
       const box  = new THREE.Box3().setFromObject(source);
       const objW = box.max.x - box.min.x;
+      // step = object width + gap between edges (gap=0 means touching)
       const step = objW + gap;
 
-      // Direction based on object's Y rotation (+X local)
+      // Direction: +X local axis of object
       const rotY = source.rotation.y;
       const dir  = new THREE.Vector3(Math.sin(rotY + Math.PI/2), 0, Math.cos(rotY + Math.PI/2));
 
-      // Create Three.js clones (visual only, not in sceneItems)
+      const groupId = `arr_${uid}`;
+      source.userData.groupId = groupId;
+
+      if (count <= 1) {
+        arrayGroups.set(uid, []);
+        source.userData.groupId = null;
+        const updated = itemsRef.current
+          .filter(i => !(i.isArrayClone && i.arrayParent === uid))
+          .map(i => i.uid === uid ? { ...i, count: 1, arrayGap: undefined, groupId: null } : i);
+        onChangeRef.current?.(updated);
+        return;
+      }
+
+      // Create Three.js clones
       const newClones = [];
       for (let i = 1; i < count; i++) {
         const cuid = `${uid}_arr_${i}`;
@@ -696,6 +702,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         clone.userData.modelId      = source.userData.modelId;
         clone.userData.isArrayClone = true;
         clone.userData.arrayParent  = uid;
+        clone.userData.groupId      = groupId;
         clone.position.set(
           source.position.x + dir.x * step * i,
           source.position.y,
@@ -709,11 +716,17 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       }
       arrayGroups.set(uid, newClones);
 
-      // Update only the source item's count — no separate clone items
-      const updated = itemsRef.current.map(i =>
-        i.uid === uid ? { ...i, count, arrayGap: gap } : i
-      );
-      onChangeRef.current?.(updated);
+      // Update sceneItems: source + real clone items with groupId
+      const filtered   = itemsRef.current.filter(i => !(i.isArrayClone && i.arrayParent === uid));
+      const withSource = filtered.map(i => i.uid === uid ? { ...i, count: 1, arrayGap: gap, groupId } : i);
+      const cloneItems = newClones.map((cuid, i) => ({
+        uid: cuid, modelId: source.userData.modelId, count: 1,
+        x: source.position.x + dir.x * step * (i+1),
+        z: source.position.z + dir.z * step * (i+1),
+        rotY: source.rotation.y,
+        isArrayClone: true, arrayParent: uid, groupId,
+      }));
+      onChangeRef.current?.([...withSource, ...cloneItems]);
     }
 
     engRef.current = { itemGroup, spawnContainer, pendingPositions, project3D, camera, selectedUidRef: { current: null }, deleteContainer, rotateObject, applyColor, duplicateObject, applyArray };
@@ -807,13 +820,12 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     // Remove containers no longer in items
     const currentUids = new Set(sceneItems.map(i=>i.uid));
     [...itemGroup.children].forEach(c => {
-      // Keep array clones — they are managed by applyArray, not sceneItems
-      if (c.userData.isArrayClone) return;
       if (!currentUids.has(c.userData.uid)) itemGroup.remove(c);
     });
 
-    // Add new items — use pending drop position or saved state position
+    // Add new items — skip array clones (managed by applyArray)
     sceneItems.forEach((item, idx) => {
+      if (item.isArrayClone) return;
       if (itemGroup.children.find(c=>c.userData.uid===item.uid)) return;
       let x, z;
       if (pendingPositions.has(item.uid)) {
@@ -845,6 +857,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
 
