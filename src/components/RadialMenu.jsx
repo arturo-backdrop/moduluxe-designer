@@ -136,6 +136,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
 // ── React wrapper — pure DOM inside ──────────────────────────
 export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onClose, wrapperRef, initialColor='#3a6ea5', initialRotY=0, units='ft' }) {
   const rootRef     = useRef(null);
+  const unitsRef    = useRef(units);
   const stateRef    = useRef({
     open:false, closing:false, activeBtn:null,
     currentR:0, targetR:0,
@@ -146,6 +147,17 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
     arrayState: { count: 1, spacing: 0.1 },
     socketStates: Object.fromEntries(sockets.map(s=>[s.name,{...(s.state||{})}])),
   });
+
+  // Keep unitsRef current and refresh card when units change
+  useEffect(() => {
+    unitsRef.current = units;
+    const state = stateRef.current;
+    if (state.cardEl && state.open) {
+      state.cardEl.innerHTML = buildCardHTML(modelName, state.activeBtn, state.buttons, state.socketStates, state.currentColor, state.currentRotY, state.arrayState, unitsRef.current);
+      // rebind events after innerHTML change — call bindCardEvents via ref
+      state._bindCardEvents?.();
+    }
+  }, [units]);
 
   useEffect(() => {
     const root  = rootRef.current;
@@ -212,7 +224,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       state.activeBtn = id;
       // Update card HTML first so we can measure it
       if (state.cardEl) {
-        state.cardEl.innerHTML = buildCardHTML(modelName, state.activeBtn, state.buttons, state.socketStates, state.currentColor, state.currentRotY, state.arrayState, units);
+        state.cardEl.innerHTML = buildCardHTML(modelName, state.activeBtn, state.buttons, state.socketStates, state.currentColor, state.currentRotY, state.arrayState, unitsRef.current);
         bindCardEvents();
       }
       // Measure after browser renders the new card content
@@ -244,15 +256,16 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
 
     function refreshCard() {
       if (state.cardEl) {
-        state.cardEl.innerHTML = buildCardHTML(modelName, state.activeBtn, state.buttons, state.socketStates, state.currentColor, state.currentRotY, state.arrayState, units);
+        state.cardEl.innerHTML = buildCardHTML(modelName, state.activeBtn, state.buttons, state.socketStates, state.currentColor, state.currentRotY, state.arrayState, unitsRef.current);
         bindCardEvents();
       }
     }
 
     function bindCardEvents() {
+      state._bindCardEvents = bindCardEvents; // expose for units refresh
       // Array
       const UNITS_MAP = { m:{factor:1}, ft:{factor:3.28084}, cm:{factor:100}, inch:{factor:39.3701} };
-      const uf = UNITS_MAP[units]?.factor || 1;
+      const uf = UNITS_MAP[unitsRef.current]?.factor || 1;
       const SPACING_STEP = 1 / uf; // 1 unit in meters
 
       const arrDec = document.getElementById('rm_arr_dec');
@@ -345,7 +358,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       display:flex;flex-direction:column;align-items:center;gap:5px;
       font-family:Figtree,sans-serif;cursor:default;z-index:10;
       opacity:0;transition:opacity 0.22s ease, transform 0.25s cubic-bezier(0.34,1.2,0.64,1);`;
-    card.innerHTML = buildCardHTML(modelName, null, state.buttons, state.socketStates, state.currentColor, state.currentRotY, state.arrayState, units);
+    card.innerHTML = buildCardHTML(modelName, null, state.buttons, state.socketStates, state.currentColor, state.currentRotY, state.arrayState, unitsRef.current);
     root.appendChild(card);
     state.cardEl = card;
 
@@ -470,5 +483,6 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       onClick={e=>e.stopPropagation()} />
   );
 }
+
 
 
