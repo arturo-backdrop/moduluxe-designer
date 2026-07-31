@@ -644,6 +644,11 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         container.remove(ph);
         container.add(root);
         attachOutlines(root);
+        // Sync outline visibility with current hover/selected state
+        const isActive = selectedUids.includes(uid) || hoveredUid === uid ||
+          (uid !== hoveredUid && getGroupUids(hoveredUid || '').includes(uid)) ||
+          getGroupUids(selectedUid || '').includes(uid);
+        setOutlineVisible(container, isActive);
         // Restore saved state
         const saved = itemsRef.current.find(i=>i.uid===uid);
         if (saved?.rotY) container.rotation.y = saved.rotY;
@@ -856,7 +861,11 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       const objW = maxP - minP;
       const step = objW + gap;
 
-      // Create Three.js clones
+      // Create Three.js clones — mark out-of-bounds ones with red ghost material
+      const OOB_MAT = new THREE.MeshStandardMaterial({
+        color: 0xff3333, transparent: true, opacity: 0.35,
+        depthWrite: false,
+      });
       const newClones = [];
       for (let i = 1; i < count; i++) {
         const cuid = `${uid}_arr_${i}`;
@@ -866,12 +875,24 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         clone.userData.isArrayClone = true;
         clone.userData.arrayParent  = uid;
         clone.userData.groupId      = groupId;
-        clone.position.set(
-          source.position.x + dir.x * step * i,
-          source.position.y,
-          source.position.z + dir.z * step * i,
-        );
+        const cx = source.position.x + dir.x * step * i;
+        const cz = source.position.z + dir.z * step * i;
+        clone.position.set(cx, source.position.y, cz);
         clone.rotation.copy(source.rotation);
+
+        // Check if clone center is outside floor bounds
+        const cloneBox = new THREE.Box3().setFromObject(source); // use source size as proxy
+        const hw = (cloneBox.max.x - cloneBox.min.x) / 2;
+        const hd = (cloneBox.max.z - cloneBox.min.z) / 2;
+        const oob = cx - hw < -floorW/2 || cx + hw > floorW/2 ||
+                    cz - hd < -floorD/2 || cz + hd > floorD/2;
+        clone.userData.outOfBounds = oob;
+        if (oob) {
+          clone.traverse(c => {
+            if (c.isMesh && !c.userData.isMeta) c.material = OOB_MAT;
+          });
+        }
+
         itemGroup.add(clone);
         newClones.push(cuid);
         clone.scale.set(0.01, 0.01, 0.01);
