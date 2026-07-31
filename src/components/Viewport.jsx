@@ -552,14 +552,13 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       if (e.key!=='Delete' && e.key!=='Backspace') return;
       if (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
       if (!selectedUid) return;
-      // Remove all selected group members
-      selectedUids.forEach(uid => {
-        const c = itemGroup.children.find(x=>x.userData.uid===uid);
-        if (c) itemGroup.remove(c);
-      });
+      // Remove all selected group members with animation
       const uidsToRemove = new Set(selectedUids);
-      const next = itemsRef.current.filter(i=>!uidsToRemove.has(i.uid));
-      onChangeRef.current?.(next);
+      selectedUids.forEach(uid => deleteContainer(uid));
+      setTimeout(() => {
+        const next = itemsRef.current.filter(i=>!uidsToRemove.has(i.uid));
+        onChangeRef.current?.(next);
+      }, 400);
       selectedUid=null; selectedUids=[]; dot.visible=false;
       onRadialMenuRef.current?.(null);
     };
@@ -670,39 +669,37 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     function rotateObject(uid, rotY) {
       const source = itemGroup.children.find(x=>x.userData.uid===uid);
       if (!source) return;
-      // Get all group members
       const item = itemsRef.current.find(i=>i.uid===uid);
       const groupUids = item?.groupId
         ? itemsRef.current.filter(i=>i.groupId===item.groupId).map(i=>i.uid)
         : [uid];
-      // Rotate source
       const prevRotY = source.rotation.y;
-      const delta = rotY - prevRotY;
+      const delta    = rotY - prevRotY;
+      // Animate source rotation
       rotAnims.set(uid, { from: prevRotY, to: rotY, startTime: performance.now() });
-      // Rotate clones around source position
+      // Rotate clones around source origin
       const ox = source.position.x, oz = source.position.z;
+      const cos = Math.cos(delta), sin = Math.sin(delta);
       groupUids.forEach(cuid => {
         if (cuid === uid) return;
         const clone = itemGroup.children.find(x=>x.userData.uid===cuid);
         if (!clone) return;
-        // Rotate position around source
         const dx = clone.position.x - ox, dz = clone.position.z - oz;
-        const cos = Math.cos(delta), sin = Math.sin(delta);
-        const nx = dx*cos - dz*sin + ox;
-        const nz = dx*sin + dz*cos + oz;
-        const fromRot = clone.rotation.y;
-        const toRot   = fromRot + delta;
-        rotAnims.set(cuid, { from: fromRot, to: toRot, startTime: performance.now(),
-          posAnim: { fromX: clone.position.x, fromZ: clone.position.z, toX: nx, toZ: nz } });
+        // 2D rotation: x' = dx*cos - dz*sin, z' = dx*sin + dz*cos  (standard CCW)
+        // Three.js rotY is CCW so we negate sin for CW visual match
+        const nx = dx*cos + dz*sin + ox;
+        const nz = -dx*sin + dz*cos + oz;
+        rotAnims.set(cuid, {
+          from: clone.rotation.y, to: clone.rotation.y + delta,
+          startTime: performance.now(),
+          posAnim: { fromX: clone.position.x, fromZ: clone.position.z, toX: nx, toZ: nz }
+        });
       });
-      // Update React state positions for clones
+      // Update React state
       const next = itemsRef.current.map(i => {
         if (!groupUids.includes(i.uid) || i.uid === uid) return i;
-        const clone = itemGroup.children.find(x=>x.userData.uid===i.uid);
-        if (!clone) return i;
         const dx = i.x - ox, dz = i.z - oz;
-        const cos = Math.cos(delta), sin = Math.sin(delta);
-        return { ...i, x: dx*cos - dz*sin + ox, z: dx*sin + dz*cos + oz, rotY: i.rotY + delta };
+        return { ...i, x: dx*cos + dz*sin + ox, z: -dx*sin + dz*cos + oz, rotY: i.rotY + delta };
       });
       onChangeRef.current?.(next);
     }
@@ -751,21 +748,29 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       const groupUids = item?.groupId
         ? itemsRef.current.filter(i=>i.groupId===item.groupId).map(i=>i.uid)
         : [uid];
-      const offset  = 1.5;
+      const offset     = 1.5;
       const newGroupId = item?.groupId ? `arr_dup_${Date.now()}` : null;
-      const newItems = [];
+      const newItems   = [];
       groupUids.forEach((gid, idx) => {
         const obj  = itemGroup.children.find(x=>x.userData.uid===gid);
         const orig = itemsRef.current.find(i=>i.uid===gid);
         if (!obj || !orig) return;
-        const newUid = `${obj.userData.modelId}_dup_${Date.now()}_${idx}`;
-        spawnContainer(obj.userData.modelId, newUid, obj.position.x + offset, obj.position.z + offset);
-        // Apply same color after spawn
-        if (orig.color) setTimeout(() => _applyColorToContainer(newUid, orig.color), 50);
+        const newUid  = `${obj.userData.modelId}_dup_${Date.now()}_${idx}`;
+        const newX    = obj.position.x + offset;
+        const newZ    = obj.position.z + offset;
+        const newRotY = obj.rotation.y;
+        const newCont = spawnContainer(obj.userData.modelId, newUid, newX, newZ);
+        // Apply rotation and color immediately on the container
+        if (newCont) newCont.rotation.y = newRotY;
+        setTimeout(() => {
+          const c = itemGroup.children.find(x=>x.userData.uid===newUid);
+          if (c) c.rotation.y = newRotY;
+          if (orig.color) _applyColorToContainer(newUid, orig.color);
+        }, 50);
         newItems.push({
           uid: newUid, modelId: obj.userData.modelId, count: 1,
-          x: obj.position.x + offset, z: obj.position.z + offset,
-          rotY: obj.rotation.y, color: orig.color || null,
+          x: newX, z: newZ, rotY: newRotY,
+          color: orig.color || null,
           groupId: newGroupId,
           isArrayClone: newGroupId ? orig.isArrayClone : false,
           arrayParent: newGroupId && orig.isArrayClone ? newGroupId : undefined,
@@ -787,30 +792,42 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         const c = itemGroup.children.find(x=>x.userData.uid===cuid);
         if (c) itemGroup.remove(c);
       });
-
-      // Get object width from bounding box
-      source.updateWorldMatrix(true, true);
-      const box  = new THREE.Box3().setFromObject(source);
-      const objW = box.max.x - box.min.x;
-      // step = object width + gap between edges (gap=0 means touching)
-      const step = objW + gap;
-
-      // Direction: +X local axis of object
-      const rotY = source.rotation.y;
-      const dir  = new THREE.Vector3(Math.sin(rotY + Math.PI/2), 0, Math.cos(rotY + Math.PI/2));
+      arrayGroups.set(uid, []);
 
       const groupId = `arr_${uid}`;
       source.userData.groupId = groupId;
 
       if (count <= 1) {
-        arrayGroups.set(uid, []);
         source.userData.groupId = null;
+        // Remove clones from sceneItems immediately (before sync runs)
         const updated = itemsRef.current
           .filter(i => !(i.isArrayClone && i.arrayParent === uid))
           .map(i => i.uid === uid ? { ...i, count: 1, arrayGap: undefined, groupId: null } : i);
+        itemsRef.current = updated; // update ref immediately to prevent sync from re-adding
         onChangeRef.current?.(updated);
         return;
       }
+
+      // Measure object size along its local +X axis (direction of array)
+      source.updateWorldMatrix(true, true);
+      const rotY = source.rotation.y;
+      const dir  = new THREE.Vector3(Math.cos(rotY), 0, -Math.sin(rotY)); // local +X in world
+      // Project bounding box onto the array direction to get true width
+      const box  = new THREE.Box3().setFromObject(source);
+      const corners = [
+        new THREE.Vector3(box.min.x, 0, box.min.z),
+        new THREE.Vector3(box.max.x, 0, box.min.z),
+        new THREE.Vector3(box.min.x, 0, box.max.z),
+        new THREE.Vector3(box.max.x, 0, box.max.z),
+      ];
+      let minP = Infinity, maxP = -Infinity;
+      corners.forEach(c => {
+        const p = c.dot(dir);
+        if (p < minP) minP = p;
+        if (p > maxP) maxP = p;
+      });
+      const objW = maxP - minP;
+      const step = objW + gap;
 
       // Create Three.js clones
       const newClones = [];
@@ -835,7 +852,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       }
       arrayGroups.set(uid, newClones);
 
-      // Update sceneItems: source + real clone items with groupId
+      // Update sceneItems
       const filtered   = itemsRef.current.filter(i => !(i.isArrayClone && i.arrayParent === uid));
       const withSource = filtered.map(i => i.uid === uid ? { ...i, count: 1, arrayGap: gap, groupId } : i);
       const cloneItems = newClones.map((cuid, i) => ({
@@ -845,7 +862,9 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         rotY: source.rotation.y,
         isArrayClone: true, arrayParent: uid, groupId,
       }));
-      onChangeRef.current?.([...withSource, ...cloneItems]);
+      const next = [...withSource, ...cloneItems];
+      itemsRef.current = next; // update ref immediately
+      onChangeRef.current?.(next);
     }
 
     engRef.current = { itemGroup, spawnContainer, pendingPositions, project3D, camera, selectedUidRef: { current: null }, deleteContainer, rotateObject, applyColor, duplicateObject, applyArray };
@@ -942,9 +961,10 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     if (!config._catalogFlat?.length) return;
     const { itemGroup, spawnContainer, pendingPositions } = eng;
 
-    // Remove containers no longer in items
+    // Remove containers no longer in items (but never remove array clones — managed by applyArray)
     const currentUids = new Set(sceneItems.map(i=>i.uid));
     [...itemGroup.children].forEach(c => {
+      if (c.userData.isArrayClone) return;
       if (!currentUids.has(c.userData.uid)) itemGroup.remove(c);
     });
 
@@ -982,6 +1002,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
 
