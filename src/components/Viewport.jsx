@@ -269,6 +269,15 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
     // Get all uids in the same group as uid (or just [uid] if no group)
     function getGroupUids(uid) {
+      // Check Three.js userData first — catches clones even when not in sceneItems
+      const obj = itemGroup.children.find(x => x.userData.uid === uid);
+      const groupId = obj?.userData.groupId;
+      if (groupId) {
+        return itemGroup.children
+          .filter(x => x.userData.groupId === groupId)
+          .map(x => x.userData.uid);
+      }
+      // Fallback: sceneItems
       const item = itemsRef.current.find(i => i.uid === uid);
       if (!item?.groupId) return [uid];
       return itemsRef.current
@@ -278,6 +287,10 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
     // Get the source uid of a group (the one that is not a clone)
     function getSourceUid(uid) {
+      // First check Three.js userData — reliable even if sceneItems is stale
+      const obj = itemGroup.children.find(x => x.userData.uid === uid);
+      if (obj?.userData.arrayParent) return obj.userData.arrayParent;
+      // Fallback: check sceneItems
       const item = itemsRef.current.find(i => i.uid === uid);
       if (!item?.groupId) return uid;
       const source = itemsRef.current.find(i => i.groupId === item.groupId && !i.isArrayClone);
