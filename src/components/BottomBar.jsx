@@ -45,15 +45,23 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel, 
   const viewportRef = useRef(null);
   const trackRef    = useRef(null);
 
-  // One chip per model type, summing count (arrays stored as count on source item)
+  // One chip per model type — exclude array clones (source item count already = 1 per physical object)
   const groupedItems = React.useMemo(() => {
     const map = new Map();
     sceneItems.forEach(item => {
+      if (item.isArrayClone) return; // clones are counted via their source's groupId
       const c = item.count || 1;
       if (map.has(item.modelId)) {
         map.get(item.modelId).count += c;
       } else {
         map.set(item.modelId, { modelId: item.modelId, count: c });
+      }
+    });
+    // Add clone counts
+    sceneItems.forEach(item => {
+      if (!item.isArrayClone) return;
+      if (map.has(item.modelId)) {
+        map.get(item.modelId).count += 1;
       }
     });
     return Array.from(map.values());
@@ -154,6 +162,7 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel, 
     </div>
   );
 }
+
 
 
 
