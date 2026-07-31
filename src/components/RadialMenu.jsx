@@ -74,6 +74,16 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
           <button id="rm_sp_inc" style="width:26px;height:26px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;">+</button>
         </div>
       </div>
+      <div style="border-top:1px solid #f0f0f0;padding-top:8px;">
+        <div style="font-size:9px;color:#999;margin-bottom:5px;">Units</div>
+        <div style="display:flex;gap:4px;">
+          ${['m','ft','cm','in'].map(ul => {
+            const key = ul === 'in' ? 'inch' : ul;
+            const active = key === units;
+            return `<button id="rm_unit_${key}" style="flex:1;padding:4px 0;border-radius:6px;border:none;font-size:10px;font-weight:${active?700:500};cursor:pointer;background:${active?'#1a1a1a':'#f0f0f0'};color:${active?'white':'#666'};">${ul}</button>`;
+          }).join('')}
+        </div>
+      </div>
     </div>`;
 
   if (activeBtnId === 'rotate') return `
@@ -292,6 +302,14 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
         onAction?.('array', { ...state.arrayState });
         refreshCard();
       };
+
+      // Unit buttons
+      ['m','ft','cm','inch'].forEach(key => {
+        const el = document.getElementById(`rm_unit_${key}`);
+        if (el) el.onclick = () => {
+          onAction?.('units', { units: key });
+        };
+      });
       const rotLeft  = document.getElementById('rm_rot_left');
       const rotRight = document.getElementById('rm_rot_right');
       if (rotLeft) rotLeft.onclick = () => {
@@ -482,6 +500,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       onClick={e=>e.stopPropagation()} />
   );
 }
+
 
 
 
