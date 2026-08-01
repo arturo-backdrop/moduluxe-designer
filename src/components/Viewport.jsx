@@ -588,9 +588,60 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       onRadialMenuRef.current?.(null);
     };
 
-    const onDragOver = e => e.preventDefault();
+    // ── Drag ghost ────────────────────────────────────────────
+    let dragGhost = null;
+    let dragGhostModelId = null;
+
+    function createDragGhost(modelId) {
+      if (dragGhost) { itemGroup.remove(dragGhost); dragGhost = null; }
+      const def = (config._catalogFlat || []).find(d => d.id === modelId);
+      const w = def?.w || 1, h = def?.h || 1, d = def?.d || 0.5;
+      const geo = new THREE.BoxGeometry(w, h, d);
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0x4488ff, transparent: true, opacity: 0.35,
+        depthWrite: false,
+      });
+      dragGhost = new THREE.Mesh(geo, mat);
+      dragGhost.position.y = h / 2;
+      dragGhost.userData.isMeta = true;
+      itemGroup.add(dragGhost);
+      dragGhostModelId = modelId;
+    }
+
+    function moveDragGhost(clientX, clientY) {
+      if (!dragGhost) return;
+      const pt = groundPt(clientX, clientY);
+      dragGhost.position.x = snap(pt.x);
+      dragGhost.position.z = snap(pt.z);
+    }
+
+    function removeDragGhost() {
+      if (dragGhost) { itemGroup.remove(dragGhost); dragGhost = null; dragGhostModelId = null; }
+    }
+
+    const onDragEnter = e => {
+      const modelId = e.dataTransfer?.types?.includes('text/plain')
+        ? null : null; // can't read data in dragenter, will get it in dragover
+      e.preventDefault();
+    };
+
+    const onDragOver = e => {
+      e.preventDefault();
+      // Try to get modelId from dataTransfer (works in Chrome/Firefox)
+      const modelId = e.dataTransfer?.getData('modelId') ||
+                      e.dataTransfer?.getData('text/plain');
+      if (modelId && modelId !== dragGhostModelId) createDragGhost(modelId);
+      moveDragGhost(e.clientX, e.clientY);
+    };
+
+    const onDragLeave = e => {
+      // Only remove if leaving the canvas entirely
+      if (!canvas.contains(e.relatedTarget)) removeDragGhost();
+    };
+
     const onDrop = e => {
       e.preventDefault();
+      removeDragGhost();
       const modelId = e.dataTransfer?.getData('modelId');
       if (!modelId) return;
       const pt  = groundPt(e.clientX, e.clientY);
@@ -605,7 +656,9 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup',   onPointerUp);
     window.addEventListener('keydown',     onKeyDown);
+    canvas.addEventListener('dragenter',   onDragEnter);
     canvas.addEventListener('dragover',    onDragOver);
+    canvas.addEventListener('dragleave',   onDragLeave);
     canvas.addEventListener('drop',        onDrop);
 
     // ── Spawn container ───────────────────────────────────────
@@ -993,7 +1046,9 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup',   onPointerUp);
       window.removeEventListener('keydown',     onKeyDown);
+      canvas.removeEventListener('dragenter',   onDragEnter);
       canvas.removeEventListener('dragover',    onDragOver);
+      canvas.removeEventListener('dragleave',   onDragLeave);
       canvas.removeEventListener('drop',        onDrop);
       window.removeEventListener('viewport:zoom', onZoom);
       window.removeEventListener('resize',      onResize);
