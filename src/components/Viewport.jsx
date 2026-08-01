@@ -456,10 +456,10 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       dragStartX  = e.clientX; dragStartY = e.clientY;
       controls.enabled = false;
       onRadialMenuRef.current?.(null);
-      restoreOOBMaterials(); // clear array OOB red before drag
-      // Pre-compute drag offsets for the whole group
+      restoreOOBMaterials(); // clear array OOB red and reset outOfBounds flags
+      // Pre-compute drag offsets for the whole group — always recalculate fresh
       const pt   = groundPt(e.clientX, e.clientY);
-      const uids = selectedUids.includes(draggingUid) ? selectedUids : getGroupUids(draggingUid);
+      const uids = getGroupUids(draggingUid);
       dragOffsets = {};
       uids.forEach(uid => {
         const obj = itemGroup.children.find(x => x.userData.uid === uid);
