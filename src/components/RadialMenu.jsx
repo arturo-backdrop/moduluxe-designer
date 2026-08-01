@@ -24,11 +24,11 @@ const BEHAVIOR_ICONS = {
 };
 
 const FIXED_ACTIONS = [
-  { id:'array',  icon:'ti-layout-columns',    label:'Array',     hasProps:true,  size:42 },
-  { id:'color',  icon:'ti-palette',           label:'Color',     hasProps:true,  size:42 },
-  { id:'rotate', icon:'ti-rotate-clockwise',  label:'Rotate',    hasProps:false, size:42 },
-  { id:'dup',    icon:'ti-copy',              label:'Duplicate', hasProps:false, size:42 },
-  { id:'del',    icon:'ti-trash',             label:'Delete',    hasProps:false, size:42 },
+  { id:'array',  icon:'ti-layout-columns',    label:'Array',     hasProps:true,  size:42, angle: -90 },
+  { id:'color',  icon:'ti-palette',           label:'Color',     hasProps:true,  size:42, angle: -18 },
+  { id:'rotate', icon:'ti-rotate-clockwise',  label:'Rotate',    hasProps:false, size:42, angle:  54 },
+  { id:'dup',    icon:'ti-copy',              label:'Duplicate', hasProps:false, size:42, angle: 126 },
+  { id:'del',    icon:'ti-trash',             label:'Delete',    hasProps:false, size:42, angle: 198 },
 ];
 
 function buildButtons(sockets=[]) {
@@ -36,8 +36,17 @@ function buildButtons(sockets=[]) {
     id:s.name, icon:BEHAVIOR_ICONS[s.behavior]||'ti-adjustments',
     label:s.label||s.name, size:48, hasProps:true, socket:s,
   }));
-  const all = [...socketBtns, ...FIXED_ACTIONS];
-  return all.map((b,i) => ({ ...b, angle:(360/all.length)*i - 90 }));
+  // Distribute sockets in the arc between del (198°) and array (-90°=270°)
+  // Arc spans from 198° to 270° (72° of space)
+  const arcStart = 216, arcEnd = 342; // leave padding from del and array
+  const count = socketBtns.length;
+  const positioned = socketBtns.map((b, i) => {
+    const angle = count === 1
+      ? (arcStart + arcEnd) / 2
+      : arcStart + (arcEnd - arcStart) / (count - 1) * i;
+    return { ...b, angle };
+  });
+  return [...positioned, ...FIXED_ACTIONS];
 }
 
 function angleDiff(a,b) { let d=((b-a)+180)%360-180; return d<-180?d+360:d; }
@@ -500,6 +509,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       onClick={e=>e.stopPropagation()} />
   );
 }
+
 
 
 
