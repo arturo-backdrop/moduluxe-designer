@@ -616,8 +616,13 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     function moveDragGhost(clientX, clientY) {
       if (!dragGhost) return;
       const pt = groundPt(clientX, clientY);
-      dragGhost.position.x = snap(pt.x);
-      dragGhost.position.z = snap(pt.z);
+      dragGhost.updateWorldMatrix(true, true);
+      const box = new THREE.Box3().setFromObject(dragGhost);
+      const hw = (box.max.x - box.min.x) / 2 || 0.5;
+      const hd = (box.max.z - box.min.z) / 2 || 0.5;
+      const cl = clampFloor(snap(pt.x), snap(pt.z), hw, hd);
+      dragGhost.position.x = cl.x;
+      dragGhost.position.z = cl.z;
     }
 
     function removeDragGhost() {
@@ -644,12 +649,13 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
     const onDrop = e => {
       e.preventDefault();
-      removeDragGhost();
       const modelId = e.dataTransfer?.getData('modelId');
       if (!modelId) return;
-      const pt  = groundPt(e.clientX, e.clientY);
+      // Use ghost position if available (already clamped to floor)
+      const x = dragGhost ? dragGhost.position.x : snap(groundPt(e.clientX, e.clientY).x);
+      const z = dragGhost ? dragGhost.position.z : snap(groundPt(e.clientX, e.clientY).z);
+      removeDragGhost();
       const uid = `${modelId}_${Date.now()}`;
-      const x   = snap(pt.x), z = snap(pt.z);
       pendingPositions.set(uid, { x, z });
       const next = [...itemsRef.current, { uid, modelId, count: 1, x, z, rotY: 0 }];
       onChangeRef.current?.(next);
