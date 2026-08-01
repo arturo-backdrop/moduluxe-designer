@@ -42,8 +42,10 @@ function ProductItem({ item, onDragStart }) {
       draggable
       onDragStart={e => {
         e.dataTransfer.setData('modelId', item.id);
+        window.__dragModelId = item.id;
         onDragStart(item);
       }}
+      onDragEnd={() => { window.__dragModelId = null; }}
       onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
       {item.thumbnail
         ? <img src={item.thumbnail} alt={item.name} className={styles.thumbImg} />
@@ -174,5 +176,6 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
     </div>
   );
 }
+
 
 
