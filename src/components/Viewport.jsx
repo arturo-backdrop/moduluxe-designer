@@ -481,15 +481,27 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         canvas.style.cursor = 'grabbing';
       }
       const pt = groundPt(e.clientX, e.clientY);
-      // Snap only the anchor, others follow with exact relative offset
+      // Calculate the bounding footprint of the entire group to clamp correctly
       const anchorOff = dragOffsets[draggingUid];
       const anchorObj = itemGroup.children.find(x => x.userData.uid === draggingUid);
       if (!anchorOff || !anchorObj) return;
-      const anchorBox = new THREE.Box3().setFromObject(anchorObj);
-      const hw = (anchorBox.max.x-anchorBox.min.x)/2, hd = (anchorBox.max.z-anchorBox.min.z)/2;
-      const snapped = clampFloor(snap(pt.x+anchorOff.dx), snap(pt.z+anchorOff.dz), hw, hd);
-      const ddx = snapped.x - (pt.x + anchorOff.dx);
-      const ddz = snapped.z - (pt.z + anchorOff.dz);
+      // Find min/max extents of all group objects relative to anchor
+      let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+      Object.entries(dragOffsets).forEach(([uid, off]) => {
+        const obj = itemGroup.children.find(x => x.userData.uid === uid);
+        if (!obj) return;
+        const b = new THREE.Box3().setFromObject(obj);
+        const relX = off.dx - anchorOff.dx, relZ = off.dz - anchorOff.dz;
+        const hw = (b.max.x - b.min.x) / 2, hd = (b.max.z - b.min.z) / 2;
+        minX = Math.min(minX, relX - hw); maxX = Math.max(maxX, relX + hw);
+        minZ = Math.min(minZ, relZ - hd); maxZ = Math.max(maxZ, relZ + hd);
+      });
+      // Clamp anchor so entire group stays inside floor
+      const rawX = snap(pt.x + anchorOff.dx), rawZ = snap(pt.z + anchorOff.dz);
+      const clampedX = Math.max(-floorW/2 - minX, Math.min(floorW/2 - maxX, rawX));
+      const clampedZ = Math.max(-floorD/2 - minZ, Math.min(floorD/2 - maxZ, rawZ));
+      const ddx = clampedX - (pt.x + anchorOff.dx);
+      const ddz = clampedZ - (pt.z + anchorOff.dz);
       Object.entries(dragOffsets).forEach(([uid, off]) => {
         const obj = itemGroup.children.find(x => x.userData.uid === uid);
         if (!obj) return;
@@ -1053,19 +1065,6 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       renderer.autoClear=false;
       renderer.render(scene, camera);
       renderer.autoClear=true;
-
-      // Update OOB material for array clones that moved in/out of floor
-      itemGroup.children.forEach(c => {
-        if (!c.userData.isArrayClone || !c.userData.origMats) return;
-        const hw = 0.5, hd = 0.5;
-        const oob = c.position.x - hw < -floorW/2 || c.position.x + hw > floorW/2 ||
-                    c.position.z - hd < -floorD/2 || c.position.z + hd > floorD/2;
-        if (oob === c.userData.outOfBounds) return;
-        c.userData.outOfBounds = oob;
-        c.userData.origMats.forEach(({ mesh, mat }) => {
-          mesh.material = oob ? LIVE_OOB_MAT : mat;
-        });
-      });
     })();
 
     return () => {
