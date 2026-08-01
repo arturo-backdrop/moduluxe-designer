@@ -501,11 +501,11 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       const anchorOff = dragOffsets[draggingUid];
       const anchorObj = itemGroup.children.find(x => x.userData.uid === draggingUid);
       if (!anchorOff || !anchorObj) return;
-      // Clamp based on full group footprint including OOB clones
+      // Clamp using only in-bounds members (OOB clones don't constrain movement)
       let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
       Object.entries(dragOffsets).forEach(([uid, off]) => {
         const obj = itemGroup.children.find(x => x.userData.uid === uid);
-        if (!obj) return;
+        if (!obj || obj.userData.outOfBounds) return;
         const b = new THREE.Box3().setFromObject(obj);
         const relX = off.dx - anchorOff.dx, relZ = off.dz - anchorOff.dz;
         const hw = (b.max.x - b.min.x) / 2, hd = (b.max.z - b.min.z) / 2;
@@ -522,6 +522,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       const clampedZ = Math.max(-floorD/2 - minZ, Math.min(floorD/2 - maxZ, rawZ));
       const ddx = clampedX - (pt.x + anchorOff.dx);
       const ddz = clampedZ - (pt.z + anchorOff.dz);
+      // Move ALL members including OOB clones
       Object.entries(dragOffsets).forEach(([uid, off]) => {
         const obj = itemGroup.children.find(x => x.userData.uid === uid);
         if (!obj) return;
