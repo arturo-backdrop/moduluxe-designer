@@ -8,6 +8,7 @@ import { loadModel } from '../three/glbParser.js';
 const DRAG_THRESHOLD = 5;   // px before drag is armed
 const GRID_SNAP      = 0.25; // meters
 const ANIM_DURATION  = 280;  // ms for spawn spring
+const LIVE_OOB_MAT   = new THREE.MeshStandardMaterial({ color:0xff3333, transparent:true, opacity:0.35, depthWrite:false });
 
 // ── Spring ease (same as Booth Planner) ──────────────────────
 function springEase(t) {
@@ -942,17 +943,22 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         clone.position.set(cx, source.position.y, cz);
         clone.rotation.copy(source.rotation);
 
+        // Save original materials for OOB toggle
+        const origMats = [];
+        clone.traverse(c => {
+          if (c.isMesh && !c.userData.isMeta) origMats.push({ mesh: c, mat: c.material });
+        });
+        clone.userData.origMats = origMats;
+
         // Check if clone center is outside floor bounds
-        const cloneBox = new THREE.Box3().setFromObject(source); // use source size as proxy
+        const cloneBox = new THREE.Box3().setFromObject(source);
         const hw = (cloneBox.max.x - cloneBox.min.x) / 2;
         const hd = (cloneBox.max.z - cloneBox.min.z) / 2;
         const oob = cx - hw < -floorW/2 || cx + hw > floorW/2 ||
                     cz - hd < -floorD/2 || cz + hd > floorD/2;
         clone.userData.outOfBounds = oob;
         if (oob) {
-          clone.traverse(c => {
-            if (c.isMesh && !c.userData.isMeta) c.material = OOB_MAT;
-          });
+          origMats.forEach(({ mesh }) => { mesh.material = OOB_MAT; });
         }
 
         itemGroup.add(clone);
@@ -1047,6 +1053,19 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       renderer.autoClear=false;
       renderer.render(scene, camera);
       renderer.autoClear=true;
+
+      // Update OOB material for array clones that moved in/out of floor
+      itemGroup.children.forEach(c => {
+        if (!c.userData.isArrayClone || !c.userData.origMats) return;
+        const hw = 0.5, hd = 0.5;
+        const oob = c.position.x - hw < -floorW/2 || c.position.x + hw > floorW/2 ||
+                    c.position.z - hd < -floorD/2 || c.position.z + hd > floorD/2;
+        if (oob === c.userData.outOfBounds) return;
+        c.userData.outOfBounds = oob;
+        c.userData.origMats.forEach(({ mesh, mat }) => {
+          mesh.material = oob ? LIVE_OOB_MAT : mat;
+        });
+      });
     })();
 
     return () => {
