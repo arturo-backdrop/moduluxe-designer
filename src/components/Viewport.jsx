@@ -347,7 +347,23 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     function closeRadialMenu() {
       const wrapper = radialMenuWrapperRef?.current;
       if (wrapper?._triggerClose) wrapper._triggerClose();
-      else closeRadialMenu();
+      else onRadialMenuRef.current?.(null);
+      restoreOOBMaterials();
+    }
+
+    function restoreOOBMaterials() {
+      itemGroup.children.forEach(c => {
+        if (!c.userData.isArrayClone || !c.userData.outOfBounds) return;
+        const source = itemGroup.children.find(x => x.userData.uid === c.userData.arrayParent);
+        const srcMeshes = [];
+        if (source) source.traverse(ch => { if (ch.isMesh && !ch.userData.isMeta) srcMeshes.push(ch); });
+        let si = 0;
+        c.traverse(ch => {
+          if (ch.isMesh && !ch.userData.isMeta) { ch.material = srcMeshes[si]?.material ?? ch.material; si++; }
+        });
+        c.userData.outOfBounds = false;
+        c.userData.origMats = [];
+      });
     }
     // Project 3D position to screen coords
     function project3D(obj) {
@@ -440,6 +456,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       dragStartX  = e.clientX; dragStartY = e.clientY;
       controls.enabled = false;
       onRadialMenuRef.current?.(null);
+      restoreOOBMaterials(); // clear array OOB red before drag
       // Pre-compute drag offsets for the whole group
       const pt   = groundPt(e.clientX, e.clientY);
       const uids = selectedUids.includes(draggingUid) ? selectedUids : getGroupUids(draggingUid);
@@ -978,7 +995,14 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           if (c.isMesh && !c.userData.isMeta) origMats.push({ mesh: c, mat: c.material });
         });
         clone.userData.origMats = origMats;
-        clone.userData.outOfBounds = false; // OOB indicator only active during drag
+
+        // Check OOB and apply red immediately so user sees it while editing array
+        clone.updateWorldMatrix(true, true);
+        const cb = new THREE.Box3().setFromObject(clone);
+        const oob = cb.min.x < -floorW/2 || cb.max.x > floorW/2 ||
+                    cb.min.z < -floorD/2 || cb.max.z > floorD/2;
+        clone.userData.outOfBounds = oob;
+        if (oob) origMats.forEach(({ mesh }) => { mesh.material = LIVE_OOB_MAT; });
 
         itemGroup.add(clone);
         newClones.push(cuid);
