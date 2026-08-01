@@ -501,18 +501,17 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       const anchorOff = dragOffsets[draggingUid];
       const anchorObj = itemGroup.children.find(x => x.userData.uid === draggingUid);
       if (!anchorOff || !anchorObj) return;
-      // Clamp based on group footprint — exclude OOB clones
+      // Clamp based on full group footprint including OOB clones
       let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
       Object.entries(dragOffsets).forEach(([uid, off]) => {
         const obj = itemGroup.children.find(x => x.userData.uid === uid);
-        if (!obj || obj.userData.outOfBounds) return; // skip OOB clones
+        if (!obj) return;
         const b = new THREE.Box3().setFromObject(obj);
         const relX = off.dx - anchorOff.dx, relZ = off.dz - anchorOff.dz;
         const hw = (b.max.x - b.min.x) / 2, hd = (b.max.z - b.min.z) / 2;
         minX = Math.min(minX, relX - hw); maxX = Math.max(maxX, relX + hw);
         minZ = Math.min(minZ, relZ - hd); maxZ = Math.max(maxZ, relZ + hd);
       });
-      // Fallback to anchor bounds if all are OOB
       if (minX === Infinity) {
         const b = new THREE.Box3().setFromObject(anchorObj);
         const hw = (b.max.x-b.min.x)/2, hd = (b.max.z-b.min.z)/2;
@@ -604,19 +603,6 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         }
         canvas.style.cursor = hoveredUid ? 'grab' : 'default';
       }
-      // Restore OOB materials on drag end
-      itemGroup.children.forEach(c => {
-        if (!c.userData.isArrayClone || !c.userData.outOfBounds) return;
-        const source = itemGroup.children.find(x => x.userData.uid === c.userData.arrayParent);
-        const srcMeshes = [];
-        if (source) source.traverse(ch => { if (ch.isMesh && !ch.userData.isMeta) srcMeshes.push(ch); });
-        let si = 0;
-        c.traverse(ch => {
-          if (ch.isMesh && !ch.userData.isMeta) { ch.material = srcMeshes[si]?.material ?? ch.material; si++; }
-        });
-        c.userData.outOfBounds = false;
-        c.userData.origMats = [];
-      });
       draggingUid = null; dragArmed = false; dragOffsets = {};
     };
 
@@ -1096,39 +1082,6 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       renderer.autoClear=false;
       renderer.render(scene, camera);
       renderer.autoClear=true;
-
-      // Live OOB material update — only during active drag
-      if (draggingUid) {
-        itemGroup.children.forEach(c => {
-          if (!c.userData.isArrayClone) return;
-          const b = new THREE.Box3().setFromObject(c);
-          const oob = b.min.x < -floorW/2 || b.max.x > floorW/2 ||
-                      b.min.z < -floorD/2 || b.max.z > floorD/2;
-          if (oob === c.userData.outOfBounds) return;
-          c.userData.outOfBounds = oob;
-          if (oob) {
-            // Save current mats and apply red
-            c.userData.origMats = [];
-            c.traverse(ch => {
-              if (ch.isMesh && !ch.userData.isMeta) {
-                c.userData.origMats.push({ mesh: ch, mat: ch.material });
-                ch.material = LIVE_OOB_MAT;
-              }
-            });
-          } else {
-            // Restore from source
-            const source = itemGroup.children.find(x => x.userData.uid === c.userData.arrayParent);
-            const srcMeshes = [];
-            if (source) source.traverse(ch => { if (ch.isMesh && !ch.userData.isMeta) srcMeshes.push(ch); });
-            let si = 0;
-            c.traverse(ch => {
-              if (ch.isMesh && !ch.userData.isMeta) { ch.material = srcMeshes[si]?.material ?? ch.material; si++; }
-            });
-            c.userData.origMats = [];
-            c.userData.outOfBounds = false;
-          }
-        });
-      }
     })();
 
     return () => {
