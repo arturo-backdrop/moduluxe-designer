@@ -594,18 +594,23 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
     function createDragGhost(modelId) {
       if (dragGhost) { itemGroup.remove(dragGhost); dragGhost = null; }
-      const def = (config._catalogFlat || []).find(d => d.id === modelId);
-      const w = def?.w || 1, h = def?.h || 1, d = def?.d || 0.5;
-      const geo = new THREE.BoxGeometry(w, h, d);
-      const mat = new THREE.MeshStandardMaterial({
-        color: 0x4488ff, transparent: true, opacity: 0.35,
-        depthWrite: false,
-      });
-      dragGhost = new THREE.Mesh(geo, mat);
-      dragGhost.position.y = h / 2;
-      dragGhost.userData.isMeta = true;
-      itemGroup.add(dragGhost);
       dragGhostModelId = modelId;
+      const def = (config._catalogFlat || []).find(d => d.id === modelId);
+      if (!def?.file) return;
+      loadModel(def.file).then(original => {
+        if (dragGhostModelId !== modelId) return; // drag changed or ended
+        const ghost = original.clone(true);
+        ghost.userData.isMeta = true;
+        ghost.traverse(c => {
+          if (c.isMesh && !c.userData.isMeta) {
+            c.material = new THREE.MeshStandardMaterial({
+              color: 0x4488ff, transparent: true, opacity: 0.45, depthWrite: false,
+            });
+          }
+        });
+        dragGhost = ghost;
+        itemGroup.add(dragGhost);
+      });
     }
 
     function moveDragGhost(clientX, clientY) {
