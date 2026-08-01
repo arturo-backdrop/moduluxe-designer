@@ -43,6 +43,10 @@ function ProductItem({ item, onDragStart }) {
       onDragStart={e => {
         e.dataTransfer.setData('modelId', item.id);
         window.__dragModelId = item.id;
+        // Hide the default drag card image
+        const img = new Image();
+        img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+        e.dataTransfer.setDragImage(img, 0, 0);
         onDragStart(item);
       }}
       onDragEnd={() => { window.__dragModelId = null; }}
