@@ -627,9 +627,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
     const onDragOver = e => {
       e.preventDefault();
-      // Try to get modelId from dataTransfer (works in Chrome/Firefox)
-      const modelId = e.dataTransfer?.getData('modelId') ||
-                      e.dataTransfer?.getData('text/plain');
+      const modelId = window.__dragModelId;
       if (modelId && modelId !== dragGhostModelId) createDragGhost(modelId);
       moveDragGhost(e.clientX, e.clientY);
     };
