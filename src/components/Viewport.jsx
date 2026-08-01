@@ -481,22 +481,26 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         canvas.style.cursor = 'grabbing';
       }
       const pt = groundPt(e.clientX, e.clientY);
-      // Calculate the bounding footprint of the entire group to clamp correctly
       const anchorOff = dragOffsets[draggingUid];
       const anchorObj = itemGroup.children.find(x => x.userData.uid === draggingUid);
       if (!anchorOff || !anchorObj) return;
-      // Find min/max extents of all group objects relative to anchor
+      // Clamp based on group footprint — exclude OOB clones
       let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
       Object.entries(dragOffsets).forEach(([uid, off]) => {
         const obj = itemGroup.children.find(x => x.userData.uid === uid);
-        if (!obj) return;
+        if (!obj || obj.userData.outOfBounds) return; // skip OOB clones
         const b = new THREE.Box3().setFromObject(obj);
         const relX = off.dx - anchorOff.dx, relZ = off.dz - anchorOff.dz;
         const hw = (b.max.x - b.min.x) / 2, hd = (b.max.z - b.min.z) / 2;
         minX = Math.min(minX, relX - hw); maxX = Math.max(maxX, relX + hw);
         minZ = Math.min(minZ, relZ - hd); maxZ = Math.max(maxZ, relZ + hd);
       });
-      // Clamp anchor so entire group stays inside floor
+      // Fallback to anchor bounds if all are OOB
+      if (minX === Infinity) {
+        const b = new THREE.Box3().setFromObject(anchorObj);
+        const hw = (b.max.x-b.min.x)/2, hd = (b.max.z-b.min.z)/2;
+        minX=-hw; maxX=hw; minZ=-hd; maxZ=hd;
+      }
       const rawX = snap(pt.x + anchorOff.dx), rawZ = snap(pt.z + anchorOff.dz);
       const clampedX = Math.max(-floorW/2 - minX, Math.min(floorW/2 - maxX, rawX));
       const clampedZ = Math.max(-floorD/2 - minZ, Math.min(floorD/2 - maxZ, rawZ));
@@ -1065,6 +1069,19 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       renderer.autoClear=false;
       renderer.render(scene, camera);
       renderer.autoClear=true;
+
+      // Live OOB material update for array clones
+      itemGroup.children.forEach(c => {
+        if (!c.userData.isArrayClone || !c.userData.origMats) return;
+        const b = new THREE.Box3().setFromObject(c);
+        const oob = b.min.x < -floorW/2 || b.max.x > floorW/2 ||
+                    b.min.z < -floorD/2 || b.max.z > floorD/2;
+        if (oob === c.userData.outOfBounds) return;
+        c.userData.outOfBounds = oob;
+        c.userData.origMats.forEach(({ mesh, mat }) => {
+          mesh.material = oob ? LIVE_OOB_MAT : mat;
+        });
+      });
     })();
 
     return () => {
