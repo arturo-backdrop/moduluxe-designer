@@ -1078,9 +1078,32 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
                     b.min.z < -floorD/2 || b.max.z > floorD/2;
         if (oob === c.userData.outOfBounds) return;
         c.userData.outOfBounds = oob;
-        c.userData.origMats.forEach(({ mesh, mat }) => {
-          mesh.material = oob ? LIVE_OOB_MAT : mat;
-        });
+        if (oob) {
+          // Going OOB — save current materials and apply red
+          c.userData.origMats = [];
+          c.traverse(ch => {
+            if (ch.isMesh && !ch.userData.isMeta) {
+              c.userData.origMats.push({ mesh: ch, mat: ch.material });
+              ch.material = LIVE_OOB_MAT;
+            }
+          });
+        } else {
+          // Coming back in — copy materials from source
+          const source = itemGroup.children.find(x => x.userData.uid === c.userData.arrayParent);
+          const sourceMeshes = [];
+          if (source) source.traverse(ch => { if (ch.isMesh && !ch.userData.isMeta) sourceMeshes.push(ch); });
+          let si = 0;
+          c.traverse(ch => {
+            if (ch.isMesh && !ch.userData.isMeta) {
+              ch.material = sourceMeshes[si]?.material || ch.material;
+              si++;
+            }
+          });
+          c.userData.origMats = [];
+          c.traverse(ch => {
+            if (ch.isMesh && !ch.userData.isMeta) c.userData.origMats.push({ mesh: ch, mat: ch.material });
+          });
+        }
       });
     })();
 
