@@ -33,18 +33,18 @@ const FIXED_ACTIONS = [
 
 const WALL_ACTIONS = [
   { id:'color', icon:'ti-palette',    label:'Color',  hasProps:true,  size:42, angle: -90 },
-  { id:'props', icon:'ti-adjustments',label:'Props',  hasProps:true,  size:42, angle: -18 },
+  { id:'props', icon:'ti-adjustments',label:'Config',  hasProps:true,  size:42, angle: -18 },
   { id:'del',   icon:'ti-trash',      label:'Delete', hasProps:false, size:42, angle:  54 },
 ];
 const COLUMN_ACTIONS = [
   { id:'color', icon:'ti-palette',    label:'Color',     hasProps:true,  size:42, angle: -90 },
-  { id:'props', icon:'ti-adjustments',label:'Props',     hasProps:true,  size:42, angle: -18 },
+  { id:'props', icon:'ti-adjustments',label:'Config',     hasProps:true,  size:42, angle: -18 },
   { id:'dup',   icon:'ti-copy',       label:'Duplicate', hasProps:false, size:42, angle:  54 },
   { id:'del',   icon:'ti-trash',      label:'Delete',    hasProps:false, size:42, angle: 126 },
 ];
 const DOOR_ACTIONS = [
   { id:'color', icon:'ti-palette',    label:'Color',  hasProps:true,  size:42, angle: -90 },
-  { id:'props', icon:'ti-adjustments',label:'Props',  hasProps:true,  size:42, angle: -18 },
+  { id:'props', icon:'ti-adjustments',label:'Config',  hasProps:true,  size:42, angle: -18 },
   { id:'del',   icon:'ti-trash',      label:'Delete', hasProps:false, size:42, angle:  54 },
 ];
 
@@ -125,6 +125,14 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
             style="width:100%;accent-color:#b48b31;" />
         </div>` : ''}
         ${isCol ? `
+        <div>
+          <div style="font-size:9px;color:#999;margin-bottom:3px;">Width (${u.label})</div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button id="rm_w_dec" style="width:22px;height:22px;border-radius:50%;border:none;background:#f0f0f0;cursor:pointer;">&#8722;</button>
+            <span id="rm_w_val" style="font-weight:700;font-size:14px;min-width:36px;text-align:center;">${(wp.width*u.factor).toFixed(units==='m'?2:1)}</span>
+            <button id="rm_w_inc" style="width:22px;height:22px;border-radius:50%;border:none;background:#f0f0f0;cursor:pointer;">+</button>
+          </div>
+        </div>
         <div>
           <div style="font-size:9px;color:#999;margin-bottom:3px;">Shape</div>
           <div style="display:flex;gap:4px;">
@@ -469,6 +477,11 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
         if (tInc) tInc.onclick = () => { wp.thickness = parseFloat((wp.thickness+STEP_T).toFixed(3)); emit(); refreshCard(); };
         if (glass) glass.oninput = () => { wp.glassRatio = parseFloat(glass.value); emit(); };
         if (open)  open.oninput  = () => { wp.openAngle  = parseFloat(open.value);  emit(); };
+        const wDec = document.getElementById('rm_w_dec');
+        const wInc = document.getElementById('rm_w_inc');
+        const STEP_W = 0.05;
+        if (wDec) wDec.onclick = () => { wp.width = wp.depth = Math.max(0.1, parseFloat((wp.width-STEP_W).toFixed(2))); emit(); refreshCard(); };
+        if (wInc) wInc.onclick = () => { wp.width = wp.depth = parseFloat((wp.width+STEP_W).toFixed(2)); emit(); refreshCard(); };
         if (sqBtn) sqBtn.onclick = () => { wp.shape = 'square'; emit(); refreshCard(); };
         if (ciBtn) ciBtn.onclick = () => { wp.shape = 'circle'; emit(); refreshCard(); };
       }
@@ -562,6 +575,14 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       Object.values(state.btnEls).forEach(el => {
         if (el) el.style.transition = 'left 0.22s cubic-bezier(0.34,1.1,0.64,1), top 0.22s cubic-bezier(0.34,1.1,0.64,1)';
       });
+      // Auto-open initialActiveBtn card
+      if (initialActiveBtn) {
+        const btn = state.buttons.find(b => b.id === initialActiveBtn);
+        if (btn && btn.hasProps) {
+          const circleEl = state.circleEls[initialActiveBtn];
+          setActiveBtn(initialActiveBtn, circleEl);
+        }
+      }
     }, nudgeDelay);
 
     // ── Close animation ───────────────────────────────────
@@ -608,6 +629,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       onClick={e=>e.stopPropagation()} />
   );
 }
+
 
 
 
