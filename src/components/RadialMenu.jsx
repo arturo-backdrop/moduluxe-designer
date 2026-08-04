@@ -86,9 +86,9 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
   // Wall/column/door props card
   if (activeBtnId === 'props' && wallProps) {
     const wp = wallProps;
-    const isWall = wp.glassRatio != null;
-    const isDoor = wp.openAngle != null;
-    const isCol  = wp.shape != null && !isDoor;
+    const isWall = wp.itemType === 'wall';
+    const isDoor = wp.itemType === 'door';
+    const isCol  = wp.itemType === 'column';
     const hDisplay = (wp.height * u.factor).toFixed(units==='m'?2:1);
     const tDisplay = wp.thickness != null ? (wp.thickness * u.factor).toFixed(units==='m'?3:2) : null;
     return `
@@ -607,6 +607,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       onClick={e=>e.stopPropagation()} />
   );
 }
+
 
 
 
