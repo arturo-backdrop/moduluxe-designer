@@ -176,6 +176,7 @@ export default function App() {
         onSceneItemsChange={items => { setSceneItems(items); pushHistory(items); }}
         mode={mode}
         activeTool={activeTool}
+        onToolChange={setActiveTool}
         onRadialMenu={setRadialMenu}
         radialMenuWrapperRef={radialMenuWrapperRef}
         engRef={viewportEngRef}
@@ -300,6 +301,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
