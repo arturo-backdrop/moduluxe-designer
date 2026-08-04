@@ -121,7 +121,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
         ${isDoor ? `
         <div>
           <div style="font-size:9px;color:#999;margin-bottom:3px;">Open — ${Math.round(wp.openAngle||45)}°</div>
-          <input id="rm_open" type="range" min="0" max="90" step="1" value="${wp.openAngle||45}"
+          <input id="rm_open" type="range" min="-90" max="90" step="1" value="${wp.openAngle||45}"
             style="width:100%;accent-color:#b48b31;" />
         </div>` : ''}
         ${isCol ? `
@@ -227,7 +227,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
 
 
 // ── React wrapper — pure DOM inside ──────────────────────────
-export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onClose, wrapperRef, initialColor='#3a6ea5', initialRotY=0, units='ft', initialArrayState=null, itemType=null, wallProps=null }) {
+export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onClose, wrapperRef, initialColor='#3a6ea5', initialRotY=0, units='ft', initialArrayState=null, itemType=null, wallProps=null, initialActiveBtn=null }) {
   const rootRef     = useRef(null);
   const unitsRef    = useRef(units);
   const stateRef    = useRef({
@@ -258,6 +258,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
 
     state.buttons = buildButtons(sockets, itemType);
     state.wallProps = wallProps ? { ...wallProps } : null;
+    if (initialActiveBtn) { state.activeBtn = initialActiveBtn; }
 
     // ── Radius animation ──────────────────────────────────
     function animateRadius() {
@@ -607,6 +608,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       onClick={e=>e.stopPropagation()} />
   );
 }
+
 
 
 
