@@ -5,7 +5,7 @@ import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
 import { loadModel } from '../three/glbParser.js';
 import {
   buildWallMesh, buildColumnMesh, buildDoorMesh,
-  buildWallGhost, buildDoorGhost, buildEndpointHandle,
+  buildWallGhost, buildColumnGhost, buildDoorGhost, buildEndpointHandle,
   snapWallPoint, snapAngle, findClosestWall,
   WALL_SNAP_RADIUS, DOOR_W, DOOR_H,
 } from '../three/wallRenderer.js';
@@ -139,7 +139,10 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
   const activeToolRef = useRef(activeTool);
   const onToolChangeRef = useRef(onToolChange);
   useEffect(() => { onRadialMenuRef.current = onRadialMenu; }, [onRadialMenu]);
-  useEffect(() => { modeRef.current = mode; }, [mode]);
+  useEffect(() => { modeRef.current = mode; 
+    if (mode === 'draw') canvas?.style && (canvas.style.cursor = 'crosshair');
+    else { canvas?.style && (canvas.style.cursor = 'default'); }
+  }, [mode]);
   useEffect(() => { activeToolRef.current = activeTool; }, [activeTool]);
   useEffect(() => { onToolChangeRef.current = onToolChange; }, [onToolChange]);
 
@@ -367,13 +370,30 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         mesh = buildColumnMesh(item);
         if (mesh) mesh.position.set(item.x || 0, 0, item.z || 0);
       }
-      if (item.type === 'door')   mesh = buildDoorMesh(item, itemsRef.current);
+      if (item.type === 'door') {
+        mesh = buildDoorMesh(item, itemsRef.current);
+        // Also rebuild parent wall to update cutout
+        const parentWall = itemsRef.current.find(i => i.uid === item.wallUid);
+        if (parentWall) {
+          const oldMesh = wallMeshMap.get(parentWall.uid);
+          if (oldMesh) { wallGroup.remove(oldMesh); wallMeshMap.delete(parentWall.uid); }
+          const wMesh = buildWallMesh(parentWall, itemsRef.current);
+          if (wMesh) {
+            wMesh.userData.uid = parentWall.uid; wMesh.userData.type = 'wall';
+            wallGroup.add(wMesh); wallMeshMap.set(parentWall.uid, wMesh);
+          }
+        }
+      }
       if (!mesh) return;
       mesh.userData.uid  = item.uid;
       mesh.userData.type = item.type;
       wallGroup.add(mesh);
       wallMeshMap.set(item.uid, mesh);
     }
+
+    let draggingWallUid = null;
+    let wallDragStart   = null; // { x, z } ground point at drag start
+    let wallDragOrigItem = null; // original item state
 
     let hoveredWallUid   = null;
     let selectedWallUid  = null;
@@ -585,6 +605,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
       // ── Draw Layout mode ──────────────────────────────────
       if (modeRef.current === 'draw') {
+        controls.enabled = false; // prevent orbit while in draw mode
         const raw = groundPt(e.clientX, e.clientY);
 
         // ── Handle drag (endpoint handles) ───────────────
@@ -687,21 +708,26 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           if (uid) {
             const item = itemsRef.current.find(i => i.uid === uid);
             if (item) {
-              // Clear old selection
               if (selectedWallUid && selectedWallUid !== uid) setWallHighlight(selectedWallUid, 'none');
               selectedWallUid = uid;
               setWallHighlight(uid, 'select');
-              // Get screen position for radial menu
+              // Start potential drag
+              draggingWallUid  = uid;
+              wallDragStart    = { x: raw.x, z: raw.z };
+              wallDragOrigItem = { ...item };
+              // Open radial menu above item
               const mesh = wallMeshMap.get(uid);
               if (mesh) {
                 const box = new THREE.Box3().setFromObject(mesh);
-                const ctr = new THREE.Vector3(); box.getCenter(ctr);
-                ctr.project(camera);
+                const top = new THREE.Vector3(); box.getCenter(top);
+                top.y = box.max.y + 0.5;
+                top.project(camera);
                 const rect = canvas.getBoundingClientRect();
                 const sp = {
-                  x: (ctr.x + 1) / 2 * rect.width + rect.left,
-                  y: (-ctr.y + 1) / 2 * rect.height + rect.top,
+                  x: (top.x + 1) / 2 * rect.width + rect.left,
+                  y: (-top.y + 1) / 2 * rect.height + rect.top,
                 };
+                panCameraToShowMenu(sp);
                 openWallRadialMenu(item, sp);
               }
             }
@@ -759,6 +785,26 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           return;
         }
 
+        // Wall/column drag in select mode
+        if (draggingWallUid && wallDragStart && wallDragOrigItem && activeToolRef.current === 'select') {
+          const dx = raw.x - wallDragStart.x, dz = raw.z - wallDragStart.z;
+          const orig = wallDragOrigItem;
+          let updated;
+          if (orig.type === 'wall') {
+            updated = { ...orig, x1: orig.x1+dx, z1: orig.z1+dz, x2: orig.x2+dx, z2: orig.z2+dz };
+          } else if (orig.type === 'column') {
+            updated = { ...orig, x: orig.x+dx, z: orig.z+dz };
+          } else {
+            return;
+          }
+          const next = itemsRef.current.map(i => i.uid === draggingWallUid ? updated : i);
+          itemsRef.current = next;
+          onChangeRef.current?.(next);
+          syncWallItem(updated);
+          rebuildHandles();
+          return;
+        }
+
         if (activeToolRef.current === 'wall') {
           if (wallState.active && wallState.start) {
             const pt = e.shiftKey
@@ -775,10 +821,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
         if (activeToolRef.current === 'column') {
           if (colGhost) scene.remove(colGhost);
-          const mat = new THREE.MeshStandardMaterial({ color: 0x4488ff, transparent: true, opacity: 0.4, depthWrite: false });
-          const geo = new THREE.BoxGeometry(0.3, 2.4, 0.3);
-          colGhost = new THREE.Mesh(geo, mat);
-          colGhost.position.set(snap(raw.x), 1.2, snap(raw.z));
+          colGhost = buildColumnGhost();
+          colGhost.position.set(snap(raw.x), 0, snap(raw.z));
           colGhost.raycast = () => {};
           scene.add(colGhost);
         }
@@ -871,6 +915,11 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         draggingHandle = null; dragHandleWallUid = null; dragHandleWhich = null;
         return;
       }
+      // Wall drag end
+      if (draggingWallUid) {
+        draggingWallUid = null; wallDragStart = null; wallDragOrigItem = null;
+      }
+      if (modeRef.current === 'draw') return; // draw mode clicks handled in pointerDown
       if (!draggingUid) return;
 
       if (!dragArmed) {
@@ -952,6 +1001,9 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       wallState.active = false;
       wallState.start  = null;
       wallState.chainGroup = [];
+      if (selectedWallUid) { setWallHighlight(selectedWallUid, 'none'); selectedWallUid = null; }
+      if (hoveredWallUid)  { setWallHighlight(hoveredWallUid, 'none');  hoveredWallUid  = null; }
+      closeRadialMenu();
     }
 
     const onKeyDown = e => {
@@ -1548,6 +1600,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
 
