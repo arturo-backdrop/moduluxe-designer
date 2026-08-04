@@ -5,7 +5,9 @@ import styles from './QuotePanel.module.css';
 const RENT_TEXT = 'Or rent for 1/3 of the price';
 
 // ── Quote Modal ───────────────────────────────────────────────
+const WALL_TYPES = new Set(['wall','column','door']);
 function QuoteModal({ config, sceneItems, onClose }) {
+  sceneItems = sceneItems.filter(i => !WALL_TYPES.has(i.type) && !i.isArrayClone);
   const [step,    setStep]    = useState(1);
   const [form,    setForm]    = useState({ reseller:'', client:'', eventName:'', eventDate:'', comments:'', privacy:false });
   const [sending, setSending] = useState(false);
@@ -190,3 +192,4 @@ export default function QuotePanel({ config, sceneItems, catalog }) {
     </>
   );
 }
+
