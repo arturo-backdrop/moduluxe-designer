@@ -128,19 +128,20 @@ function applyPaintColor(root, color) {
   });
 }
 
-export default function Viewport({ config, floorSize, sceneItems, onSceneItemsChange, onRadialMenu, radialMenuWrapperRef, engRef: externalEngRef, mode = 'place', activeTool = 'select' }) {
+export default function Viewport({ config, floorSize, sceneItems, onSceneItemsChange, onRadialMenu, radialMenuWrapperRef, engRef: externalEngRef, mode = 'place', activeTool = 'select', onToolChange }) {
   const canvasRef = useRef(null);
   const engRef    = useRef(null);
-  // Refs so event handlers always see latest values
   const itemsRef    = useRef(sceneItems);
   const onChangeRef = useRef(onSceneItemsChange);
   const onRadialMenuRef = useRef(onRadialMenu);
   const catalogRef  = useRef(config._catalogFlat || []);
   const modeRef     = useRef(mode);
   const activeToolRef = useRef(activeTool);
+  const onToolChangeRef = useRef(onToolChange);
   useEffect(() => { onRadialMenuRef.current = onRadialMenu; }, [onRadialMenu]);
   useEffect(() => { modeRef.current = mode; }, [mode]);
   useEffect(() => { activeToolRef.current = activeTool; }, [activeTool]);
+  useEffect(() => { onToolChangeRef.current = onToolChange; }, [onToolChange]);
 
   useEffect(() => { itemsRef.current    = sceneItems; }, [sceneItems]);
   useEffect(() => { onChangeRef.current = onSceneItemsChange; }, [onSceneItemsChange]);
@@ -356,20 +357,39 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
     // ── Wall / Column / Door sync ─────────────────────────────
     function syncWallItem(item) {
-      // Remove old mesh
       if (wallMeshMap.has(item.uid)) {
         wallGroup.remove(wallMeshMap.get(item.uid));
         wallMeshMap.delete(item.uid);
       }
       let mesh = null;
       if (item.type === 'wall')   mesh = buildWallMesh(item, itemsRef.current);
-      if (item.type === 'column') mesh = buildColumnMesh(item);
+      if (item.type === 'column') {
+        mesh = buildColumnMesh(item);
+        if (mesh) mesh.position.set(item.x || 0, 0, item.z || 0);
+      }
       if (item.type === 'door')   mesh = buildDoorMesh(item, itemsRef.current);
       if (!mesh) return;
       mesh.userData.uid  = item.uid;
       mesh.userData.type = item.type;
       wallGroup.add(mesh);
       wallMeshMap.set(item.uid, mesh);
+    }
+
+    let hoveredWallUid   = null;
+    let selectedWallUid  = null;
+
+    function setWallHighlight(uid, type) {
+      // type: 'none' | 'hover' | 'select'
+      const mesh = uid && wallMeshMap.get(uid);
+      if (!mesh) return;
+      const emissive = type === 'select' ? 0x666666 : type === 'hover' ? 0x333333 : 0x000000;
+      mesh.traverse(c => {
+        if (c.isMesh && c.material && !c.material.transmission) {
+          c.material = c.material.clone();
+          c.material.emissive = new THREE.Color(emissive);
+          c.material.emissiveIntensity = type === 'none' ? 0 : 1;
+        }
+      });
     }
 
     function removeWallItem(uid) {
@@ -407,6 +427,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         initialColor: item.color || '#cccccc',
         initialRotY: 0,
         wallProps: {
+          itemType:   item.type,
           height:     item.height     ?? 2.4,
           thickness:  item.thickness  ?? 0.1,
           glassRatio: item.glassRatio ?? 0,
@@ -554,12 +575,9 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     const onPointerDown = e => {
       // ── Right click: end wall chain ───────────────────────
       if (e.button === 2) {
-        if (modeRef.current === 'draw' && activeToolRef.current === 'wall' && wallState.active) {
-          wallState.active = false;
-          wallState.start = null;
-          if (wallState.ghost) { scene.remove(wallState.ghost); wallState.ghost = null; }
-          startMarker.visible = false;
-          wallState.chainGroup = [];
+        if (modeRef.current === 'draw') {
+          clearDrawGhosts();
+          onToolChangeRef.current?.('select');
         }
         return;
       }
@@ -632,6 +650,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           itemsRef.current = next;
           onChangeRef.current?.(next);
           syncWallItem(newCol);
+          clearDrawGhosts();
+          onToolChangeRef.current?.('select');
           return;
         }
 
@@ -651,23 +671,27 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
             itemsRef.current = next;
             onChangeRef.current?.(next);
             syncWallItem(newDoor);
+            clearDrawGhosts();
+            onToolChangeRef.current?.('select');
           }
           return;
         }
 
         // ── Select in draw mode (click on wall/column/door) ──
+        raycaster.setFromCamera(pointer, camera);
         const wallHit = raycaster.intersectObjects(wallGroup.children, true);
         if (wallHit.length > 0) {
-          const hitObj = wallHit[0].object;
-          let uid = hitObj.userData?.uid;
-          // Walk up to find group with uid
-          let cur = hitObj;
+          let cur = wallHit[0].object;
           while (cur && !cur.userData?.uid) cur = cur.parent;
-          uid = cur?.userData?.uid;
+          const uid = cur?.userData?.uid;
           if (uid) {
             const item = itemsRef.current.find(i => i.uid === uid);
             if (item) {
-              // Project center to screen
+              // Clear old selection
+              if (selectedWallUid && selectedWallUid !== uid) setWallHighlight(selectedWallUid, 'none');
+              selectedWallUid = uid;
+              setWallHighlight(uid, 'select');
+              // Get screen position for radial menu
               const mesh = wallMeshMap.get(uid);
               if (mesh) {
                 const box = new THREE.Box3().setFromObject(mesh);
@@ -684,6 +708,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           }
           return;
         }
+        // Click on empty — deselect
+        if (selectedWallUid) { setWallHighlight(selectedWallUid, 'none'); selectedWallUid = null; }
         closeRadialMenu();
         return;
       }
@@ -763,7 +789,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           if (hit) {
             const { wall, t } = hit;
             const dx = wall.x2 - wall.x1, dz = wall.z2 - wall.z1;
-            const wallAngle = Math.atan2(dx, dz);
+            const wallAngle = -Math.atan2(dz, dx);
             doorGhost = buildDoorGhost(wallAngle);
             doorGhost.raycast = () => {};
             const wx = wall.x1 + dx * t, wz = wall.z1 + dz * t;
@@ -932,6 +958,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       if (e.key === 'Escape') {
         clearDrawGhosts();
         closeRadialMenu();
+        onToolChangeRef.current?.('select');
         return;
       }
       if (e.key!=='Delete' && e.key!=='Backspace') return;
@@ -1428,13 +1455,21 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           if (hoveredHandle) hoveredHandle.material.color.setHex(0xb48b31);
           hoveredHandle = newHovHandle;
           if (hoveredHandle) hoveredHandle.material.color.setHex(0xffd700);
-          canvas.style.cursor = hoveredHandle ? 'pointer' : 'crosshair';
         }
         // Wall hover highlight
-        if (!hoveredHandle) {
-          const wallHits = raycaster.intersectObjects(wallGroup.children, true);
-          canvas.style.cursor = wallHits.length > 0 ? 'pointer' : 'crosshair';
+        const wallHits = raycaster.intersectObjects(wallGroup.children, true);
+        let newHovWall = null;
+        if (wallHits.length > 0) {
+          let cur = wallHits[0].object;
+          while (cur && !cur.userData?.uid) cur = cur.parent;
+          newHovWall = cur?.userData?.uid || null;
         }
+        if (newHovWall !== hoveredWallUid) {
+          if (hoveredWallUid && hoveredWallUid !== selectedWallUid) setWallHighlight(hoveredWallUid, 'none');
+          hoveredWallUid = newHovWall;
+          if (hoveredWallUid && hoveredWallUid !== selectedWallUid) setWallHighlight(hoveredWallUid, 'hover');
+        }
+        canvas.style.cursor = (newHovHandle || newHovWall) ? 'pointer' : 'crosshair';
       }
     })();
 
@@ -1513,6 +1548,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
 
