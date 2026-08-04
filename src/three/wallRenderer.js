@@ -165,7 +165,7 @@ export function buildDoorMesh(item, allItems) {
   const leaf = new THREE.Mesh(leafGeo, leafMat);
   leaf.position.set(0, height / 2, 0);
   leaf.castShadow = true;
-  const angleRad = (openAngle * Math.PI) / 180;
+  const angleRad = (openAngle * Math.PI) / 180; // negative = opens outward
   pivot.rotation.y = -angleRad;
   pivot.add(leaf);
 
@@ -205,8 +205,9 @@ export function buildWallGhost(start, end, height = 2.4, thickness = 0.1) {
 export function buildColumnGhost(width = 0.3, height = 2.4, depth = 0.3) {
   const mat = new THREE.MeshStandardMaterial({ color: 0x4488ff, transparent: true, opacity: 0.4, depthWrite: false });
   const geo = new THREE.BoxGeometry(width, height, depth);
+  geo.translate(0, height / 2, 0); // base at y=0
   const mesh = new THREE.Mesh(geo, mat);
-  mesh.position.y = height / 2;
+  mesh.userData.isMeta = true;
   return mesh;
 }
 
@@ -273,7 +274,7 @@ export function snapAngle(start, end) {
   );
 }
 
-export function findClosestWall(pt, walls, maxDist = 0.6) {
+export function findClosestWall(pt, walls, maxDist = 2.0) {
   let best = null, bestDist = maxDist, bestT = 0;
   walls.forEach(w => {
     if (w.type !== 'wall') return;
@@ -289,3 +290,4 @@ export function findClosestWall(pt, walls, maxDist = 0.6) {
   });
   return best ? { wall: best, t: bestT } : null;
 }
+
