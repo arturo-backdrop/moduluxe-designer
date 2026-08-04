@@ -223,6 +223,7 @@ export default function App() {
                 initialArrayState={radialMenu.initialArrayState || null}
                 itemType={radialMenu.itemType || null}
                 wallProps={radialMenu.wallProps || null}
+                initialActiveBtn={radialMenu.initialActiveBtn || null}
                 wrapperRef={radialMenuWrapperRef}
                 onAction={(action, data) => {
                   if (action === 'del') {
@@ -301,6 +302,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
