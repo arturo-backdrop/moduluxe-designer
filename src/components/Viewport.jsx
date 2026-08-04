@@ -400,19 +400,38 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
     let hoveredWallUid   = null;
     let selectedWallUid  = null;
+    const wallOutlineMap = new Map(); // uid -> outline mesh
 
     function setWallHighlight(uid, type) {
-      // type: 'none' | 'hover' | 'select'
-      const mesh = uid && wallMeshMap.get(uid);
+      if (!uid) return;
+      // Remove old outline
+      if (wallOutlineMap.has(uid)) {
+        scene.remove(wallOutlineMap.get(uid));
+        wallOutlineMap.delete(uid);
+      }
+      if (type === 'none') return;
+      const mesh = wallMeshMap.get(uid);
       if (!mesh) return;
-      const emissive = type === 'select' ? 0x666666 : type === 'hover' ? 0x333333 : 0x000000;
+      // Build edge outline
+      const color = type === 'select' ? 0xb48b31 : 0x88aaff;
+      const outlines = [];
       mesh.traverse(c => {
-        if (c.isMesh && c.material && !c.material.transmission) {
-          c.material = c.material.clone();
-          c.material.emissive = new THREE.Color(emissive);
-          c.material.emissiveIntensity = type === 'none' ? 0 : 1;
-        }
+        if (!c.isMesh || c.userData.isMeta) return;
+        const edges = new THREE.EdgesGeometry(c.geometry, 15);
+        const line  = new THREE.LineSegments(edges,
+          new THREE.LineBasicMaterial({ color, linewidth: 1, depthTest: false }));
+        line.renderOrder = 999;
+        line.position.copy(c.getWorldPosition(new THREE.Vector3()));
+        line.quaternion.copy(c.getWorldQuaternion(new THREE.Quaternion()));
+        line.scale.copy(c.getWorldScale(new THREE.Vector3()));
+        outlines.push(line);
       });
+      if (outlines.length > 0) {
+        const grp = new THREE.Group();
+        outlines.forEach(o => grp.add(o));
+        scene.add(grp);
+        wallOutlineMap.set(uid, grp);
+      }
     }
 
     function removeWallItem(uid) {
@@ -449,6 +468,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         modelId: null,
         initialColor: item.color || '#cccccc',
         initialRotY: 0,
+        initialActiveBtn: 'props', // open props card by default
         wallProps: {
           itemType:   item.type,
           height:     item.height     ?? 2.4,
@@ -1601,6 +1621,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
 
