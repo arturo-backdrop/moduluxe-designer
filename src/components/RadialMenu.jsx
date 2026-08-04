@@ -31,7 +31,27 @@ const FIXED_ACTIONS = [
   { id:'del',    icon:'ti-trash',             label:'Delete',    hasProps:false, size:42, angle: 198 },
 ];
 
-function buildButtons(sockets=[]) {
+const WALL_ACTIONS = [
+  { id:'color', icon:'ti-palette',    label:'Color',  hasProps:true,  size:42, angle: -90 },
+  { id:'props', icon:'ti-adjustments',label:'Props',  hasProps:true,  size:42, angle: -18 },
+  { id:'del',   icon:'ti-trash',      label:'Delete', hasProps:false, size:42, angle:  54 },
+];
+const COLUMN_ACTIONS = [
+  { id:'color', icon:'ti-palette',    label:'Color',     hasProps:true,  size:42, angle: -90 },
+  { id:'props', icon:'ti-adjustments',label:'Props',     hasProps:true,  size:42, angle: -18 },
+  { id:'dup',   icon:'ti-copy',       label:'Duplicate', hasProps:false, size:42, angle:  54 },
+  { id:'del',   icon:'ti-trash',      label:'Delete',    hasProps:false, size:42, angle: 126 },
+];
+const DOOR_ACTIONS = [
+  { id:'color', icon:'ti-palette',    label:'Color',  hasProps:true,  size:42, angle: -90 },
+  { id:'props', icon:'ti-adjustments',label:'Props',  hasProps:true,  size:42, angle: -18 },
+  { id:'del',   icon:'ti-trash',      label:'Delete', hasProps:false, size:42, angle:  54 },
+];
+
+function buildButtons(sockets=[], itemType=null) {
+  if (itemType === 'wall')   return WALL_ACTIONS;
+  if (itemType === 'column') return COLUMN_ACTIONS;
+  if (itemType === 'door')   return DOOR_ACTIONS;
   const socketBtns = sockets.map(s => ({
     id:s.name, icon:BEHAVIOR_ICONS[s.behavior]||'ti-adjustments',
     label:s.label||s.name, size:48, hasProps:true, socket:s,
@@ -56,12 +76,66 @@ const PRESET_COLORS = [
   '#4a7c5e','#8b4a6b','#d4a843','#6b6b6b','#1a3a5c',
 ];
 
-function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentColor='#3a6ea5', currentRotY=0, arrayState={count:1,spacing:0}, units='ft') {
+function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentColor='#3a6ea5', currentRotY=0, arrayState={count:1,spacing:0}, units='ft', wallProps=null) {
   const UNITS_MAP = { m:{label:'m',factor:1}, ft:{label:'ft',factor:3.28084}, cm:{label:'cm',factor:100}, inch:{label:'in',factor:39.3701} };
   const u = UNITS_MAP[units] || UNITS_MAP.m;
   const spacingDisplay = (arrayState.spacing * u.factor).toFixed(units==='m'?2:1);
 
   if (!activeBtnId) return `<div style="font-size:9px;color:#999;">${modelName}</div>`;
+
+  // Wall/column/door props card
+  if (activeBtnId === 'props' && wallProps) {
+    const wp = wallProps;
+    const isWall = wp.glassRatio != null;
+    const isDoor = wp.openAngle != null;
+    const isCol  = wp.shape != null && !isDoor;
+    const hDisplay = (wp.height * u.factor).toFixed(units==='m'?2:1);
+    const tDisplay = wp.thickness != null ? (wp.thickness * u.factor).toFixed(units==='m'?3:2) : null;
+    return `
+      <div style="font-size:9px;color:#999;margin-bottom:4px;">${modelName}</div>
+      <div style="font-weight:900;font-size:12px;color:#1a1a1a;margin-bottom:8px;">Properties</div>
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:140px;">
+        ${isWall||isCol ? `
+        <div>
+          <div style="font-size:9px;color:#999;margin-bottom:3px;">Height (${u.label})</div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button id="rm_h_dec" style="width:22px;height:22px;border-radius:50%;border:none;background:#f0f0f0;cursor:pointer;">&#8722;</button>
+            <span id="rm_h_val" style="font-weight:700;font-size:14px;min-width:36px;text-align:center;">${hDisplay}</span>
+            <button id="rm_h_inc" style="width:22px;height:22px;border-radius:50%;border:none;background:#f0f0f0;cursor:pointer;">+</button>
+          </div>
+        </div>` : ''}
+        ${isWall ? `
+        <div>
+          <div style="font-size:9px;color:#999;margin-bottom:3px;">Thickness (${u.label})</div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button id="rm_t_dec" style="width:22px;height:22px;border-radius:50%;border:none;background:#f0f0f0;cursor:pointer;">&#8722;</button>
+            <span id="rm_t_val" style="font-weight:700;font-size:14px;min-width:36px;text-align:center;">${tDisplay}</span>
+            <button id="rm_t_inc" style="width:22px;height:22px;border-radius:50%;border:none;background:#f0f0f0;cursor:pointer;">+</button>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:9px;color:#999;margin-bottom:3px;">Glass — ${Math.round((wp.glassRatio||0)*100)}%</div>
+          <input id="rm_glass" type="range" min="0" max="1" step="0.05" value="${wp.glassRatio||0}"
+            style="width:100%;accent-color:#b48b31;" />
+        </div>` : ''}
+        ${isDoor ? `
+        <div>
+          <div style="font-size:9px;color:#999;margin-bottom:3px;">Open — ${Math.round(wp.openAngle||45)}°</div>
+          <input id="rm_open" type="range" min="0" max="90" step="1" value="${wp.openAngle||45}"
+            style="width:100%;accent-color:#b48b31;" />
+        </div>` : ''}
+        ${isCol ? `
+        <div>
+          <div style="font-size:9px;color:#999;margin-bottom:3px;">Shape</div>
+          <div style="display:flex;gap:4px;">
+            <button id="rm_sq" style="flex:1;padding:4px;border-radius:6px;border:none;font-size:10px;cursor:pointer;
+              background:${wp.shape==='square'?'#1a1a1a':'#f0f0f0'};color:${wp.shape==='square'?'white':'#666'};">Square</button>
+            <button id="rm_ci" style="flex:1;padding:4px;border-radius:6px;border:none;font-size:10px;cursor:pointer;
+              background:${wp.shape==='circle'?'#1a1a1a':'#f0f0f0'};color:${wp.shape==='circle'?'white':'#666'};">Circle</button>
+          </div>
+        </div>` : ''}
+      </div>`;
+  }
 
   if (activeBtnId === 'array') return `
     <div style="font-size:9px;color:#999;margin-bottom:6px;">${modelName}</div>
@@ -153,7 +227,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
 
 
 // ── React wrapper — pure DOM inside ──────────────────────────
-export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onClose, wrapperRef, initialColor='#3a6ea5', initialRotY=0, units='ft', initialArrayState=null }) {
+export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onClose, wrapperRef, initialColor='#3a6ea5', initialRotY=0, units='ft', initialArrayState=null, itemType=null, wallProps=null }) {
   const rootRef     = useRef(null);
   const unitsRef    = useRef(units);
   const stateRef    = useRef({
@@ -172,7 +246,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
     unitsRef.current = units;
     const state = stateRef.current;
     if (state.cardEl && state.activeBtn) {
-      state.cardEl.innerHTML = buildCardHTML(modelName, state.activeBtn, state.buttons, state.socketStates, state.currentColor, state.currentRotY, state.arrayState, units);
+      state.cardEl.innerHTML = buildCardHTML(modelName, state.activeBtn, state.buttons, state.socketStates, state.currentColor, state.currentRotY, state.arrayState, units, state.wallProps);
       state._bindCardEvents?.();
     }
   }, [units]);
@@ -182,7 +256,8 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
     const state = stateRef.current;
     if (!root) return;
 
-    state.buttons = buildButtons(sockets);
+    state.buttons = buildButtons(sockets, itemType);
+    state.wallProps = wallProps ? { ...wallProps } : null;
 
     // ── Radius animation ──────────────────────────────────
     function animateRadius() {
@@ -242,7 +317,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       state.activeBtn = id;
       // Update card HTML first so we can measure it
       if (state.cardEl) {
-        state.cardEl.innerHTML = buildCardHTML(modelName, state.activeBtn, state.buttons, state.socketStates, state.currentColor, state.currentRotY, state.arrayState, unitsRef.current);
+        state.cardEl.innerHTML = buildCardHTML(modelName, state.activeBtn, state.buttons, state.socketStates, state.currentColor, state.currentRotY, state.arrayState, unitsRef.current, state.wallProps);
         bindCardEvents();
       }
       // Measure after browser renders the new card content
@@ -274,7 +349,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
 
     function refreshCard() {
       if (state.cardEl) {
-        state.cardEl.innerHTML = buildCardHTML(modelName, state.activeBtn, state.buttons, state.socketStates, state.currentColor, state.currentRotY, state.arrayState, unitsRef.current);
+        state.cardEl.innerHTML = buildCardHTML(modelName, state.activeBtn, state.buttons, state.socketStates, state.currentColor, state.currentRotY, state.arrayState, unitsRef.current, state.wallProps);
         bindCardEvents();
       }
     }
@@ -373,6 +448,29 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
           if (el) el.textContent = state.socketStates[s.name].count;
         };
       });
+
+      // Wall/column/door props bindings
+      if (state.wallProps) {
+        const wp = state.wallProps;
+        const STEP_H = 0.1, STEP_T = 0.01;
+        const hDec = document.getElementById('rm_h_dec');
+        const hInc = document.getElementById('rm_h_inc');
+        const tDec = document.getElementById('rm_t_dec');
+        const tInc = document.getElementById('rm_t_inc');
+        const glass = document.getElementById('rm_glass');
+        const open  = document.getElementById('rm_open');
+        const sqBtn = document.getElementById('rm_sq');
+        const ciBtn = document.getElementById('rm_ci');
+        const emit  = () => onAction?.('wallProps', { ...wp });
+        if (hDec) hDec.onclick = () => { wp.height = Math.max(0.5, parseFloat((wp.height-STEP_H).toFixed(2))); emit(); refreshCard(); };
+        if (hInc) hInc.onclick = () => { wp.height = parseFloat((wp.height+STEP_H).toFixed(2)); emit(); refreshCard(); };
+        if (tDec) tDec.onclick = () => { wp.thickness = Math.max(0.05, parseFloat((wp.thickness-STEP_T).toFixed(3))); emit(); refreshCard(); };
+        if (tInc) tInc.onclick = () => { wp.thickness = parseFloat((wp.thickness+STEP_T).toFixed(3)); emit(); refreshCard(); };
+        if (glass) glass.oninput = () => { wp.glassRatio = parseFloat(glass.value); emit(); };
+        if (open)  open.oninput  = () => { wp.openAngle  = parseFloat(open.value);  emit(); };
+        if (sqBtn) sqBtn.onclick = () => { wp.shape = 'square'; emit(); refreshCard(); };
+        if (ciBtn) ciBtn.onclick = () => { wp.shape = 'circle'; emit(); refreshCard(); };
+      }
     }
 
     // ── Build DOM ─────────────────────────────────────────
@@ -509,6 +607,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       onClick={e=>e.stopPropagation()} />
   );
 }
+
 
 
 
