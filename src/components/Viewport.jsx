@@ -139,9 +139,10 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
   const activeToolRef = useRef(activeTool);
   const onToolChangeRef = useRef(onToolChange);
   useEffect(() => { onRadialMenuRef.current = onRadialMenu; }, [onRadialMenu]);
-  useEffect(() => { modeRef.current = mode; 
-    if (mode === 'draw') canvas?.style && (canvas.style.cursor = 'crosshair');
-    else { canvas?.style && (canvas.style.cursor = 'default'); }
+  useEffect(() => {
+    modeRef.current = mode;
+    const c = canvasRef.current;
+    if (c) c.style.cursor = mode === 'draw' ? 'crosshair' : 'default';
   }, [mode]);
   useEffect(() => { activeToolRef.current = activeTool; }, [activeTool]);
   useEffect(() => { onToolChangeRef.current = onToolChange; }, [onToolChange]);
