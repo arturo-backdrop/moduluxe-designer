@@ -608,7 +608,6 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
       // ── Draw Layout mode ──────────────────────────────────
       if (modeRef.current === 'draw') {
-        controls.enabled = false; // prevent orbit while in draw mode
         const raw = groundPt(e.clientX, e.clientY);
 
         // ── Handle drag (endpoint handles) ───────────────
@@ -619,7 +618,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           draggingHandle = h;
           dragHandleWallUid = h.userData.wallUid;
           dragHandleWhich  = h.userData.which;
-          controls.enabled = false;
+          controls.enabled = false; // disable orbit only during handle drag
           return;
         }
 
@@ -718,6 +717,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
               draggingWallUid  = uid;
               wallDragStart    = { x: raw.x, z: raw.z };
               wallDragOrigItem = { ...item };
+              controls.enabled = false; // disable orbit during wall drag
               // Open radial menu above item
               const mesh = wallMeshMap.get(uid);
               if (mesh) {
@@ -912,13 +912,11 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     };
 
     const onPointerUp = e => {
-      controls.enabled = true; // always re-enable first
-      // Handle drag end
+      controls.enabled = true;
       if (draggingHandle) {
         draggingHandle = null; dragHandleWallUid = null; dragHandleWhich = null;
         return;
       }
-      // Wall drag end
       if (draggingWallUid) {
         draggingWallUid = null; wallDragStart = null; wallDragOrigItem = null;
       }
