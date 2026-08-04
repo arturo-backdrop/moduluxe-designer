@@ -54,7 +54,8 @@ export function buildWallMesh(item, allItems) {
   }
 
   // Position & rotate
-  const angle = Math.atan2(dx, dz);
+  // rotation.y = -atan2(dz,dx) aligns local +X with wall direction
+  const angle = -Math.atan2(dz, dx);
   group.position.set((x1 + x2) / 2, 0, (z1 + z2) / 2);
   group.rotation.y = angle;
 
@@ -118,7 +119,7 @@ export function buildDoorMesh(item, allItems) {
   const { x1, z1, x2, z2 } = wall;
   const dx = x2 - x1, dz = z2 - z1;
   const wx = x1 + dx * t, wz = z1 + dz * t;
-  const wallAngle = Math.atan2(dx, dz);
+  const wallAngle = -Math.atan2(dz, dx);
   group.position.set(wx, 0, wz);
   group.rotation.y = wallAngle;
 
@@ -132,7 +133,7 @@ export function buildWallGhost(start, end, height = 2.4, thickness = 0.1) {
   if (len < 0.01) return null;
   const geo   = new THREE.BoxGeometry(len, height, thickness);
   const mesh  = new THREE.Mesh(geo, ghostMat);
-  const angle = Math.atan2(dx, dz);
+  const angle = -Math.atan2(dz, dx);
   mesh.position.set((start.x + end.x) / 2, height / 2, (start.z + end.z) / 2);
   mesh.rotation.y = angle;
   return mesh;
@@ -220,3 +221,4 @@ export function findClosestWall(pt, walls, maxDist = 0.5) {
   });
   return best ? { wall: best, t: bestT } : null;
 }
+
