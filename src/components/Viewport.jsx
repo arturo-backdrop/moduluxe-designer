@@ -450,14 +450,16 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     }
 
     function openWallRadialMenu(item, screenPt) {
-      // Clamp to safe area so menu is always fully visible
       const vw = window.innerWidth, vh = window.innerHeight;
-      const MARGIN = 160;
+      const minX = SAFE_AREA.left   + MENU_RADIUS;
+      const maxX = vw - SAFE_AREA.right  - MENU_RADIUS;
+      const minY = SAFE_AREA.top    + MENU_RADIUS;
+      const maxY = vh - SAFE_AREA.bottom - MENU_RADIUS;
+      // Clamp to usable viewport — if already inside, use original position
       const sp = {
-        x: Math.max(SAFE_AREA.left + MARGIN, Math.min(vw - SAFE_AREA.right - MARGIN, screenPt.x)),
-        y: Math.max(SAFE_AREA.top  + MARGIN, Math.min(vh - SAFE_AREA.bottom - MARGIN, screenPt.y)),
+        x: Math.max(minX, Math.min(maxX, screenPt.x)),
+        y: Math.max(minY, Math.min(maxY, screenPt.y)),
       };
-      panCameraToShowMenu(sp);
       onRadialMenuRef.current?.({
         x: screenPt.x, y: screenPt.y,
         uid: item.uid,
