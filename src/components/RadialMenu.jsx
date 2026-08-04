@@ -23,50 +23,64 @@ const BEHAVIOR_ICONS = {
   slide_x:'ti-arrows-left-right', slide_z:'ti-arrows-move',
 };
 
-// ── Fixed button positions ───────────────────────────────────
-// 9 slots evenly at 40° intervals around 360°:
-// Slots:  0=0°  1=40°  2=80°  3=120°  4=160°  5=200°  6=240°  7=280°  8=320°
-// Products fixed: array=0°, color=80°, rotate=160°, dup=240°, del=320°
-// Socket slots:   36=40°, s2=120°, s3=200°, s4=280°
+// ── Button definitions (no angle — assigned dynamically) ─────
+const BASE_ACTIONS = [
+  { id:'array',  icon:'ti-layout-columns',   label:'Array',     hasProps:true,  size:42 },
+  { id:'color',  icon:'ti-palette',          label:'Color',     hasProps:true,  size:42 },
+  { id:'rotate', icon:'ti-rotate-clockwise', label:'Rotate',    hasProps:false, size:42 },
+  { id:'dup',    icon:'ti-copy',             label:'Duplicate', hasProps:false, size:42 },
+  { id:'del',    icon:'ti-trash',            label:'Delete',    hasProps:false, size:42 },
+];
+const WALL_BASE = [
+  { id:'color', icon:'ti-palette',     label:'Color',  hasProps:true,  size:42 },
+  { id:'props', icon:'ti-adjustments', label:'Config', hasProps:true,  size:42 },
+  { id:'del',   icon:'ti-trash',       label:'Delete', hasProps:false, size:42 },
+];
+const COLUMN_BASE = [
+  { id:'color', icon:'ti-palette',     label:'Color',     hasProps:true,  size:42 },
+  { id:'props', icon:'ti-adjustments', label:'Config',    hasProps:true,  size:42 },
+  { id:'dup',   icon:'ti-copy',        label:'Duplicate', hasProps:false, size:42 },
+  { id:'del',   icon:'ti-trash',       label:'Delete',    hasProps:false, size:42 },
+];
+const DOOR_BASE = [
+  { id:'color', icon:'ti-palette',     label:'Color',  hasProps:true,  size:42 },
+  { id:'props', icon:'ti-adjustments', label:'Config', hasProps:true,  size:42 },
+  { id:'del',   icon:'ti-trash',       label:'Delete', hasProps:false, size:42 },
+];
 
-const FIXED_ACTIONS = [
-  { id:'array',  icon:'ti-layout-columns',   label:'Array',     hasProps:true,  size:42, angle:   0 },
-  { id:'color',  icon:'ti-palette',          label:'Color',     hasProps:true,  size:42, angle:  80 },
-  { id:'rotate', icon:'ti-rotate-clockwise', label:'Rotate',    hasProps:false, size:42, angle: 160 },
-  { id:'dup',    icon:'ti-copy',             label:'Duplicate', hasProps:false, size:42, angle: 240 },
-  { id:'del',    icon:'ti-trash',            label:'Delete',    hasProps:false, size:42, angle: 320 },
-];
-// Socket slots intercalated between fixed buttons
-const SOCKET_ANGLES = [40, 120, 200, 280];
-
-const WALL_ACTIONS = [
-  { id:'color', icon:'ti-palette',     label:'Color',  hasProps:true,  size:42, angle:   0 },
-  { id:'props', icon:'ti-adjustments', label:'Config', hasProps:true,  size:42, angle: 120 },
-  { id:'del',   icon:'ti-trash',       label:'Delete', hasProps:false, size:42, angle: 240 },
-];
-const COLUMN_ACTIONS = [
-  { id:'color', icon:'ti-palette',     label:'Color',     hasProps:true,  size:42, angle:   0 },
-  { id:'props', icon:'ti-adjustments', label:'Config',    hasProps:true,  size:42, angle:  90 },
-  { id:'dup',   icon:'ti-copy',        label:'Duplicate', hasProps:false, size:42, angle: 180 },
-  { id:'del',   icon:'ti-trash',       label:'Delete',    hasProps:false, size:42, angle: 270 },
-];
-const DOOR_ACTIONS = [
-  { id:'color', icon:'ti-palette',     label:'Color',  hasProps:true,  size:42, angle:   0 },
-  { id:'props', icon:'ti-adjustments', label:'Config', hasProps:true,  size:42, angle: 120 },
-  { id:'del',   icon:'ti-trash',       label:'Delete', hasProps:false, size:42, angle: 240 },
-];
+// Distribute buttons evenly around 360°, starting from -90° (top)
+function distributeAngles(btns, startAngle = -90) {
+  const step = 360 / btns.length;
+  return btns.map((b, i) => ({ ...b, angle: startAngle + step * i }));
+}
 
 function buildButtons(sockets=[], itemType=null) {
-  if (itemType === 'wall')   return WALL_ACTIONS;
-  if (itemType === 'column') return COLUMN_ACTIONS;
-  if (itemType === 'door')   return DOOR_ACTIONS;
-  // Max 4 sockets, each at a fixed slot angle
-  const socketBtns = sockets.slice(0, 4).map((s, i) => ({
+  if (itemType === 'wall')   return distributeAngles(WALL_BASE);
+  if (itemType === 'column') return distributeAngles(COLUMN_BASE);
+  if (itemType === 'door')   return distributeAngles(DOOR_BASE);
+  const socketBtns = sockets.slice(0, 4).map(s => ({
     id:s.name, icon:BEHAVIOR_ICONS[s.behavior]||'ti-adjustments',
     label:s.label||s.name, size:48, hasProps:true, socket:s,
-    angle: SOCKET_ANGLES[i],
   }));
-  return [...socketBtns, ...FIXED_ACTIONS];
+  // Interleave: socket1, array, socket2, color, socket3, rotate, socket4, dup, del
+  const order = [];
+  const fixed = [...BASE_ACTIONS];
+  const sock  = [...socketBtns];
+  // Place sockets between fixed actions for even spread
+  const total = fixed.length + sock.length;
+  const step  = 360 / total;
+  // Merge: fixed actions get priority positions, sockets fill between
+  const merged = [];
+  let fi = 0, si = 0;
+  for (let i = 0; i < total; i++) {
+    // Place a socket every other slot if available
+    if (si < sock.length && (fi >= fixed.length || i % 2 === 0 && si * 2 <= fi)) {
+      merged.push(sock[si++]);
+    } else {
+      merged.push(fixed[fi++]);
+    }
+  }
+  return distributeAngles(merged);
 }
 
 function angleDiff(a,b) { let d=((b-a)+180)%360-180; return d<-180?d+360:d; }
