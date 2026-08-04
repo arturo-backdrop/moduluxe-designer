@@ -569,6 +569,18 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       if (modeRef.current === 'draw') {
         const raw = groundPt(e.clientX, e.clientY);
 
+        // ── Handle drag (endpoint handles) ───────────────
+        raycaster.setFromCamera(pointer, camera);
+        const handleHits = raycaster.intersectObjects(handleGroup.children, false);
+        if (handleHits.length > 0) {
+          const h = handleHits[0].object;
+          draggingHandle = h;
+          dragHandleWallUid = h.userData.wallUid;
+          dragHandleWhich  = h.userData.which;
+          controls.enabled = false;
+          return;
+        }
+
         // ── Wall tool ─────────────────────────────────────
         if (activeToolRef.current === 'wall') {
           const walls = itemsRef.current.filter(i => i.type === 'wall');
@@ -707,6 +719,20 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         const raw = groundPt(e.clientX, e.clientY);
         const walls = itemsRef.current.filter(i => i.type === 'wall');
 
+        // Handle drag
+        if (draggingHandle && dragHandleWallUid) {
+          const { pt } = snapWallPoint(raw, walls, floorW, floorD);
+          const next = itemsRef.current.map(i => {
+            if (i.uid !== dragHandleWallUid) return i;
+            if (dragHandleWhich === 'start') return { ...i, x1: pt.x, z1: pt.z };
+            return { ...i, x2: pt.x, z2: pt.z };
+          });
+          itemsRef.current = next;
+          onChangeRef.current?.(next);
+          rebuildHandles();
+          return;
+        }
+
         if (activeToolRef.current === 'wall') {
           if (wallState.active && wallState.start) {
             const pt = e.shiftKey
@@ -814,6 +840,11 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
     const onPointerUp = e => {
       controls.enabled = true;
+      // Handle drag end
+      if (draggingHandle) {
+        draggingHandle = null; dragHandleWallUid = null; dragHandleWhich = null;
+        return;
+      }
       if (!draggingUid) return;
 
       if (!dragArmed) {
@@ -887,7 +918,22 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       draggingUid = null; dragArmed = false; dragOffsets = {};
     };
 
+    function clearDrawGhosts() {
+      if (wallState.ghost) { scene.remove(wallState.ghost); wallState.ghost = null; }
+      if (colGhost)  { scene.remove(colGhost);  colGhost  = null; }
+      if (doorGhost) { scene.remove(doorGhost); doorGhost = null; }
+      startMarker.visible = false;
+      wallState.active = false;
+      wallState.start  = null;
+      wallState.chainGroup = [];
+    }
+
     const onKeyDown = e => {
+      if (e.key === 'Escape') {
+        clearDrawGhosts();
+        closeRadialMenu();
+        return;
+      }
       if (e.key!=='Delete' && e.key!=='Backspace') return;
       if (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
       if (!selectedUid) return;
@@ -1370,6 +1416,26 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       renderer.autoClear=false;
       renderer.render(scene, camera);
       renderer.autoClear=true;
+
+      // Wall/handle hover in draw mode
+      if (modeRef.current === 'draw') {
+        // Update raycaster from last known pointer
+        raycaster.setFromCamera(pointer, camera);
+        // Handle hover
+        const handleHits = raycaster.intersectObjects(handleGroup.children, false);
+        const newHovHandle = handleHits.length > 0 ? handleHits[0].object : null;
+        if (newHovHandle !== hoveredHandle) {
+          if (hoveredHandle) hoveredHandle.material.color.setHex(0xb48b31);
+          hoveredHandle = newHovHandle;
+          if (hoveredHandle) hoveredHandle.material.color.setHex(0xffd700);
+          canvas.style.cursor = hoveredHandle ? 'pointer' : 'crosshair';
+        }
+        // Wall hover highlight
+        if (!hoveredHandle) {
+          const wallHits = raycaster.intersectObjects(wallGroup.children, true);
+          canvas.style.cursor = wallHits.length > 0 ? 'pointer' : 'crosshair';
+        }
+      }
     })();
 
     return () => {
@@ -1447,6 +1513,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
 
