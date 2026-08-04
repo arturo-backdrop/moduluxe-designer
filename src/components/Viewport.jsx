@@ -8,6 +8,7 @@ import { loadModel } from '../three/glbParser.js';
 const DRAG_THRESHOLD = 5;   // px before drag is armed
 const GRID_SNAP      = 0.25; // meters
 const ANIM_DURATION  = 280;  // ms for spawn spring
+const LIVE_OOB_MAT   = new THREE.MeshStandardMaterial({ color:0xff3333, transparent:true, opacity:0.35, depthWrite:false });
 
 // ── Spring ease (same as Booth Planner) ──────────────────────
 function springEase(t) {
@@ -260,11 +261,49 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     const pointer    = new THREE.Vector2();
     const planeY0    = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
     let hoveredUid   = null;
-    let selectedUid  = null;
+    let selectedUid  = null;   // the "anchor" uid (source of array)
+    let selectedUids = [];     // all uids in the selection (group)
     let draggingUid  = null;
     let dragArmed    = false;
     let dragStartX   = 0, dragStartY = 0;
-    let dragOffX     = 0, dragOffZ   = 0;
+    let dragOffsets  = {};     // uid -> {dx, dz}
+
+    // Get all uids in the same group as uid (or just [uid] if no group)
+    function getGroupUids(uid) {
+      // Check Three.js userData first — catches clones even when not in sceneItems
+      const obj = itemGroup.children.find(x => x.userData.uid === uid);
+      const groupId = obj?.userData.groupId;
+      if (groupId) {
+        return itemGroup.children
+          .filter(x => x.userData.groupId === groupId)
+          .map(x => x.userData.uid);
+      }
+      // Fallback: sceneItems
+      const item = itemsRef.current.find(i => i.uid === uid);
+      if (!item?.groupId) return [uid];
+      return itemsRef.current
+        .filter(i => i.groupId === item.groupId)
+        .map(i => i.uid);
+    }
+
+    // Get the source uid of a group (the one that is not a clone)
+    function getSourceUid(uid) {
+      // First check Three.js userData — reliable even if sceneItems is stale
+      const obj = itemGroup.children.find(x => x.userData.uid === uid);
+      if (obj?.userData.arrayParent) return obj.userData.arrayParent;
+      // Fallback: check sceneItems
+      const item = itemsRef.current.find(i => i.uid === uid);
+      if (!item?.groupId) return uid;
+      const source = itemsRef.current.find(i => i.groupId === item.groupId && !i.isArrayClone);
+      return source?.uid || uid;
+    }
+
+    function setGroupOutline(uids, visible) {
+      uids.forEach(uid => {
+        const c = itemGroup.children.find(x => x.userData.uid === uid);
+        if (c) setOutlineVisible(c, visible);
+      });
+    }
 
     function snap(v) { return Math.round(v/GRID_SNAP)*GRID_SNAP; }
 
@@ -308,7 +347,23 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     function closeRadialMenu() {
       const wrapper = radialMenuWrapperRef?.current;
       if (wrapper?._triggerClose) wrapper._triggerClose();
-      else closeRadialMenu();
+      else onRadialMenuRef.current?.(null);
+      restoreOOBMaterials();
+    }
+
+    function restoreOOBMaterials() {
+      itemGroup.children.forEach(c => {
+        if (!c.userData.isArrayClone || !c.userData.outOfBounds) return;
+        const source = itemGroup.children.find(x => x.userData.uid === c.userData.arrayParent);
+        const srcMeshes = [];
+        if (source) source.traverse(ch => { if (ch.isMesh && !ch.userData.isMeta) srcMeshes.push(ch); });
+        let si = 0;
+        c.traverse(ch => {
+          if (ch.isMesh && !ch.userData.isMeta) { ch.material = srcMeshes[si]?.material ?? ch.material; si++; }
+        });
+        c.userData.outOfBounds = false;
+        c.userData.origMats = [];
+      });
     }
     // Project 3D position to screen coords
     function project3D(obj) {
@@ -389,42 +444,49 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       if (e.button !== 0) return;
       const c = getHitContainer(e.clientX, e.clientY);
       if (!c) {
-        if (selectedUid) {
-          const prev = itemGroup.children.find(x=>x.userData.uid===selectedUid);
-          if (prev) setOutlineVisible(prev, selectedUid===hoveredUid);
-          selectedUid = null; if(engRef.current) engRef.current.selectedUidRef.current = null;
-        }
+        // Deselect
+        setGroupOutline(selectedUids, false);
+        selectedUid = null; selectedUids = [];
+        if(engRef.current) engRef.current.selectedUidRef.current = null;
         closeRadialMenu();
         return;
       }
-      draggingUid  = c.userData.uid;
-      dragArmed    = false;
-      dragStartX   = e.clientX; dragStartY = e.clientY;
-      const pt     = groundPt(e.clientX, e.clientY);
-      dragOffX     = c.position.x - pt.x;
-      dragOffZ     = c.position.z - pt.z;
+      draggingUid = c.userData.uid;
+      dragArmed   = false;
+      dragStartX  = e.clientX; dragStartY = e.clientY;
       controls.enabled = false;
-      // Hide radial menu while dragging
       onRadialMenuRef.current?.(null);
+      restoreOOBMaterials(); // clear array OOB red and reset outOfBounds flags
+      // Pre-compute drag offsets for the whole group — always recalculate fresh
+      const pt   = groundPt(e.clientX, e.clientY);
+      const uids = getGroupUids(draggingUid);
+      dragOffsets = {};
+      uids.forEach(uid => {
+        const obj = itemGroup.children.find(x => x.userData.uid === uid);
+        if (obj) dragOffsets[uid] = { dx: obj.position.x - pt.x, dz: obj.position.z - pt.z };
+      });
     };
 
     const onPointerMove = e => {
       if (!draggingUid) {
-        // Hover (only when not pressing mouse)
         if (e.buttons !== 0) return;
         const c   = getHitContainer(e.clientX, e.clientY);
         const uid = c?.userData.uid || null;
         if (uid !== hoveredUid) {
-          if (hoveredUid && hoveredUid !== selectedUid) {
-            const prev = itemGroup.children.find(x=>x.userData.uid===hoveredUid);
-            if (prev) { setOutlineVisible(prev, false); dot.visible=false; }
+          // Clear old hover outline (only if not selected)
+          if (hoveredUid) {
+            const hoverGroup = getGroupUids(hoveredUid);
+            const notSelected = hoverGroup.filter(u => !selectedUids.includes(u));
+            setGroupOutline(notSelected, false);
+            dot.visible = false;
           }
           hoveredUid = uid;
           if (uid) {
-            setOutlineVisible(c, true); updateDot(c);
+            setGroupOutline(getGroupUids(uid), true);
+            updateDot(c);
             canvas.style.cursor = 'grab';
           } else {
-            dot.visible=false;
+            dot.visible = false;
             canvas.style.cursor = 'default';
           }
         }
@@ -435,87 +497,199 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         dragArmed = true;
         canvas.style.cursor = 'grabbing';
       }
-      const c = itemGroup.children.find(x=>x.userData.uid===draggingUid);
-      if (!c) return;
-      const pt  = groundPt(e.clientX, e.clientY);
-      const box = new THREE.Box3().setFromObject(c);
-      const hw  = (box.max.x-box.min.x)/2, hd = (box.max.z-box.min.z)/2;
-      const cl  = clampFloor(snap(pt.x+dragOffX), snap(pt.z+dragOffZ), hw, hd);
-      c.position.x = cl.x; c.position.z = cl.z;
-      updateDot(c);
+      const pt = groundPt(e.clientX, e.clientY);
+      const anchorOff = dragOffsets[draggingUid];
+      const anchorObj = itemGroup.children.find(x => x.userData.uid === draggingUid);
+      if (!anchorOff || !anchorObj) return;
+      // Clamp using only in-bounds members (OOB clones don't constrain movement)
+      let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+      Object.entries(dragOffsets).forEach(([uid, off]) => {
+        const obj = itemGroup.children.find(x => x.userData.uid === uid);
+        if (!obj || obj.userData.outOfBounds) return;
+        const b = new THREE.Box3().setFromObject(obj);
+        const relX = off.dx - anchorOff.dx, relZ = off.dz - anchorOff.dz;
+        const hw = (b.max.x - b.min.x) / 2, hd = (b.max.z - b.min.z) / 2;
+        minX = Math.min(minX, relX - hw); maxX = Math.max(maxX, relX + hw);
+        minZ = Math.min(minZ, relZ - hd); maxZ = Math.max(maxZ, relZ + hd);
+      });
+      if (minX === Infinity) {
+        const b = new THREE.Box3().setFromObject(anchorObj);
+        const hw = (b.max.x-b.min.x)/2, hd = (b.max.z-b.min.z)/2;
+        minX=-hw; maxX=hw; minZ=-hd; maxZ=hd;
+      }
+      const rawX = snap(pt.x + anchorOff.dx), rawZ = snap(pt.z + anchorOff.dz);
+      const clampedX = Math.max(-floorW/2 - minX, Math.min(floorW/2 - maxX, rawX));
+      const clampedZ = Math.max(-floorD/2 - minZ, Math.min(floorD/2 - maxZ, rawZ));
+      const ddx = clampedX - (pt.x + anchorOff.dx);
+      const ddz = clampedZ - (pt.z + anchorOff.dz);
+      // Move ALL members including OOB clones
+      Object.entries(dragOffsets).forEach(([uid, off]) => {
+        const obj = itemGroup.children.find(x => x.userData.uid === uid);
+        if (!obj) return;
+        obj.position.x = pt.x + off.dx + ddx;
+        obj.position.z = pt.z + off.dz + ddz;
+      });
+      updateDot(anchorObj);
     };
 
     const onPointerUp = e => {
       controls.enabled = true;
       if (!draggingUid) return;
+
       if (!dragArmed) {
-        // click = select / deselect
-        if (selectedUid && selectedUid !== draggingUid) {
-          const prev = itemGroup.children.find(x=>x.userData.uid===selectedUid);
-          if (prev) setOutlineVisible(prev, selectedUid===hoveredUid);
-        }
-        if (selectedUid === draggingUid) {
-          selectedUid = null; if(engRef.current) engRef.current.selectedUidRef.current = null;
+        // Click = select group
+        const clickedGroupUids = getGroupUids(draggingUid);
+        const sourceUid = getSourceUid(draggingUid);
+
+        if (selectedUid === sourceUid) {
+          // Deselect
+          setGroupOutline(selectedUids, false);
+          selectedUid = null; selectedUids = [];
+          if(engRef.current) engRef.current.selectedUidRef.current = null;
           onRadialMenuRef.current?.(null);
         } else {
-          selectedUid = draggingUid; if(engRef.current) engRef.current.selectedUidRef.current = draggingUid;
-          const c = itemGroup.children.find(x=>x.userData.uid===selectedUid);
-          if (c) {
-            setOutlineVisible(c, true);
-            const sp = project3D(c);
+          // Select whole group, outline all
+          setGroupOutline(selectedUids, false); // clear old
+          selectedUid  = sourceUid;
+          selectedUids = clickedGroupUids;
+          if(engRef.current) engRef.current.selectedUidRef.current = sourceUid;
+          setGroupOutline(selectedUids, true);
+          // Show radial menu over the source object
+          const sourceObj = itemGroup.children.find(x => x.userData.uid === sourceUid);
+          if (sourceObj) {
+            const sp = project3D(sourceObj);
             panCameraToShowMenu(sp);
-            // Read current rotation and color from object
-            const savedItem = itemsRef.current.find(i=>i.uid===selectedUid);
+            const savedItem = itemsRef.current.find(i => i.uid === sourceUid);
             onRadialMenuRef.current?.({
-              x:sp.x, y:sp.y, uid:selectedUid,
-              modelId:c.userData.modelId,
-              initialRotY: c.rotation.y,
+              x: sp.x, y: sp.y, uid: sourceUid,
+              modelId: sourceObj.userData.modelId,
+              initialRotY: sourceObj.rotation.y,
               initialColor: savedItem?.color || null,
+              initialArrayState: savedItem?.groupId
+                ? { count: itemsRef.current.filter(i=>i.groupId===savedItem.groupId).length, spacing: savedItem?.arrayGap || 0 }
+                : null,
             });
           }
         }
       } else {
-        // drag ended — keep selected, reshow menu at new position
-        if (selectedUid && selectedUid !== draggingUid) {
-          const prev = itemGroup.children.find(x=>x.userData.uid===selectedUid);
-          if (prev) setOutlineVisible(prev, selectedUid===hoveredUid);
-        }
-        selectedUid = draggingUid; if(engRef.current) engRef.current.selectedUidRef.current = draggingUid;
-        const c = itemGroup.children.find(x=>x.userData.uid===selectedUid);
-        if (c) {
-          setOutlineVisible(c, true);
-          const sp = project3D(c);
+        // Drag ended — update positions in React state for all moved objects
+        const sourceUid = getSourceUid(draggingUid);
+        selectedUid  = sourceUid;
+        selectedUids = getGroupUids(draggingUid);
+        if(engRef.current) engRef.current.selectedUidRef.current = sourceUid;
+        setGroupOutline(selectedUids, true);
+
+        const next = itemsRef.current.map(i => {
+          const obj = itemGroup.children.find(x => x.userData.uid === i.uid);
+          if (obj && dragOffsets[i.uid]) return { ...i, x: obj.position.x, z: obj.position.z };
+          return i;
+        });
+        onChangeRef.current?.(next);
+
+        // Reshow menu over source
+        const sourceObj = itemGroup.children.find(x => x.userData.uid === sourceUid);
+        if (sourceObj) {
+          const sp = project3D(sourceObj);
           panCameraToShowMenu(sp);
-          onRadialMenuRef.current?.({ x:sp.x, y:sp.y, uid:selectedUid, modelId:c.userData.modelId, initialRotY: c.rotation.y });
-          const next = itemsRef.current.map(i =>
-            i.uid === draggingUid ? { ...i, x: c.position.x, z: c.position.z } : i
-          );
-          onChangeRef.current?.(next);
+          const savedItem2 = itemsRef.current.find(i => i.uid === sourceUid);
+          onRadialMenuRef.current?.({
+            x: sp.x, y: sp.y, uid: sourceUid,
+            modelId: sourceObj.userData.modelId,
+            initialRotY: sourceObj.rotation.y,
+            initialColor: savedItem2?.color || null,
+            initialArrayState: savedItem2?.groupId
+              ? { count: itemsRef.current.filter(i=>i.groupId===savedItem2.groupId).length, spacing: savedItem2?.arrayGap || 0 }
+              : null,
+          });
         }
         canvas.style.cursor = hoveredUid ? 'grab' : 'default';
       }
-      draggingUid = null; dragArmed = false;
+      draggingUid = null; dragArmed = false; dragOffsets = {};
     };
 
     const onKeyDown = e => {
       if (e.key!=='Delete' && e.key!=='Backspace') return;
       if (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
       if (!selectedUid) return;
-      const c = itemGroup.children.find(x=>x.userData.uid===selectedUid);
-      if (c) itemGroup.remove(c);
-      const next = itemsRef.current.filter(i=>i.uid!==selectedUid);
-      onChangeRef.current?.(next);
-      selectedUid=null; dot.visible=false;
+      // Remove all selected group members with animation
+      const uidsToRemove = new Set(selectedUids);
+      selectedUids.forEach(uid => deleteContainer(uid));
+      setTimeout(() => {
+        const next = itemsRef.current.filter(i=>!uidsToRemove.has(i.uid));
+        onChangeRef.current?.(next);
+      }, 400);
+      selectedUid=null; selectedUids=[]; dot.visible=false;
+      onRadialMenuRef.current?.(null);
     };
 
-    const onDragOver = e => e.preventDefault();
+    // ── Drag ghost ────────────────────────────────────────────
+    let dragGhost = null;
+    let dragGhostModelId = null;
+
+    function createDragGhost(modelId) {
+      if (dragGhost) { itemGroup.remove(dragGhost); dragGhost = null; }
+      dragGhostModelId = modelId;
+      const def = (config._catalogFlat || []).find(d => d.id === modelId);
+      if (!def?.file) return;
+      loadModel(def.file).then(original => {
+        if (dragGhostModelId !== modelId) return; // drag changed or ended
+        const ghost = original.clone(true);
+        ghost.userData.isMeta = true;
+        ghost.traverse(c => {
+          if (c.isMesh && !c.userData.isMeta) {
+            c.material = new THREE.MeshStandardMaterial({
+              color: 0x4488ff, transparent: true, opacity: 0.45, depthWrite: false,
+            });
+          }
+        });
+        dragGhost = ghost;
+        itemGroup.add(dragGhost);
+      });
+    }
+
+    function moveDragGhost(clientX, clientY) {
+      if (!dragGhost) return;
+      const pt = groundPt(clientX, clientY);
+      dragGhost.updateWorldMatrix(true, true);
+      const box = new THREE.Box3().setFromObject(dragGhost);
+      const hw = (box.max.x - box.min.x) / 2 || 0.5;
+      const hd = (box.max.z - box.min.z) / 2 || 0.5;
+      const cl = clampFloor(snap(pt.x), snap(pt.z), hw, hd);
+      dragGhost.position.x = cl.x;
+      dragGhost.position.z = cl.z;
+    }
+
+    function removeDragGhost() {
+      if (dragGhost) { itemGroup.remove(dragGhost); dragGhost = null; dragGhostModelId = null; }
+    }
+
+    const onDragEnter = e => {
+      const modelId = e.dataTransfer?.types?.includes('text/plain')
+        ? null : null; // can't read data in dragenter, will get it in dragover
+      e.preventDefault();
+    };
+
+    const onDragOver = e => {
+      e.preventDefault();
+      const modelId = window.__dragModelId;
+      if (modelId && modelId !== dragGhostModelId) createDragGhost(modelId);
+      moveDragGhost(e.clientX, e.clientY);
+    };
+
+    const onDragLeave = e => {
+      // Only remove if leaving the canvas entirely
+      if (!canvas.contains(e.relatedTarget)) removeDragGhost();
+    };
+
     const onDrop = e => {
       e.preventDefault();
       const modelId = e.dataTransfer?.getData('modelId');
       if (!modelId) return;
-      const pt  = groundPt(e.clientX, e.clientY);
+      // Use ghost position if available (already clamped to floor)
+      const x = dragGhost ? dragGhost.position.x : snap(groundPt(e.clientX, e.clientY).x);
+      const z = dragGhost ? dragGhost.position.z : snap(groundPt(e.clientX, e.clientY).z);
+      removeDragGhost();
       const uid = `${modelId}_${Date.now()}`;
-      const x   = snap(pt.x), z = snap(pt.z);
       pendingPositions.set(uid, { x, z });
       const next = [...itemsRef.current, { uid, modelId, count: 1, x, z, rotY: 0 }];
       onChangeRef.current?.(next);
@@ -525,7 +699,9 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup',   onPointerUp);
     window.addEventListener('keydown',     onKeyDown);
+    canvas.addEventListener('dragenter',   onDragEnter);
     canvas.addEventListener('dragover',    onDragOver);
+    canvas.addEventListener('dragleave',   onDragLeave);
     canvas.addEventListener('drop',        onDrop);
 
     // ── Spawn container ───────────────────────────────────────
@@ -564,6 +740,11 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         container.remove(ph);
         container.add(root);
         attachOutlines(root);
+        // Sync outline visibility with current hover/selected state
+        const isActive = selectedUids.includes(uid) || hoveredUid === uid ||
+          (uid !== hoveredUid && getGroupUids(hoveredUid || '').includes(uid)) ||
+          getGroupUids(selectedUid || '').includes(uid);
+        setOutlineVisible(container, isActive);
         // Restore saved state
         const saved = itemsRef.current.find(i=>i.uid===uid);
         if (saved?.rotY) container.rotation.y = saved.rotY;
@@ -612,12 +793,55 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     const ROT_DUR  = 300; // ms
 
     function rotateObject(uid, rotY) {
-      const c = itemGroup.children.find(x=>x.userData.uid===uid);
-      if (!c) return;
-      rotAnims.set(uid, { from: c.rotation.y, to: rotY, startTime: performance.now() });
+      const source = itemGroup.children.find(x=>x.userData.uid===uid);
+      if (!source) return;
+      const item = itemsRef.current.find(i=>i.uid===uid);
+      const groupUids = item?.groupId
+        ? itemsRef.current.filter(i=>i.groupId===item.groupId).map(i=>i.uid)
+        : [uid];
+      const prevRotY = source.rotation.y;
+      const delta    = rotY - prevRotY;
+      // Animate source rotation
+      rotAnims.set(uid, { from: prevRotY, to: rotY, startTime: performance.now() });
+      // Rotate clones around source origin
+      const ox = source.position.x, oz = source.position.z;
+      const cos = Math.cos(delta), sin = Math.sin(delta);
+      groupUids.forEach(cuid => {
+        if (cuid === uid) return;
+        const clone = itemGroup.children.find(x=>x.userData.uid===cuid);
+        if (!clone) return;
+        const dx = clone.position.x - ox, dz = clone.position.z - oz;
+        // 2D rotation: x' = dx*cos - dz*sin, z' = dx*sin + dz*cos  (standard CCW)
+        // Three.js rotY is CCW so we negate sin for CW visual match
+        const nx = dx*cos + dz*sin + ox;
+        const nz = -dx*sin + dz*cos + oz;
+        rotAnims.set(cuid, {
+          from: clone.rotation.y, to: clone.rotation.y + delta,
+          startTime: performance.now(),
+          posAnim: { fromX: clone.position.x, fromZ: clone.position.z, toX: nx, toZ: nz }
+        });
+      });
+      // Update React state
+      const next = itemsRef.current.map(i => {
+        if (!groupUids.includes(i.uid) || i.uid === uid) return i;
+        const dx = i.x - ox, dz = i.z - oz;
+        return { ...i, x: dx*cos + dz*sin + ox, z: -dx*sin + dz*cos + oz, rotY: i.rotY + delta };
+      });
+      onChangeRef.current?.(next);
     }
 
     function applyColor(uid, color) {
+      // Apply to all group members
+      const item = itemsRef.current.find(i=>i.uid===uid);
+      const groupUids = item?.groupId
+        ? itemsRef.current.filter(i=>i.groupId===item.groupId).map(i=>i.uid)
+        : [uid];
+      groupUids.forEach(gid => _applyColorToContainer(gid, color));
+      // Update React state for all
+      const next = itemsRef.current.map(i => groupUids.includes(i.uid) ? { ...i, color } : i);
+      onChangeRef.current?.(next);
+    }
+    function _applyColorToContainer(uid, color) {
       const c = itemGroup.children.find(x=>x.userData.uid===uid);
       if (!c) return;
       const paintColor = new THREE.Color(color);
@@ -646,13 +870,41 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     }
 
     function duplicateObject(uid) {
-      const c = itemGroup.children.find(x=>x.userData.uid===uid);
-      if (!c) return;
-      const newUid = `${c.userData.modelId}_${Date.now()}`;
-      const offset = 1.5;
-      spawnContainer(c.userData.modelId, newUid, c.position.x + offset, c.position.z + offset);
-      const next = [...itemsRef.current, { uid: newUid, modelId: c.userData.modelId, count: 1, x: c.position.x + offset, z: c.position.z + offset, rotY: c.rotation.y }];
-      onChangeRef.current?.(next);
+      const item = itemsRef.current.find(i=>i.uid===uid);
+      const groupUids = item?.groupId
+        ? itemsRef.current.filter(i=>i.groupId===item.groupId).map(i=>i.uid)
+        : [uid];
+      const offset     = 1.5;
+      const newGroupId = item?.groupId ? `arr_dup_${Date.now()}` : null;
+      const newItems   = [];
+      groupUids.forEach((gid, idx) => {
+        const obj  = itemGroup.children.find(x=>x.userData.uid===gid);
+        const orig = itemsRef.current.find(i=>i.uid===gid);
+        if (!obj || !orig) return;
+        const newUid  = `${obj.userData.modelId}_dup_${Date.now()}_${idx}`;
+        const newX    = obj.position.x + offset;
+        const newZ    = obj.position.z + offset;
+        const newRotY = obj.rotation.y;
+        const capturedColor = orig.color || null;
+        const capturedUid   = newUid; // capture in closure
+        const newCont = spawnContainer(obj.userData.modelId, capturedUid, newX, newZ);
+        if (newCont) newCont.rotation.y = newRotY;
+        // Use increasing delays so each item's timeout is unique
+        setTimeout(() => {
+          const c = itemGroup.children.find(x=>x.userData.uid===capturedUid);
+          if (c) c.rotation.y = newRotY;
+          if (capturedColor) _applyColorToContainer(capturedUid, capturedColor);
+        }, 80 + idx * 60);
+        newItems.push({
+          uid: newUid, modelId: obj.userData.modelId, count: 1,
+          x: newX, z: newZ, rotY: newRotY,
+          color: orig.color || null,
+          groupId: newGroupId,
+          isArrayClone: newGroupId ? orig.isArrayClone : false,
+          arrayParent: newGroupId && orig.isArrayClone ? newGroupId : undefined,
+        });
+      });
+      onChangeRef.current?.([...itemsRef.current, ...newItems]);
     }
 
     // Array — distribute copies in +X with gap between bounding boxes
@@ -662,59 +914,103 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       const source = itemGroup.children.find(x=>x.userData.uid===uid);
       if (!source) return;
 
-      // Remove previous clones for this uid
+      // Remove previous Three.js clones
       const prevClones = arrayGroups.get(uid) || [];
       prevClones.forEach(cuid => {
         const c = itemGroup.children.find(x=>x.userData.uid===cuid);
         if (c) itemGroup.remove(c);
       });
+      arrayGroups.set(uid, []);
 
-      if (count <= 1) { arrayGroups.set(uid, []); return; }
+      const groupId = `arr_${uid}`;
+      source.userData.groupId = groupId;
 
-      // Get object width from bounding box
+      if (count <= 1) {
+        source.userData.groupId = null;
+        // Remove clones from sceneItems immediately (before sync runs)
+        const updated = itemsRef.current
+          .filter(i => !(i.isArrayClone && i.arrayParent === uid))
+          .map(i => i.uid === uid ? { ...i, count: 1, arrayGap: undefined, groupId: null } : i);
+        itemsRef.current = updated; // update ref immediately to prevent sync from re-adding
+        onChangeRef.current?.(updated);
+        return;
+      }
+
+      // Measure object size along its local +X axis (direction of array)
       source.updateWorldMatrix(true, true);
-      const box  = new THREE.Box3().setFromObject(source);
-      const objW = box.max.x - box.min.x;
-      const step = objW + gap; // center-to-center distance
-
-      // Direction based on object's Y rotation (+X local)
       const rotY = source.rotation.y;
-      const dir  = new THREE.Vector3(Math.sin(rotY + Math.PI/2), 0, Math.cos(rotY + Math.PI/2));
+      const dir  = new THREE.Vector3(Math.cos(rotY), 0, -Math.sin(rotY)); // local +X in world
+      // Project bounding box onto the array direction to get true width
+      const box  = new THREE.Box3().setFromObject(source);
+      const corners = [
+        new THREE.Vector3(box.min.x, 0, box.min.z),
+        new THREE.Vector3(box.max.x, 0, box.min.z),
+        new THREE.Vector3(box.min.x, 0, box.max.z),
+        new THREE.Vector3(box.max.x, 0, box.max.z),
+      ];
+      let minP = Infinity, maxP = -Infinity;
+      corners.forEach(c => {
+        const p = c.dot(dir);
+        if (p < minP) minP = p;
+        if (p > maxP) maxP = p;
+      });
+      const objW = maxP - minP;
+      const step = objW + gap;
 
+      // Create Three.js clones — mark out-of-bounds ones with red ghost material
+      const OOB_MAT = new THREE.MeshStandardMaterial({
+        color: 0xff3333, transparent: true, opacity: 0.35,
+        depthWrite: false,
+      });
       const newClones = [];
       for (let i = 1; i < count; i++) {
-        const cuid = `${source.userData.modelId}_arr_${uid}_${i}`;
+        const cuid = `${uid}_arr_${i}`;
         const clone = source.clone(true);
         clone.userData.uid          = cuid;
         clone.userData.modelId      = source.userData.modelId;
         clone.userData.isArrayClone = true;
         clone.userData.arrayParent  = uid;
-
-        clone.position.set(
-          source.position.x + dir.x * step * i,
-          source.position.y,
-          source.position.z + dir.z * step * i,
-        );
+        clone.userData.groupId      = groupId;
+        const cx = source.position.x + dir.x * step * i;
+        const cz = source.position.z + dir.z * step * i;
+        clone.position.set(cx, source.position.y, cz);
         clone.rotation.copy(source.rotation);
+
+        // Save original materials for OOB toggle during drag
+        const origMats = [];
+        clone.traverse(c => {
+          if (c.isMesh && !c.userData.isMeta) origMats.push({ mesh: c, mat: c.material });
+        });
+        clone.userData.origMats = origMats;
+
+        // Check OOB and apply red immediately so user sees it while editing array
+        clone.updateWorldMatrix(true, true);
+        const cb = new THREE.Box3().setFromObject(clone);
+        const oob = cb.min.x < -floorW/2 || cb.max.x > floorW/2 ||
+                    cb.min.z < -floorD/2 || cb.max.z > floorD/2;
+        clone.userData.outOfBounds = oob;
+        if (oob) origMats.forEach(({ mesh }) => { mesh.material = LIVE_OOB_MAT; });
+
         itemGroup.add(clone);
         newClones.push(cuid);
-
-        // Spawn animation
         clone.scale.set(0.01, 0.01, 0.01);
         spawnAnims.push({ container: clone, startTime: performance.now() });
       }
       arrayGroups.set(uid, newClones);
 
-      // Update React state
+      // Update sceneItems
       const filtered   = itemsRef.current.filter(i => !(i.isArrayClone && i.arrayParent === uid));
+      const withSource = filtered.map(i => i.uid === uid ? { ...i, count: 1, arrayGap: gap, groupId } : i);
       const cloneItems = newClones.map((cuid, i) => ({
         uid: cuid, modelId: source.userData.modelId, count: 1,
         x: source.position.x + dir.x * step * (i+1),
         z: source.position.z + dir.z * step * (i+1),
         rotY: source.rotation.y,
-        isArrayClone: true, arrayParent: uid,
+        isArrayClone: true, arrayParent: uid, groupId,
       }));
-      onChangeRef.current?.([...filtered, ...cloneItems]);
+      const next = [...withSource, ...cloneItems];
+      itemsRef.current = next; // update ref immediately
+      onChangeRef.current?.(next);
     }
 
     engRef.current = { itemGroup, spawnContainer, pendingPositions, project3D, camera, selectedUidRef: { current: null }, deleteContainer, rotateObject, applyColor, duplicateObject, applyArray };
@@ -759,7 +1055,13 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         const t = Math.min((now - anim.startTime) / ROT_DUR, 1);
         const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t; // ease in-out quad
         const c = itemGroup.children.find(x=>x.userData.uid===uid);
-        if (c) c.rotation.y = anim.from + (anim.to - anim.from) * ease;
+        if (c) {
+          c.rotation.y = anim.from + (anim.to - anim.from) * ease;
+          if (anim.posAnim) {
+            c.position.x = anim.posAnim.fromX + (anim.posAnim.toX - anim.posAnim.fromX) * ease;
+            c.position.z = anim.posAnim.fromZ + (anim.posAnim.toZ - anim.posAnim.fromZ) * ease;
+          }
+        }
         if (t >= 1) rotAnims.delete(uid);
       });
 
@@ -789,7 +1091,9 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup',   onPointerUp);
       window.removeEventListener('keydown',     onKeyDown);
+      canvas.removeEventListener('dragenter',   onDragEnter);
       canvas.removeEventListener('dragover',    onDragOver);
+      canvas.removeEventListener('dragleave',   onDragLeave);
       canvas.removeEventListener('drop',        onDrop);
       window.removeEventListener('viewport:zoom', onZoom);
       window.removeEventListener('resize',      onResize);
@@ -805,14 +1109,16 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     if (!config._catalogFlat?.length) return;
     const { itemGroup, spawnContainer, pendingPositions } = eng;
 
-    // Remove containers no longer in items
+    // Remove containers no longer in items (but never remove array clones — managed by applyArray)
     const currentUids = new Set(sceneItems.map(i=>i.uid));
     [...itemGroup.children].forEach(c => {
+      if (c.userData.isArrayClone) return;
       if (!currentUids.has(c.userData.uid)) itemGroup.remove(c);
     });
 
-    // Add new items — use pending drop position or saved state position
+    // Add new items — skip array clones (managed by applyArray)
     sceneItems.forEach((item, idx) => {
+      if (item.isArrayClone) return;
       if (itemGroup.children.find(c=>c.userData.uid===item.uid)) return;
       let x, z;
       if (pendingPositions.has(item.uid)) {
@@ -828,6 +1134,12 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         x = (col-2)*3; z = -row*3;
       }
       spawnContainer(item.modelId, item.uid, x, z);
+      // Restore array visuals if item has count > 1 (e.g. loading saved project)
+      if (item.count > 1 && item.arrayGap != null) {
+        setTimeout(() => {
+          if (eng.applyArray) eng.applyArray(item.uid, item.count, item.arrayGap);
+        }, 300); // wait for spawn animation
+      }
     });
   }, [sceneItems, config._catalogFlat]);
 
@@ -838,5 +1150,13 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
+
+
+
+
+
+
+
 
 

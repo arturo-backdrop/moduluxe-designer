@@ -219,12 +219,20 @@ export default function App() {
                 units={units}
                 initialRotY={radialMenu.initialRotY || 0}
                 initialColor={radialMenu.initialColor || '#3a6ea5'}
+                initialArrayState={radialMenu.initialArrayState || null}
                 wrapperRef={radialMenuWrapperRef}
                 onAction={(action, data) => {
                   if (action === 'del') {
-                    viewportEngRef.current?.deleteContainer(radialMenu.uid);
+                    // Delete entire group
+                    const uid = radialMenu.uid;
+                    const item = sceneItems.find(i => i.uid === uid);
+                    const groupUids = item?.groupId
+                      ? sceneItems.filter(i => i.groupId === item.groupId).map(i => i.uid)
+                      : [uid];
+                    groupUids.forEach(gid => viewportEngRef.current?.deleteContainer(gid));
                     setTimeout(() => {
-                      setSceneItems(prev => prev.filter(i => i.uid !== radialMenu.uid));
+                      const toRemove = new Set(groupUids);
+                      setSceneItems(prev => prev.filter(i => !toRemove.has(i.uid)));
                     }, 380);
                     setRadialMenu(null);
                   } else if (action === 'rotate') {
@@ -241,6 +249,8 @@ export default function App() {
                     viewportEngRef.current?.applyArray(radialMenu.uid, data.count, data.spacing);
                   } else if (action === 'dup') {
                     viewportEngRef.current?.duplicateObject(radialMenu.uid);
+                  } else if (action === 'units') {
+                    setUnits(data.units);
                   }
                 }}
                 onClose={() => setRadialMenu(null)}
@@ -252,3 +262,5 @@ export default function App() {
     </div>
   );
 }
+
+
