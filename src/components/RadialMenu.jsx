@@ -56,13 +56,13 @@ function buildButtons(sockets=[], itemType=null) {
     id:s.name, icon:BEHAVIOR_ICONS[s.behavior]||'ti-adjustments',
     label:s.label||s.name, size:48, hasProps:true, socket:s,
   }));
-  // Distribute sockets in the arc between del (198°) and array (-90°=270°)
-  // Arc spans from 198° to 270° (72° of space)
-  const arcStart = 216, arcEnd = 342; // leave padding from del and array
+  // Sockets go in the arc from 210° to 330° (between del@198 and array@-90°=270°)
+  // Use tighter arc with clear padding from fixed buttons
+  const arcStart = 222, arcEnd = 318;
   const count = socketBtns.length;
   const positioned = socketBtns.map((b, i) => {
     const angle = count === 1
-      ? (arcStart + arcEnd) / 2
+      ? 270  // straight left — clear of all fixed buttons
       : arcStart + (arcEnd - arcStart) / (count - 1) * i;
     return { ...b, angle };
   });
