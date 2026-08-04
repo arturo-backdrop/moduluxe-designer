@@ -648,6 +648,9 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           } else {
             // Second+ click — confirm wall segment
             const endPt = e.shiftKey ? pt : snapAngle(wallState.start, pt);
+            // Clamp endpoint to floor
+            const eCl = clampFloor(endPt.x, endPt.z, 0, 0);
+            endPt.x = eCl.x; endPt.z = eCl.z;
             const dx = endPt.x - wallState.start.x, dz = endPt.z - wallState.start.z;
             if (Math.sqrt(dx*dx + dz*dz) > 0.1) {
               const uid     = `wall_${Date.now()}`;
@@ -676,9 +679,11 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         // ── Column tool ───────────────────────────────────
         if (activeToolRef.current === 'column') {
           const uid = `col_${Date.now()}`;
+          const colHalf = 0.15; // default half-size
+          const clamped = clampFloor(snap(raw.x), snap(raw.z), colHalf, colHalf);
           const newCol = {
             uid, type: 'column',
-            x: snap(raw.x), z: snap(raw.z),
+            x: clamped.x, z: clamped.z,
             width: 0.3, depth: 0.3, height: 2.4, color: '#cccccc', shape: 'square',
           };
           const next = [...itemsRef.current, newCol];
@@ -805,13 +810,15 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           const orig = wallDragOrigItem;
           let updated;
           if (orig.type === 'wall') {
-            // Snap delta based on snapped raw position
             const dx = snap(raw.x) - snap(wallDragStart.x);
             const dz = snap(raw.z) - snap(wallDragStart.z);
-            updated = { ...orig, x1: orig.x1+dx, z1: orig.z1+dz, x2: orig.x2+dx, z2: orig.z2+dz };
+            const c1 = clampFloor(orig.x1+dx, orig.z1+dz, 0, 0);
+            const c2 = clampFloor(orig.x2+dx, orig.z2+dz, 0, 0);
+            updated = { ...orig, x1: c1.x, z1: c1.z, x2: c2.x, z2: c2.z };
           } else if (orig.type === 'column') {
-            // Snap to grid directly
-            updated = { ...orig, x: snap(raw.x), z: snap(raw.z) };
+            const colW = (orig.width || 0.3) / 2;
+            const cc = clampFloor(snap(raw.x), snap(raw.z), colW, colW);
+            updated = { ...orig, x: cc.x, z: cc.z };
           } else if (orig.type === 'door') {
             const wall = itemsRef.current.find(i => i.uid === orig.wallUid);
             if (wall) {
@@ -848,7 +855,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         if (activeToolRef.current === 'column') {
           if (colGhost) scene.remove(colGhost);
           colGhost = buildColumnGhost();
-          colGhost.position.set(snap(raw.x), 0, snap(raw.z));
+          const cg = clampFloor(snap(raw.x), snap(raw.z), 0.15, 0.15);
+          colGhost.position.set(cg.x, 0, cg.z);
           colGhost.raycast = () => {};
           scene.add(colGhost);
         }
@@ -1624,6 +1632,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
 
