@@ -458,7 +458,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         modelId: null,
         initialColor: item.color || '#cccccc',
         initialRotY: 0,
-        initialActiveBtn: 'props', // open props card by default
+        initialActiveBtn: 'props',
         wallProps: {
           itemType:   item.type,
           height:     item.height     ?? 2.4,
@@ -466,6 +466,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           glassRatio: item.glassRatio ?? 0,
           openAngle:  item.openAngle  ?? 45,
           shape:      item.shape      ?? 'square',
+          width:      item.width      ?? 0.3,
+          depth:      item.depth      ?? 0.3,
         },
       });
     }
@@ -798,17 +800,19 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           return;
         }
 
-        // Wall/column/door drag in select mode
+        // Wall/column/door drag in select mode - with grid snap
         if (draggingWallUid && wallDragStart && wallDragOrigItem && activeToolRef.current === 'select') {
-          const dx = raw.x - wallDragStart.x, dz = raw.z - wallDragStart.z;
           const orig = wallDragOrigItem;
           let updated;
           if (orig.type === 'wall') {
+            // Snap delta based on snapped raw position
+            const dx = snap(raw.x) - snap(wallDragStart.x);
+            const dz = snap(raw.z) - snap(wallDragStart.z);
             updated = { ...orig, x1: orig.x1+dx, z1: orig.z1+dz, x2: orig.x2+dx, z2: orig.z2+dz };
           } else if (orig.type === 'column') {
-            updated = { ...orig, x: orig.x+dx, z: orig.z+dz };
+            // Snap to grid directly
+            updated = { ...orig, x: snap(raw.x), z: snap(raw.z) };
           } else if (orig.type === 'door') {
-            // Drag door along its parent wall
             const wall = itemsRef.current.find(i => i.uid === orig.wallUid);
             if (wall) {
               const wx = wall.x2 - wall.x1, wz = wall.z2 - wall.z1;
@@ -1620,6 +1624,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
 
