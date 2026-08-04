@@ -129,7 +129,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
           <div style="font-size:9px;color:#999;margin-bottom:3px;">Width (${u.label})</div>
           <div style="display:flex;align-items:center;gap:6px;">
             <button id="rm_w_dec" style="width:22px;height:22px;border-radius:50%;border:none;background:#f0f0f0;cursor:pointer;">&#8722;</button>
-            <span id="rm_w_val" style="font-weight:700;font-size:14px;min-width:36px;text-align:center;">${(wp.width*u.factor).toFixed(units==='m'?2:1)}</span>
+            <span id="rm_w_val" style="font-weight:700;font-size:14px;min-width:36px;text-align:center;">${((wp.width||0.3)*u.factor).toFixed(units==='m'?2:1)}</span>
             <button id="rm_w_inc" style="width:22px;height:22px;border-radius:50%;border:none;background:#f0f0f0;cursor:pointer;">+</button>
           </div>
         </div>
@@ -480,8 +480,8 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
         const wDec = document.getElementById('rm_w_dec');
         const wInc = document.getElementById('rm_w_inc');
         const STEP_W = 0.05;
-        if (wDec) wDec.onclick = () => { wp.width = wp.depth = Math.max(0.1, parseFloat((wp.width-STEP_W).toFixed(2))); emit(); refreshCard(); };
-        if (wInc) wInc.onclick = () => { wp.width = wp.depth = parseFloat((wp.width+STEP_W).toFixed(2)); emit(); refreshCard(); };
+        if (wDec) wDec.onclick = () => { wp.width = wp.depth = Math.max(0.1, parseFloat(((wp.width||0.3)-STEP_W).toFixed(2))); emit(); refreshCard(); };
+        if (wInc) wInc.onclick = () => { wp.width = wp.depth = parseFloat(((wp.width||0.3)+STEP_W).toFixed(2)); emit(); refreshCard(); };
         if (sqBtn) sqBtn.onclick = () => { wp.shape = 'square'; emit(); refreshCard(); };
         if (ciBtn) ciBtn.onclick = () => { wp.shape = 'circle'; emit(); refreshCard(); };
       }
@@ -629,6 +629,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       onClick={e=>e.stopPropagation()} />
   );
 }
+
 
 
 
