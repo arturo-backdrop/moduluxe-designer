@@ -450,7 +450,14 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     }
 
     function openWallRadialMenu(item, screenPt) {
-      panCameraToShowMenu(screenPt);
+      // Clamp to safe area so menu is always fully visible
+      const vw = window.innerWidth, vh = window.innerHeight;
+      const MARGIN = 160;
+      const sp = {
+        x: Math.max(SAFE_AREA.left + MARGIN, Math.min(vw - SAFE_AREA.right - MARGIN, screenPt.x)),
+        y: Math.max(SAFE_AREA.top  + MARGIN, Math.min(vh - SAFE_AREA.bottom - MARGIN, screenPt.y)),
+      };
+      panCameraToShowMenu(sp);
       onRadialMenuRef.current?.({
         x: screenPt.x, y: screenPt.y,
         uid: item.uid,
@@ -838,9 +845,12 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
         if (activeToolRef.current === 'wall') {
           if (wallState.active && wallState.start) {
-            const pt = e.shiftKey
+            const snapped = e.shiftKey
               ? snapWallPoint(raw, walls, floorW, floorD).pt
               : snapAngle(wallState.start, snapWallPoint(raw, walls, floorW, floorD).pt);
+            // Clamp endpoint to floor
+            const cl = clampFloor(snapped.x, snapped.z, 0, 0);
+            const pt = new THREE.Vector3(cl.x, 0, cl.z);
             // Update ghost
             if (wallState.ghost) scene.remove(wallState.ghost);
             const def = itemsRef.current.find(i => i.uid === wallState.chainGroup[0]);
@@ -1630,6 +1640,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
 
