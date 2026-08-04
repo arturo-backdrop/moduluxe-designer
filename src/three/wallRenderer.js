@@ -216,8 +216,8 @@ export function buildDoorGhost(wallAngle, width = DOOR_W, height = DOOR_H, thick
     color: 0x4488ff, transparent: true, opacity: 0.4, depthWrite: false, side: THREE.DoubleSide,
   });
   const group = new THREE.Group();
-  // Simple door outline ghost
-  const frameGeo = new THREE.BoxGeometry(width + 0.11, height + 0.06, thickness);
+  // Use a thicker box so it's visible from both sides of the wall
+  const frameGeo = new THREE.BoxGeometry(width + 0.11, height + 0.06, Math.max(0.25, thickness * 2));
   const frame = new THREE.Mesh(frameGeo, mat);
   frame.position.y = height / 2;
   group.add(frame);
@@ -290,4 +290,5 @@ export function findClosestWall(pt, walls, maxDist = 2.0) {
   });
   return best ? { wall: best, t: bestT } : null;
 }
+
 
