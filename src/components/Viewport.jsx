@@ -143,6 +143,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     modeRef.current = mode;
     const c = canvasRef.current;
     if (c) c.style.cursor = mode === 'draw' ? 'crosshair' : 'default';
+    // Always re-enable orbit when mode changes
+    if (engRef.current?.controls) engRef.current.controls.enabled = true;
   }, [mode]);
   useEffect(() => { activeToolRef.current = activeTool; }, [activeTool]);
   useEffect(() => { onToolChangeRef.current = onToolChange; }, [onToolChange]);
@@ -910,7 +912,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     };
 
     const onPointerUp = e => {
-      controls.enabled = true;
+      controls.enabled = true; // always re-enable first
       // Handle drag end
       if (draggingHandle) {
         draggingHandle = null; dragHandleWallUid = null; dragHandleWhich = null;
@@ -920,7 +922,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       if (draggingWallUid) {
         draggingWallUid = null; wallDragStart = null; wallDragOrigItem = null;
       }
-      if (modeRef.current === 'draw') return; // draw mode clicks handled in pointerDown
+      if (modeRef.current === 'draw') return;
       if (!draggingUid) return;
 
       if (!dragArmed) {
@@ -1422,7 +1424,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     }
 
     engRef.current = {
-      itemGroup, spawnContainer, pendingPositions, project3D, camera,
+      itemGroup, spawnContainer, pendingPositions, project3D, camera, controls,
       selectedUidRef: { current: null },
       deleteContainer, rotateObject, applyColor, duplicateObject, applyArray,
       syncWallItem, removeWallItem, rebuildHandles, wallMeshMap,
