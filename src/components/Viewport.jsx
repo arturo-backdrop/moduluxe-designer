@@ -3,6 +3,12 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
 import { loadModel } from '../three/glbParser.js';
+import {
+  buildWallMesh, buildColumnMesh, buildDoorMesh,
+  buildWallGhost, buildDoorGhost, buildEndpointHandle,
+  snapWallPoint, snapAngle, findClosestWall,
+  WALL_SNAP_RADIUS, DOOR_W, DOOR_H,
+} from '../three/wallRenderer.js';
 
 // ── Constants ─────────────────────────────────────────────────
 const DRAG_THRESHOLD = 5;   // px before drag is armed
@@ -122,7 +128,7 @@ function applyPaintColor(root, color) {
   });
 }
 
-export default function Viewport({ config, floorSize, sceneItems, onSceneItemsChange, onRadialMenu, radialMenuWrapperRef, engRef: externalEngRef }) {
+export default function Viewport({ config, floorSize, sceneItems, onSceneItemsChange, onRadialMenu, radialMenuWrapperRef, engRef: externalEngRef, mode = 'place', activeTool = 'select' }) {
   const canvasRef = useRef(null);
   const engRef    = useRef(null);
   // Refs so event handlers always see latest values
@@ -130,7 +136,11 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
   const onChangeRef = useRef(onSceneItemsChange);
   const onRadialMenuRef = useRef(onRadialMenu);
   const catalogRef  = useRef(config._catalogFlat || []);
+  const modeRef     = useRef(mode);
+  const activeToolRef = useRef(activeTool);
   useEffect(() => { onRadialMenuRef.current = onRadialMenu; }, [onRadialMenu]);
+  useEffect(() => { modeRef.current = mode; }, [mode]);
+  useEffect(() => { activeToolRef.current = activeTool; }, [activeTool]);
 
   useEffect(() => { itemsRef.current    = sceneItems; }, [sceneItems]);
   useEffect(() => { onChangeRef.current = onSceneItemsChange; }, [onSceneItemsChange]);
@@ -253,8 +263,47 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     const itemGroup = new THREE.Group();
     scene.add(itemGroup);
 
+    // Wall group (separate from itemGroup so raycasting is clean)
+    const wallGroup = new THREE.Group();
+    scene.add(wallGroup);
+    const wallMeshMap = new Map(); // uid -> THREE.Group
+
     // Spawn animations
     const spawnAnims = []; // { container, startTime }
+
+    // ── Wall Tool State ───────────────────────────────────────
+    const wallState = {
+      active: false,       // currently drawing a chain
+      start: null,         // THREE.Vector3
+      end: null,           // THREE.Vector3
+      ghost: null,         // ghost mesh in scene
+      startMarker: null,   // cyan dot
+      chainGroup: [],      // uids of walls in current chain
+    };
+
+    // Start marker (cyan sphere)
+    const startMarkerGeo = new THREE.SphereGeometry(0.06, 12, 12);
+    const startMarkerMat = new THREE.MeshStandardMaterial({ color: 0x00e5ff, roughness: 0.3 });
+    const startMarker    = new THREE.Mesh(startMarkerGeo, startMarkerMat);
+    startMarker.visible  = false;
+    startMarker.renderOrder = 10;
+    startMarker.raycast  = () => {};
+    scene.add(startMarker);
+
+    // Door ghost
+    let doorGhost = null;
+    let doorGhostWall = null; // { wall, t }
+
+    // Endpoint handles group
+    const handleGroup = new THREE.Group();
+    scene.add(handleGroup);
+    let hoveredHandle = null;
+    let draggingHandle = null;
+    let dragHandleWallUid = null;
+    let dragHandleWhich = null; // 'start' | 'end'
+
+    // Column ghost
+    let colGhost = null;
 
     // ── Interaction state ─────────────────────────────────────
     const raycaster  = new THREE.Raycaster();
@@ -302,6 +351,68 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       uids.forEach(uid => {
         const c = itemGroup.children.find(x => x.userData.uid === uid);
         if (c) setOutlineVisible(c, visible);
+      });
+    }
+
+    // ── Wall / Column / Door sync ─────────────────────────────
+    function syncWallItem(item) {
+      // Remove old mesh
+      if (wallMeshMap.has(item.uid)) {
+        wallGroup.remove(wallMeshMap.get(item.uid));
+        wallMeshMap.delete(item.uid);
+      }
+      let mesh = null;
+      if (item.type === 'wall')   mesh = buildWallMesh(item, itemsRef.current);
+      if (item.type === 'column') mesh = buildColumnMesh(item);
+      if (item.type === 'door')   mesh = buildDoorMesh(item, itemsRef.current);
+      if (!mesh) return;
+      mesh.userData.uid  = item.uid;
+      mesh.userData.type = item.type;
+      wallGroup.add(mesh);
+      wallMeshMap.set(item.uid, mesh);
+    }
+
+    function removeWallItem(uid) {
+      if (wallMeshMap.has(uid)) {
+        wallGroup.remove(wallMeshMap.get(uid));
+        wallMeshMap.delete(uid);
+      }
+    }
+
+    function rebuildHandles() {
+      handleGroup.clear();
+      itemsRef.current.forEach(item => {
+        if (item.type !== 'wall') return;
+        const s = new THREE.Vector3(item.x1, 0, item.z1);
+        const e = new THREE.Vector3(item.x2, 0, item.z2);
+        const hs = buildEndpointHandle(s);
+        hs.userData = { wallUid: item.uid, which: 'start' };
+        const he = buildEndpointHandle(e);
+        he.userData = { wallUid: item.uid, which: 'end' };
+        handleGroup.add(hs, he);
+      });
+    }
+
+    function getWallItems() {
+      return itemsRef.current.filter(i => i.type === 'wall' || i.type === 'column' || i.type === 'door');
+    }
+
+    function openWallRadialMenu(item, screenPt) {
+      panCameraToShowMenu(screenPt);
+      onRadialMenuRef.current?.({
+        x: screenPt.x, y: screenPt.y,
+        uid: item.uid,
+        itemType: item.type,
+        modelId: null,
+        initialColor: item.color || '#cccccc',
+        initialRotY: 0,
+        wallProps: {
+          height:     item.height     ?? 2.4,
+          thickness:  item.thickness  ?? 0.1,
+          glassRatio: item.glassRatio ?? 0,
+          openAngle:  item.openAngle  ?? 45,
+          shape:      item.shape      ?? 'square',
+        },
       });
     }
 
@@ -441,7 +552,130 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     }
 
     const onPointerDown = e => {
+      // ── Right click: end wall chain ───────────────────────
+      if (e.button === 2) {
+        if (modeRef.current === 'draw' && activeToolRef.current === 'wall' && wallState.active) {
+          wallState.active = false;
+          wallState.start = null;
+          if (wallState.ghost) { scene.remove(wallState.ghost); wallState.ghost = null; }
+          startMarker.visible = false;
+          wallState.chainGroup = [];
+        }
+        return;
+      }
       if (e.button !== 0) return;
+
+      // ── Draw Layout mode ──────────────────────────────────
+      if (modeRef.current === 'draw') {
+        const raw = groundPt(e.clientX, e.clientY);
+
+        // ── Wall tool ─────────────────────────────────────
+        if (activeToolRef.current === 'wall') {
+          const walls = itemsRef.current.filter(i => i.type === 'wall');
+          const { pt } = snapWallPoint(raw, walls, floorW, floorD);
+          if (!wallState.active) {
+            // First click — set start
+            wallState.active = true;
+            wallState.start  = pt;
+            wallState.end    = pt.clone();
+            startMarker.position.set(pt.x, 0.06, pt.z);
+            startMarker.visible = true;
+          } else {
+            // Second+ click — confirm wall segment
+            const endPt = e.shiftKey ? pt : snapAngle(wallState.start, pt);
+            const dx = endPt.x - wallState.start.x, dz = endPt.z - wallState.start.z;
+            if (Math.sqrt(dx*dx + dz*dz) > 0.1) {
+              const uid     = `wall_${Date.now()}`;
+              const groupId = wallState.chainGroup.length === 0
+                ? `wchain_${Date.now()}` : itemsRef.current.find(i => i.uid === wallState.chainGroup[0])?.groupId;
+              const newWall = {
+                uid, type: 'wall', groupId,
+                x1: wallState.start.x, z1: wallState.start.z,
+                x2: endPt.x,          z2: endPt.z,
+                height: 2.4, thickness: 0.1, glassRatio: 0, color: '#cccccc',
+              };
+              wallState.chainGroup.push(uid);
+              const next = [...itemsRef.current, newWall];
+              itemsRef.current = next;
+              onChangeRef.current?.(next);
+              syncWallItem(newWall);
+              rebuildHandles();
+              // Chain: new start = this end
+              wallState.start = endPt.clone();
+              startMarker.position.set(endPt.x, 0.06, endPt.z);
+            }
+          }
+          return;
+        }
+
+        // ── Column tool ───────────────────────────────────
+        if (activeToolRef.current === 'column') {
+          const uid = `col_${Date.now()}`;
+          const newCol = {
+            uid, type: 'column',
+            x: snap(raw.x), z: snap(raw.z),
+            width: 0.3, depth: 0.3, height: 2.4, color: '#cccccc', shape: 'square',
+          };
+          const next = [...itemsRef.current, newCol];
+          itemsRef.current = next;
+          onChangeRef.current?.(next);
+          syncWallItem(newCol);
+          return;
+        }
+
+        // ── Door tool ─────────────────────────────────────
+        if (activeToolRef.current === 'door') {
+          const walls = itemsRef.current.filter(i => i.type === 'wall');
+          const hit = findClosestWall(raw, walls);
+          if (hit) {
+            const uid = `door_${Date.now()}`;
+            const newDoor = {
+              uid, type: 'door',
+              wallUid: hit.wall.uid, t: hit.t,
+              width: DOOR_W, height: DOOR_H,
+              openAngle: 45, color: '#cccccc',
+            };
+            const next = [...itemsRef.current, newDoor];
+            itemsRef.current = next;
+            onChangeRef.current?.(next);
+            syncWallItem(newDoor);
+          }
+          return;
+        }
+
+        // ── Select in draw mode (click on wall/column/door) ──
+        const wallHit = raycaster.intersectObjects(wallGroup.children, true);
+        if (wallHit.length > 0) {
+          const hitObj = wallHit[0].object;
+          let uid = hitObj.userData?.uid;
+          // Walk up to find group with uid
+          let cur = hitObj;
+          while (cur && !cur.userData?.uid) cur = cur.parent;
+          uid = cur?.userData?.uid;
+          if (uid) {
+            const item = itemsRef.current.find(i => i.uid === uid);
+            if (item) {
+              // Project center to screen
+              const mesh = wallMeshMap.get(uid);
+              if (mesh) {
+                const box = new THREE.Box3().setFromObject(mesh);
+                const ctr = new THREE.Vector3(); box.getCenter(ctr);
+                ctr.project(camera);
+                const rect = canvas.getBoundingClientRect();
+                const sp = {
+                  x: (ctr.x + 1) / 2 * rect.width + rect.left,
+                  y: (-ctr.y + 1) / 2 * rect.height + rect.top,
+                };
+                openWallRadialMenu(item, sp);
+              }
+            }
+          }
+          return;
+        }
+        closeRadialMenu();
+        return;
+      }
+
       const c = getHitContainer(e.clientX, e.clientY);
       if (!c) {
         // Deselect
@@ -468,6 +702,52 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     };
 
     const onPointerMove = e => {
+      // ── Draw Layout mode move ─────────────────────────────
+      if (modeRef.current === 'draw') {
+        const raw = groundPt(e.clientX, e.clientY);
+        const walls = itemsRef.current.filter(i => i.type === 'wall');
+
+        if (activeToolRef.current === 'wall') {
+          if (wallState.active && wallState.start) {
+            const pt = e.shiftKey
+              ? snapWallPoint(raw, walls, floorW, floorD).pt
+              : snapAngle(wallState.start, snapWallPoint(raw, walls, floorW, floorD).pt);
+            // Update ghost
+            if (wallState.ghost) scene.remove(wallState.ghost);
+            const def = itemsRef.current.find(i => i.uid === wallState.chainGroup[0]);
+            const h = def?.height ?? 2.4, t = def?.thickness ?? 0.1;
+            wallState.ghost = buildWallGhost(wallState.start, pt, h, t);
+            if (wallState.ghost) { wallState.ghost.raycast = () => {}; scene.add(wallState.ghost); }
+          }
+        }
+
+        if (activeToolRef.current === 'column') {
+          if (colGhost) scene.remove(colGhost);
+          const mat = new THREE.MeshStandardMaterial({ color: 0x4488ff, transparent: true, opacity: 0.4, depthWrite: false });
+          const geo = new THREE.BoxGeometry(0.3, 2.4, 0.3);
+          colGhost = new THREE.Mesh(geo, mat);
+          colGhost.position.set(snap(raw.x), 1.2, snap(raw.z));
+          colGhost.raycast = () => {};
+          scene.add(colGhost);
+        }
+
+        if (activeToolRef.current === 'door') {
+          if (doorGhost) { scene.remove(doorGhost); doorGhost = null; }
+          const hit = findClosestWall(raw, walls);
+          if (hit) {
+            const { wall, t } = hit;
+            const dx = wall.x2 - wall.x1, dz = wall.z2 - wall.z1;
+            const wallAngle = Math.atan2(dx, dz);
+            doorGhost = buildDoorGhost(wallAngle);
+            doorGhost.raycast = () => {};
+            const wx = wall.x1 + dx * t, wz = wall.z1 + dz * t;
+            doorGhost.position.set(wx, 0, wz);
+            scene.add(doorGhost);
+          }
+        }
+        return;
+      }
+
       if (!draggingUid) {
         if (e.buttons !== 0) return;
         const c   = getHitContainer(e.clientX, e.clientY);
@@ -695,10 +975,12 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       onChangeRef.current?.(next);
     };
 
+    const onContextMenu = e => { if (modeRef.current === 'draw') e.preventDefault(); };
     canvas.addEventListener('pointerdown', onPointerDown);
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup',   onPointerUp);
     window.addEventListener('keydown',     onKeyDown);
+    canvas.addEventListener('contextmenu', onContextMenu);
     canvas.addEventListener('dragenter',   onDragEnter);
     canvas.addEventListener('dragover',    onDragOver);
     canvas.addEventListener('dragleave',   onDragLeave);
@@ -1013,7 +1295,12 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       onChangeRef.current?.(next);
     }
 
-    engRef.current = { itemGroup, spawnContainer, pendingPositions, project3D, camera, selectedUidRef: { current: null }, deleteContainer, rotateObject, applyColor, duplicateObject, applyArray };
+    engRef.current = {
+      itemGroup, spawnContainer, pendingPositions, project3D, camera,
+      selectedUidRef: { current: null },
+      deleteContainer, rotateObject, applyColor, duplicateObject, applyArray,
+      syncWallItem, removeWallItem, rebuildHandles, wallMeshMap,
+    };
     if (externalEngRef) externalEngRef.current = engRef.current;
 
     // ── Zoom from toolbar ──────────────────────────────────────
@@ -1088,6 +1375,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     return () => {
       cancelAnimationFrame(raf);
       canvas.removeEventListener('pointerdown', onPointerDown);
+      canvas.removeEventListener('contextmenu', onContextMenu);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup',   onPointerUp);
       window.removeEventListener('keydown',     onKeyDown);
@@ -1105,20 +1393,32 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
   useEffect(() => {
     const eng = engRef.current;
     if (!eng) return;
-    // Don't sync until catalog is loaded — otherwise we get permanent placeholders
     if (!config._catalogFlat?.length) return;
-    const { itemGroup, spawnContainer, pendingPositions } = eng;
+    const { itemGroup, spawnContainer, pendingPositions, syncWallItem, removeWallItem, rebuildHandles } = eng;
 
-    // Remove containers no longer in items (but never remove array clones — managed by applyArray)
     const currentUids = new Set(sceneItems.map(i=>i.uid));
+
+    // Sync wall/column/door items
+    const wallTypes = new Set(['wall','column','door']);
+    sceneItems.filter(i => wallTypes.has(i.type)).forEach(item => {
+      syncWallItem(item);
+    });
+    // Remove deleted wall items
+    eng.wallMeshMap && eng.wallMeshMap.forEach((mesh, uid) => {
+      if (!currentUids.has(uid)) removeWallItem(uid);
+    });
+    rebuildHandles();
+
+    // Remove product containers no longer in items
     [...itemGroup.children].forEach(c => {
       if (c.userData.isArrayClone) return;
       if (!currentUids.has(c.userData.uid)) itemGroup.remove(c);
     });
 
-    // Add new items — skip array clones (managed by applyArray)
+    // Add new product items
     sceneItems.forEach((item, idx) => {
       if (item.isArrayClone) return;
+      if (wallTypes.has(item.type)) return; // handled above
       if (itemGroup.children.find(c=>c.userData.uid===item.uid)) return;
       let x, z;
       if (pendingPositions.has(item.uid)) {
@@ -1126,19 +1426,16 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         x = pos.x; z = pos.z;
         pendingPositions.delete(item.uid);
       } else if (item.x != null && item.z != null) {
-        // Restore from saved state
         x = item.x; z = item.z;
       } else {
-        // Fallback grid layout
         const col = idx%5, row = Math.floor(idx/5);
         x = (col-2)*3; z = -row*3;
       }
       spawnContainer(item.modelId, item.uid, x, z);
-      // Restore array visuals if item has count > 1 (e.g. loading saved project)
       if (item.count > 1 && item.arrayGap != null) {
         setTimeout(() => {
           if (eng.applyArray) eng.applyArray(item.uid, item.count, item.arrayGap);
-        }, 300); // wait for spawn animation
+        }, 300);
       }
     });
   }, [sceneItems, config._catalogFlat]);
@@ -1150,6 +1447,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
 
