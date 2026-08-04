@@ -213,42 +213,80 @@ export default function App() {
               <RadialMenu
                 x={radialMenu.x}
                 y={radialMenu.y}
-                modelName={item?.name || radialMenu.modelId}
+                modelName={item?.name || radialMenu.modelId || radialMenu.itemType || ''}
                 sockets={sockets}
                 accentColor={CONFIG.accentColor}
                 units={units}
                 initialRotY={radialMenu.initialRotY || 0}
-                initialColor={radialMenu.initialColor || '#3a6ea5'}
+                initialColor={radialMenu.initialColor || '#cccccc'}
                 initialArrayState={radialMenu.initialArrayState || null}
+                itemType={radialMenu.itemType || null}
+                wallProps={radialMenu.wallProps || null}
                 wrapperRef={radialMenuWrapperRef}
                 onAction={(action, data) => {
                   if (action === 'del') {
-                    // Delete entire group
                     const uid = radialMenu.uid;
                     const item = sceneItems.find(i => i.uid === uid);
-                    const groupUids = item?.groupId
-                      ? sceneItems.filter(i => i.groupId === item.groupId).map(i => i.uid)
-                      : [uid];
-                    groupUids.forEach(gid => viewportEngRef.current?.deleteContainer(gid));
-                    setTimeout(() => {
-                      const toRemove = new Set(groupUids);
+                    const wallTypes = new Set(['wall','column','door']);
+                    if (item && wallTypes.has(item.type)) {
+                      // Wall/column/door delete — also delete doors attached to this wall
+                      const toRemove = new Set([uid]);
+                      if (item.type === 'wall') {
+                        // Remove entire wall chain group
+                        if (item.groupId) sceneItems.filter(i => i.groupId === item.groupId).forEach(i => toRemove.add(i.uid));
+                        // Remove doors attached to any wall in group
+                        sceneItems.filter(i => i.type === 'door' && toRemove.has(i.wallUid)).forEach(i => toRemove.add(i.uid));
+                      }
                       setSceneItems(prev => prev.filter(i => !toRemove.has(i.uid)));
-                    }, 380);
-                    setRadialMenu(null);
+                      setRadialMenu(null);
+                    } else {
+                      // Product delete
+                      const groupUids = item?.groupId
+                        ? sceneItems.filter(i => i.groupId === item.groupId).map(i => i.uid)
+                        : [uid];
+                      groupUids.forEach(gid => viewportEngRef.current?.deleteContainer(gid));
+                      setTimeout(() => {
+                        const toRemove = new Set(groupUids);
+                        setSceneItems(prev => prev.filter(i => !toRemove.has(i.uid)));
+                      }, 380);
+                      setRadialMenu(null);
+                    }
+                  } else if (action === 'wallProps') {
+                    // Update wall/column/door properties
+                    setSceneItems(prev => prev.map(i => {
+                      if (i.uid !== radialMenu.uid) return i;
+                      return { ...i, ...data };
+                    }));
+                  } else if (action === 'color') {
+                    const item = sceneItems.find(i => i.uid === radialMenu.uid);
+                    const wallTypes = new Set(['wall','column','door']);
+                    if (item && wallTypes.has(item.type)) {
+                      setSceneItems(prev => prev.map(i =>
+                        i.uid === radialMenu.uid ? { ...i, color: data.color } : i
+                      ));
+                    } else {
+                      viewportEngRef.current?.applyColor(radialMenu.uid, data.color);
+                      setSceneItems(prev => prev.map(i =>
+                        i.uid === radialMenu.uid ? { ...i, color: data.color } : i
+                      ));
+                    }
                   } else if (action === 'rotate') {
                     viewportEngRef.current?.rotateObject(radialMenu.uid, data.rotY);
                     setSceneItems(prev => prev.map(i =>
                       i.uid === radialMenu.uid ? { ...i, rotY: data.rotY } : i
                     ));
-                  } else if (action === 'color') {
-                    viewportEngRef.current?.applyColor(radialMenu.uid, data.color);
-                    setSceneItems(prev => prev.map(i =>
-                      i.uid === radialMenu.uid ? { ...i, color: data.color } : i
-                    ));
                   } else if (action === 'array') {
                     viewportEngRef.current?.applyArray(radialMenu.uid, data.count, data.spacing);
                   } else if (action === 'dup') {
-                    viewportEngRef.current?.duplicateObject(radialMenu.uid);
+                    const item = sceneItems.find(i => i.uid === radialMenu.uid);
+                    if (item?.type === 'column') {
+                      // Duplicate column
+                      const newUid = `col_${Date.now()}`;
+                      const newCol = { ...item, uid: newUid, x: item.x + 1, z: item.z + 1 };
+                      setSceneItems(prev => [...prev, newCol]);
+                    } else {
+                      viewportEngRef.current?.duplicateObject(radialMenu.uid);
+                    }
                   } else if (action === 'units') {
                     setUnits(data.units);
                   }
@@ -262,5 +300,6 @@ export default function App() {
     </div>
   );
 }
+
 
 
