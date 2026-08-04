@@ -23,50 +23,50 @@ const BEHAVIOR_ICONS = {
   slide_x:'ti-arrows-left-right', slide_z:'ti-arrows-move',
 };
 
+// ── Fixed button positions ───────────────────────────────────
+// 9 slots evenly at 40° intervals around 360°:
+// Slots:  0=0°  1=40°  2=80°  3=120°  4=160°  5=200°  6=240°  7=280°  8=320°
+// Products fixed: array=0°, color=80°, rotate=160°, dup=240°, del=320°
+// Socket slots:   36=40°, s2=120°, s3=200°, s4=280°
+
 const FIXED_ACTIONS = [
-  { id:'array',  icon:'ti-layout-columns',    label:'Array',     hasProps:true,  size:42, angle: -90 },
-  { id:'color',  icon:'ti-palette',           label:'Color',     hasProps:true,  size:42, angle: -18 },
-  { id:'rotate', icon:'ti-rotate-clockwise',  label:'Rotate',    hasProps:false, size:42, angle:  54 },
-  { id:'dup',    icon:'ti-copy',              label:'Duplicate', hasProps:false, size:42, angle: 126 },
-  { id:'del',    icon:'ti-trash',             label:'Delete',    hasProps:false, size:42, angle: 198 },
+  { id:'array',  icon:'ti-layout-columns',   label:'Array',     hasProps:true,  size:42, angle:   0 },
+  { id:'color',  icon:'ti-palette',          label:'Color',     hasProps:true,  size:42, angle:  80 },
+  { id:'rotate', icon:'ti-rotate-clockwise', label:'Rotate',    hasProps:false, size:42, angle: 160 },
+  { id:'dup',    icon:'ti-copy',             label:'Duplicate', hasProps:false, size:42, angle: 240 },
+  { id:'del',    icon:'ti-trash',            label:'Delete',    hasProps:false, size:42, angle: 320 },
 ];
+// Socket slots intercalated between fixed buttons
+const SOCKET_ANGLES = [40, 120, 200, 280];
 
 const WALL_ACTIONS = [
-  { id:'color', icon:'ti-palette',    label:'Color',  hasProps:true,  size:42, angle: -90 },
-  { id:'props', icon:'ti-adjustments',label:'Config',  hasProps:true,  size:42, angle: -18 },
-  { id:'del',   icon:'ti-trash',      label:'Delete', hasProps:false, size:42, angle:  54 },
+  { id:'color', icon:'ti-palette',     label:'Color',  hasProps:true,  size:42, angle:   0 },
+  { id:'props', icon:'ti-adjustments', label:'Config', hasProps:true,  size:42, angle: 120 },
+  { id:'del',   icon:'ti-trash',       label:'Delete', hasProps:false, size:42, angle: 240 },
 ];
 const COLUMN_ACTIONS = [
-  { id:'color', icon:'ti-palette',    label:'Color',     hasProps:true,  size:42, angle: -90 },
-  { id:'props', icon:'ti-adjustments',label:'Config',     hasProps:true,  size:42, angle: -18 },
-  { id:'dup',   icon:'ti-copy',       label:'Duplicate', hasProps:false, size:42, angle:  54 },
-  { id:'del',   icon:'ti-trash',      label:'Delete',    hasProps:false, size:42, angle: 126 },
+  { id:'color', icon:'ti-palette',     label:'Color',     hasProps:true,  size:42, angle:   0 },
+  { id:'props', icon:'ti-adjustments', label:'Config',    hasProps:true,  size:42, angle:  90 },
+  { id:'dup',   icon:'ti-copy',        label:'Duplicate', hasProps:false, size:42, angle: 180 },
+  { id:'del',   icon:'ti-trash',       label:'Delete',    hasProps:false, size:42, angle: 270 },
 ];
 const DOOR_ACTIONS = [
-  { id:'color', icon:'ti-palette',    label:'Color',  hasProps:true,  size:42, angle: -90 },
-  { id:'props', icon:'ti-adjustments',label:'Config',  hasProps:true,  size:42, angle: -18 },
-  { id:'del',   icon:'ti-trash',      label:'Delete', hasProps:false, size:42, angle:  54 },
+  { id:'color', icon:'ti-palette',     label:'Color',  hasProps:true,  size:42, angle:   0 },
+  { id:'props', icon:'ti-adjustments', label:'Config', hasProps:true,  size:42, angle: 120 },
+  { id:'del',   icon:'ti-trash',       label:'Delete', hasProps:false, size:42, angle: 240 },
 ];
 
 function buildButtons(sockets=[], itemType=null) {
   if (itemType === 'wall')   return WALL_ACTIONS;
   if (itemType === 'column') return COLUMN_ACTIONS;
   if (itemType === 'door')   return DOOR_ACTIONS;
-  const socketBtns = sockets.map(s => ({
+  // Max 4 sockets, each at a fixed slot angle
+  const socketBtns = sockets.slice(0, 4).map((s, i) => ({
     id:s.name, icon:BEHAVIOR_ICONS[s.behavior]||'ti-adjustments',
     label:s.label||s.name, size:48, hasProps:true, socket:s,
+    angle: SOCKET_ANGLES[i],
   }));
-  // Sockets go in the arc from 210° to 330° (between del@198 and array@-90°=270°)
-  // Use tighter arc with clear padding from fixed buttons
-  const arcStart = 222, arcEnd = 318;
-  const count = socketBtns.length;
-  const positioned = socketBtns.map((b, i) => {
-    const angle = count === 1
-      ? 270  // straight left — clear of all fixed buttons
-      : arcStart + (arcEnd - arcStart) / (count - 1) * i;
-    return { ...b, angle };
-  });
-  return [...positioned, ...FIXED_ACTIONS];
+  return [...socketBtns, ...FIXED_ACTIONS];
 }
 
 function angleDiff(a,b) { let d=((b-a)+180)%360-180; return d<-180?d+360:d; }
@@ -629,6 +629,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       onClick={e=>e.stopPropagation()} />
   );
 }
+
 
 
 
