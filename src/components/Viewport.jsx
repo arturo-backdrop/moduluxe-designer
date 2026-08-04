@@ -653,11 +653,9 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
             endPt.x = eCl.x; endPt.z = eCl.z;
             const dx = endPt.x - wallState.start.x, dz = endPt.z - wallState.start.z;
             if (Math.sqrt(dx*dx + dz*dz) > 0.1) {
-              const uid     = `wall_${Date.now()}`;
-              const groupId = wallState.chainGroup.length === 0
-                ? `wchain_${Date.now()}` : itemsRef.current.find(i => i.uid === wallState.chainGroup[0])?.groupId;
+              const uid = `wall_${Date.now()}`;
               const newWall = {
-                uid, type: 'wall', groupId,
+                uid, type: 'wall',
                 x1: wallState.start.x, z1: wallState.start.z,
                 x2: endPt.x,          z2: endPt.z,
                 height: 2.4, thickness: 0.1, glassRatio: 0, color: '#cccccc',
