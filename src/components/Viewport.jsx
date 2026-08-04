@@ -400,38 +400,28 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
     let hoveredWallUid   = null;
     let selectedWallUid  = null;
-    const wallOutlineMap = new Map(); // uid -> outline mesh
 
     function setWallHighlight(uid, type) {
       if (!uid) return;
-      // Remove old outline
-      if (wallOutlineMap.has(uid)) {
-        scene.remove(wallOutlineMap.get(uid));
-        wallOutlineMap.delete(uid);
-      }
-      if (type === 'none') return;
       const mesh = wallMeshMap.get(uid);
-      if (!mesh) return;
-      // Build edge outline
+      // Remove old outlines (stored as children with isWallOutline flag)
+      if (mesh) {
+        const toRemove = [];
+        mesh.traverse(c => { if (c.userData.isWallOutline) toRemove.push(c); });
+        toRemove.forEach(c => c.parent?.remove(c));
+      }
+      if (type === 'none' || !mesh) return;
       const color = type === 'select' ? 0xb48b31 : 0x88aaff;
-      const outlines = [];
+      // Attach outline lines as children of each mesh so they move with it
       mesh.traverse(c => {
-        if (!c.isMesh || c.userData.isMeta) return;
+        if (!c.isMesh || c.userData.isMeta || c.userData.isWallOutline) return;
         const edges = new THREE.EdgesGeometry(c.geometry, 15);
         const line  = new THREE.LineSegments(edges,
-          new THREE.LineBasicMaterial({ color, linewidth: 1, depthTest: false }));
+          new THREE.LineBasicMaterial({ color, linewidth: 2, depthTest: false }));
         line.renderOrder = 999;
-        line.position.copy(c.getWorldPosition(new THREE.Vector3()));
-        line.quaternion.copy(c.getWorldQuaternion(new THREE.Quaternion()));
-        line.scale.copy(c.getWorldScale(new THREE.Vector3()));
-        outlines.push(line);
+        line.userData.isWallOutline = true;
+        c.add(line); // child of mesh — moves/rotates with parent automatically
       });
-      if (outlines.length > 0) {
-        const grp = new THREE.Group();
-        outlines.forEach(o => grp.add(o));
-        scene.add(grp);
-        wallOutlineMap.set(uid, grp);
-      }
     }
 
     function removeWallItem(uid) {
@@ -808,7 +798,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           return;
         }
 
-        // Wall/column drag in select mode
+        // Wall/column/door drag in select mode
         if (draggingWallUid && wallDragStart && wallDragOrigItem && activeToolRef.current === 'select') {
           const dx = raw.x - wallDragStart.x, dz = raw.z - wallDragStart.z;
           const orig = wallDragOrigItem;
@@ -817,14 +807,23 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
             updated = { ...orig, x1: orig.x1+dx, z1: orig.z1+dz, x2: orig.x2+dx, z2: orig.z2+dz };
           } else if (orig.type === 'column') {
             updated = { ...orig, x: orig.x+dx, z: orig.z+dz };
-          } else {
-            return;
-          }
+          } else if (orig.type === 'door') {
+            // Drag door along its parent wall
+            const wall = itemsRef.current.find(i => i.uid === orig.wallUid);
+            if (wall) {
+              const wx = wall.x2 - wall.x1, wz = wall.z2 - wall.z1;
+              const wlen2 = wx*wx + wz*wz;
+              const t = Math.max(0.05, Math.min(0.95,
+                ((raw.x - wall.x1)*wx + (raw.z - wall.z1)*wz) / wlen2
+              ));
+              updated = { ...orig, t };
+            } else return;
+          } else return;
           const next = itemsRef.current.map(i => i.uid === draggingWallUid ? updated : i);
           itemsRef.current = next;
           onChangeRef.current?.(next);
           syncWallItem(updated);
-          rebuildHandles();
+          if (orig.type !== 'door') rebuildHandles();
           return;
         }
 
@@ -1621,6 +1620,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
 
