@@ -46,10 +46,12 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel, 
   const trackRef    = useRef(null);
 
   // One chip per model type — exclude array clones (source item count already = 1 per physical object)
+  const WALL_TYPES = new Set(['wall','column','door']);
   const groupedItems = React.useMemo(() => {
     const map = new Map();
     sceneItems.forEach(item => {
-      if (item.isArrayClone) return; // clones are counted via their source's groupId
+      if (item.isArrayClone) return;
+      if (WALL_TYPES.has(item.type)) return; // exclude layout items
       const c = item.count || 1;
       if (map.has(item.modelId)) {
         map.get(item.modelId).count += c;
@@ -162,6 +164,7 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel, 
     </div>
   );
 }
+
 
 
 
