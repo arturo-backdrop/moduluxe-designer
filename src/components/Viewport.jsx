@@ -724,9 +724,15 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           return;
         }
 
-        // ── Select in draw mode (click on wall/column/door) ──
+        // ── Select in draw mode (only when select tool active) ──
+        if (activeToolRef.current !== 'select') return;
+        // Update pointer from actual click position
+        const r2 = canvas.getBoundingClientRect();
+        pointer.x =  ((e.clientX - r2.left) / r2.width)  * 2 - 1;
+        pointer.y = -((e.clientY - r2.top)  / r2.height) * 2 + 1;
         raycaster.setFromCamera(pointer, camera);
-        const wallHit = raycaster.intersectObjects(wallGroup.children, true);
+        const wallHit = raycaster.intersectObjects(wallGroup.children, true)
+          .filter(h => !h.object.userData.isMeta && !h.object.userData.isWallOutline);
         if (wallHit.length > 0) {
           let cur = wallHit[0].object;
           while (cur && !cur.userData?.uid) cur = cur.parent;
@@ -1551,7 +1557,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           if (hoveredHandle) hoveredHandle.material.color.setHex(0xffd700);
         }
         // Wall hover highlight
-        const wallHits = raycaster.intersectObjects(wallGroup.children, true);
+        const wallHits = raycaster.intersectObjects(wallGroup.children, true)
+          .filter(h => !h.object.userData.isMeta && !h.object.userData.isWallOutline);
         let newHovWall = null;
         if (wallHits.length > 0) {
           let cur = wallHits[0].object;
