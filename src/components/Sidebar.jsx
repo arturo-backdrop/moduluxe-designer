@@ -95,6 +95,9 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
         const items = Array.isArray(data) ? data : (data.models || []);
         const grouped = {};
         items.forEach(item => {
+          // Hide accessories (socket-only) and presets from catalog
+          if (item.type === 'preset') return;
+          if (item.category === 'Accessory' || item.category === 'accessory') return;
           const cat = item.category || 'Other';
           if (!grouped[cat]) grouped[cat] = [];
           grouped[cat].push(item);
@@ -180,6 +183,7 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
     </div>
   );
 }
+
 
 
 
