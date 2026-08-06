@@ -18,9 +18,9 @@ const CFG = {
 const ACCENT = '#b48b31';
 
 const BEHAVIOR_ICONS = {
-  fixed:'ti-bulb', distribute:'ti-layout-rows', color:'ti-palette',
-  positions:'ti-layout-columns', slide_y:'ti-arrows-up-down',
-  slide_x:'ti-arrows-left-right', slide_z:'ti-arrows-move',
+  fixed:'ti-bulb', distribute:'ti-layout-rows', toggle_mesh:'ti-eye',
+  color:'ti-palette', positions:'ti-layout-columns',
+  slide_y:'ti-arrows-up-down', slide_x:'ti-arrows-left-right', slide_z:'ti-arrows-move',
 };
 
 // ── Button definitions (no angle — assigned dynamically) ─────
@@ -221,8 +221,9 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
   if (!btn?.socket) return `<div style="font-size:9px;color:#999;">${modelName}</div>`;
   const s = btn.socket, state = socketStates[s.name] || s.state || {};
 
-  if (s.behavior === 'fixed') {
+  if (s.behavior === 'fixed' || s.behavior === 'toggle_mesh') {
     const on = state.on;
+    const isMeshToggle = s.behavior === 'toggle_mesh';
     return `
       <div style="font-size:9px;color:#999;margin-bottom:4px;">${modelName}</div>
       <div style="font-weight:900;font-size:12px;color:#1a1a1a;">${s.label}</div>
@@ -452,8 +453,14 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
         const s = b.socket;
         const toggle = document.getElementById(`rm_toggle_${s.name}`);
         if (toggle) toggle.onclick = () => {
-          state.socketStates[s.name] = { ...state.socketStates[s.name], on: !state.socketStates[s.name].on };
-          onAction?.('socket', { name:s.name, state:state.socketStates[s.name] });
+          const curOn = state.socketStates[s.name]?.on;
+          state.socketStates[s.name] = { ...state.socketStates[s.name], on: !curOn };
+          if (s.behavior === 'toggle_mesh') {
+            // Direct mesh visibility toggle
+            onAction?.('toggle_mesh', { meshName: s.name, visible: !curOn });
+          } else {
+            onAction?.('socket', { name:s.name, state:state.socketStates[s.name] });
+          }
           refreshCard();
         };
         const dec = document.getElementById(`rm_dec_${s.name}`);
@@ -643,6 +650,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       onClick={e=>e.stopPropagation()} />
   );
 }
+
 
 
 
