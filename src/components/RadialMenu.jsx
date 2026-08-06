@@ -245,6 +245,34 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
         <button id="rm_inc_${s.name}" style="width:26px;height:26px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;">+</button>
       </div>`;
   }
+  if (s.behavior === 'positions') {
+    const positions = s.socketPositions || [];
+    const total     = positions.length; // number of Blender empties
+    const posIdx    = state.positionIndex ?? -1; // -1 = off
+    const labels    = positions.map((p,i) => p.name.replace(/.*\./, '') || (i+1));
+    return `
+      <div style="font-size:9px;color:#999;margin-bottom:4px;">${modelName}</div>
+      <div style="font-weight:900;font-size:12px;color:#1a1a1a;margin-bottom:8px;">${s.label}</div>
+      <div style="margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#999;margin-bottom:4px;">
+          <span>Off</span>
+          <span>${posIdx < 0 ? 'Off' : 'Position ' + (posIdx+1) + ' / ' + total}</span>
+          <span>${total}</span>
+        </div>
+        <input id="rm_pos_${s.name}" type="range" min="-1" max="${total-1}" step="1" value="${posIdx}"
+          style="width:100%;accent-color:#b48b31;" />
+      </div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;">
+        <button id="rm_pos_off_${s.name}" style="flex:1;padding:4px 8px;border-radius:6px;border:none;font-size:11px;cursor:pointer;
+          background:${posIdx===-1?'#1a1a1a':'#f0f0f0'};color:${posIdx===-1?'white':'#666'};">Off</button>
+        ${positions.map((p,i) => `
+          <button id="rm_pos_${i}_${s.name}" style="flex:1;padding:4px 8px;border-radius:6px;border:none;font-size:11px;cursor:pointer;
+            background:${posIdx===i?'#b48b31':'#f0f0f0'};color:${posIdx===i?'white':'#666'};">
+            ${p.name.split('.').pop()}
+          </button>
+        `).join('')}
+      </div>`;
+  }
   return `<div style="font-size:9px;color:#999;">${modelName}</div>`;
 }
 
@@ -477,6 +505,20 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
           const el = document.getElementById(`rm_count_${s.name}`);
           if (el) el.textContent = state.socketStates[s.name].count;
         };
+        // Positions slider
+        const posSlider = document.getElementById(`rm_pos_${s.name}`);
+        const setPos = (idx) => {
+          state.socketStates[s.name] = { ...state.socketStates[s.name], positionIndex: idx };
+          onAction?.('socket', { name: s.name, state: state.socketStates[s.name] });
+          refreshCard();
+        };
+        if (posSlider) posSlider.oninput = () => setPos(parseInt(posSlider.value));
+        const offBtn = document.getElementById(`rm_pos_off_${s.name}`);
+        if (offBtn) offBtn.onclick = () => setPos(-1);
+        (s.socketPositions||[]).forEach((p,i) => {
+          const btn = document.getElementById(`rm_pos_${i}_${s.name}`);
+          if (btn) btn.onclick = () => setPos(i);
+        });
       });
 
       // Wall/column/door props bindings
@@ -650,6 +692,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       onClick={e=>e.stopPropagation()} />
   );
 }
+
 
 
 
