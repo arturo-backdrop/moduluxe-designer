@@ -994,11 +994,17 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
             const sp = project3D(sourceObj);
             panCameraToShowMenu(sp);
             const savedItem = itemsRef.current.find(i => i.uid === sourceUid);
-            // Collect toggle meshes from loaded GLB
+            // Collect toggle meshes and socket positions from loaded GLB
             const toggleMeshes = [];
+            const socketPositions = {};
             sourceObj.traverse(child => {
               if (child.userData.isToggleMesh) toggleMeshes.push({ name: child.name, visible: child.visible });
             });
+            // Get socketPositions from the GLB root userData
+            const glbRoot = sourceObj.children.find(c => c.userData.socketPositions);
+            if (glbRoot?.userData.socketPositions) Object.assign(socketPositions, glbRoot.userData.socketPositions);
+            // Also check direct children
+            sourceObj.traverse(c => { if (c.userData?.socketPositions) Object.assign(socketPositions, c.userData.socketPositions); });
             onRadialMenuRef.current?.({
               x: sp.x, y: sp.y, uid: sourceUid,
               modelId: sourceObj.userData.modelId,
@@ -1008,6 +1014,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
                 ? { count: itemsRef.current.filter(i=>i.groupId===savedItem.groupId).length, spacing: savedItem?.arrayGap || 0 }
                 : null,
               toggleMeshes,
+              socketPositions,
             });
           }
         }
@@ -1208,10 +1215,21 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         const saved = itemsRef.current.find(i=>i.uid===uid);
         if (saved?.rotY) container.rotation.y = saved.rotY;
         if (saved?.color) applyColor(uid, saved.color);
-        // Restore toggle mesh states from saved item
+        // Restore toggle mesh states
         if (saved?.toggleStates) {
           Object.entries(saved.toggleStates).forEach(([meshName, visible]) => {
             root.traverse(obj => { if (obj.name === meshName) obj.visible = visible; });
+          });
+        }
+        // Restore socket accessory states
+        if (saved?.socketStates) {
+          const catalogItem = catalogRef.current.find(d => d.id === modelId);
+          Object.entries(saved.socketStates).forEach(([socketName, state]) => {
+            const socketDef = catalogItem?.sockets?.find(s => s.name === socketName);
+            if (socketDef) {
+              const positions = root.userData?.socketPositions?.[socketName] || [];
+              applySocket(uid, socketName, state, { ...socketDef, socketPositions: positions });
+            }
           });
         }
       }
@@ -1340,11 +1358,95 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       container.traverse(obj => {
         if (obj.name === meshName) obj.visible = visible;
       });
-      // Save toggle state in sceneItems
       const next = itemsRef.current.map(i => {
         if (i.uid !== uid) return i;
         const toggleStates = { ...(i.toggleStates||{}), [meshName]: visible };
         return { ...i, toggleStates };
+      });
+      onChangeRef.current?.(next);
+    }
+
+    // ── Socket accessory management ───────────────────────────
+    // socketContainers: uid -> { socketName -> THREE.Group (the loaded accessory) }
+    const socketContainers = new Map();
+
+    function getSocketContainer(uid) {
+      if (!socketContainers.has(uid)) socketContainers.set(uid, {});
+      return socketContainers.get(uid);
+    }
+
+    function applySocket(uid, socketName, state, socketDef) {
+      // socketDef: { behavior, accessoryFile, positions: [{position,quaternion},...] }
+      const container = itemGroup.children.find(x=>x.userData.uid===uid);
+      if (!container) return;
+      const sc = getSocketContainer(uid);
+
+      // Remove existing accessory for this socket
+      if (sc[socketName]) { container.remove(sc[socketName]); delete sc[socketName]; }
+
+      const behavior = socketDef?.behavior || 'fixed';
+
+      if (behavior === 'fixed') {
+        if (!state?.on) return; // off
+        const positions = socketDef?.socketPositions || [];
+        if (positions.length === 0) return;
+        const pos  = positions[0];
+        if (!socketDef?.accessoryFile) return;
+        loadModel(socketDef.accessoryFile).then(orig => {
+          const acc = orig.clone(true);
+          acc.userData.isSocketAccessory = true;
+          acc.userData.socketName = socketName;
+          acc.position.set(pos.position.x, pos.position.y, pos.position.z);
+          if (pos.quaternion) acc.quaternion.set(pos.quaternion.x, pos.quaternion.y, pos.quaternion.z, pos.quaternion.w);
+          container.add(acc);
+          sc[socketName] = acc;
+        });
+
+      } else if (behavior === 'positions') {
+        const posIdx = state?.positionIndex ?? -1; // -1 = off
+        if (posIdx < 0) return;
+        const positions = socketDef?.socketPositions || [];
+        const pos = positions[posIdx];
+        if (!pos || !socketDef?.accessoryFile) return;
+        loadModel(socketDef.accessoryFile).then(orig => {
+          const acc = orig.clone(true);
+          acc.userData.isSocketAccessory = true;
+          acc.userData.socketName = socketName;
+          acc.position.set(pos.position.x, pos.position.y, pos.position.z);
+          if (pos.quaternion) acc.quaternion.set(pos.quaternion.x, pos.quaternion.y, pos.quaternion.z, pos.quaternion.w);
+          container.add(acc);
+          sc[socketName] = acc;
+        });
+
+      } else if (behavior === 'distribute') {
+        const count = state?.count ?? 0;
+        if (count === 0) return;
+        const positions = socketDef?.socketPositions || [];
+        if (!socketDef?.accessoryFile || positions.length === 0) return;
+        const grp = new THREE.Group();
+        grp.userData.isSocketAccessory = true;
+        grp.userData.socketName = socketName;
+        container.add(grp);
+        sc[socketName] = grp;
+        // Distribute evenly across available positions
+        const step = (positions.length - 1) / Math.max(count - 1, 1);
+        for (let i = 0; i < count; i++) {
+          const idx = Math.min(Math.round(i * step), positions.length - 1);
+          const pos = positions[idx];
+          loadModel(socketDef.accessoryFile).then(orig => {
+            const acc = orig.clone(true);
+            acc.position.set(pos.position.x, pos.position.y, pos.position.z);
+            if (pos.quaternion) acc.quaternion.set(pos.quaternion.x, pos.quaternion.y, pos.quaternion.z, pos.quaternion.w);
+            grp.add(acc);
+          });
+        }
+      }
+
+      // Save socket state in sceneItems
+      const next = itemsRef.current.map(i => {
+        if (i.uid !== uid) return i;
+        const socketStates = { ...(i.socketStates||{}), [socketName]: state };
+        return { ...i, socketStates };
       });
       onChangeRef.current?.(next);
     }
@@ -1495,7 +1597,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       itemGroup, spawnContainer, pendingPositions, project3D, camera, controls,
       selectedUidRef: { current: null },
       deleteContainer, rotateObject, applyColor, duplicateObject, applyArray,
-      toggleMeshVisibility,
+      toggleMeshVisibility, applySocket,
       syncWallItem, removeWallItem, rebuildHandles, wallMeshMap,
     };
     if (externalEngRef) externalEngRef.current = engRef.current;
@@ -1673,6 +1775,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
 
