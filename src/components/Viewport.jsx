@@ -994,6 +994,11 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
             const sp = project3D(sourceObj);
             panCameraToShowMenu(sp);
             const savedItem = itemsRef.current.find(i => i.uid === sourceUid);
+            // Collect toggle meshes from loaded GLB
+            const toggleMeshes = [];
+            sourceObj.traverse(child => {
+              if (child.userData.isToggleMesh) toggleMeshes.push({ name: child.name, visible: child.visible });
+            });
             onRadialMenuRef.current?.({
               x: sp.x, y: sp.y, uid: sourceUid,
               modelId: sourceObj.userData.modelId,
@@ -1002,6 +1007,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
               initialArrayState: savedItem?.groupId
                 ? { count: itemsRef.current.filter(i=>i.groupId===savedItem.groupId).length, spacing: savedItem?.arrayGap || 0 }
                 : null,
+              toggleMeshes,
             });
           }
         }
@@ -1195,15 +1201,19 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         container.remove(ph);
         container.add(root);
         attachOutlines(root);
-        // Sync outline visibility with current hover/selected state
         const isActive = selectedUids.includes(uid) || hoveredUid === uid ||
           (uid !== hoveredUid && getGroupUids(hoveredUid || '').includes(uid)) ||
           getGroupUids(selectedUid || '').includes(uid);
         setOutlineVisible(container, isActive);
-        // Restore saved state
         const saved = itemsRef.current.find(i=>i.uid===uid);
         if (saved?.rotY) container.rotation.y = saved.rotY;
         if (saved?.color) applyColor(uid, saved.color);
+        // Restore toggle mesh states from saved item
+        if (saved?.toggleStates) {
+          Object.entries(saved.toggleStates).forEach(([meshName, visible]) => {
+            root.traverse(obj => { if (obj.name === meshName) obj.visible = visible; });
+          });
+        }
       }
 
       if (def?.file) {
@@ -1324,7 +1334,20 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       });
     }
 
-    function duplicateObject(uid) {
+    function toggleMeshVisibility(uid, meshName, visible) {
+      const container = itemGroup.children.find(x=>x.userData.uid===uid);
+      if (!container) return;
+      container.traverse(obj => {
+        if (obj.name === meshName) obj.visible = visible;
+      });
+      // Save toggle state in sceneItems
+      const next = itemsRef.current.map(i => {
+        if (i.uid !== uid) return i;
+        const toggleStates = { ...(i.toggleStates||{}), [meshName]: visible };
+        return { ...i, toggleStates };
+      });
+      onChangeRef.current?.(next);
+    }
       const item = itemsRef.current.find(i=>i.uid===uid);
       const groupUids = item?.groupId
         ? itemsRef.current.filter(i=>i.groupId===item.groupId).map(i=>i.uid)
@@ -1472,6 +1495,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       itemGroup, spawnContainer, pendingPositions, project3D, camera, controls,
       selectedUidRef: { current: null },
       deleteContainer, rotateObject, applyColor, duplicateObject, applyArray,
+      toggleMeshVisibility,
       syncWallItem, removeWallItem, rebuildHandles, wallMeshMap,
     };
     if (externalEngRef) externalEngRef.current = engRef.current;
@@ -1649,6 +1673,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
 
