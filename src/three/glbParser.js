@@ -85,6 +85,7 @@ async function buildMaterial(json, bin, matIndex, matCache) {
     opacity:     bc[3] ?? 1,
   });
   if (m.name) mat.name = m.name;
+  if (m.doubleSided) mat.side = THREE.DoubleSide;  // respect Blender Backface Culling OFF
   if (pbr.baseColorTexture) {
     const tex = await buildTexture(json, bin, pbr.baseColorTexture.index);
     if (tex) mat.map = tex;
@@ -169,3 +170,4 @@ export function cloneModel(original) {
 export function clearModelCache() {
   modelCache.clear();
 }
+
