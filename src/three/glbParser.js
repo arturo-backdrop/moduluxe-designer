@@ -148,6 +148,20 @@ async function buildScene(json, bin) {
   const sceneDef = json.scenes[json.scene || 0];
   const root     = new THREE.Group();
   for (const ni of sceneDef.nodes) root.add(await buildNode(json, bin, ni, matCache));
+
+  // Auto-detect toggle_ meshes — hide by default, expose as sockets
+  const toggleMeshes = [];
+  root.traverse(obj => {
+    if (!obj.name) return;
+    const lower = obj.name.toLowerCase();
+    if (lower.startsWith('toggle_')) {
+      obj.visible = false;
+      obj.userData.isToggleMesh = true;
+      const label = obj.name.slice(7).replace(/_/g,' ').replace(/\w/g,c=>c.toUpperCase());
+      toggleMeshes.push({ name: obj.name, label });
+    }
+  });
+  root.userData.toggleMeshes = toggleMeshes;
   return root;
 }
 
@@ -170,4 +184,5 @@ export function cloneModel(original) {
 export function clearModelCache() {
   modelCache.clear();
 }
+
 
