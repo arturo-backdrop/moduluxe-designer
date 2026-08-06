@@ -1450,6 +1450,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       });
       onChangeRef.current?.(next);
     }
+    function duplicateObject(uid) {
+
       const item = itemsRef.current.find(i=>i.uid===uid);
       const groupUids = item?.groupId
         ? itemsRef.current.filter(i=>i.groupId===item.groupId).map(i=>i.uid)
@@ -1775,6 +1777,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
+
 
 
 
