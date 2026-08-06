@@ -208,7 +208,17 @@ export default function App() {
         <VideoWidget config={CONFIG} />
         {radialMenu && (() => {
           const item    = catalog[radialMenu.modelId];
-          const sockets = item?.sockets || [];
+          // Merge manifest sockets with auto-detected toggle meshes from GLB
+          const manifestSockets = item?.sockets || [];
+          const toggleSockets   = (radialMenu.toggleMeshes || []).map(t => ({
+            name:     t.name,
+            behavior: 'toggle_mesh',
+            label:    t.name.slice(7).replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()),
+            state:    { on: t.visible },
+          }));
+          // Don't duplicate sockets already in manifest
+          const manifestNames = new Set(manifestSockets.map(s=>s.name));
+          const sockets = [...manifestSockets, ...toggleSockets.filter(s=>!manifestNames.has(s.name))];
           return (
             <div style={{ position:'absolute', inset:0, pointerEvents:'none', zIndex:9 }}>
               <RadialMenu
@@ -289,6 +299,8 @@ export default function App() {
                     } else {
                       viewportEngRef.current?.duplicateObject(radialMenu.uid);
                     }
+                  } else if (action === 'toggle_mesh') {
+                    viewportEngRef.current?.toggleMeshVisibility(radialMenu.uid, data.meshName, data.visible);
                   } else if (action === 'units') {
                     setUnits(data.units);
                   }
@@ -302,6 +314,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
