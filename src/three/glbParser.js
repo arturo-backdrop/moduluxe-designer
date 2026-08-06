@@ -157,11 +157,36 @@ async function buildScene(json, bin) {
     if (lower.startsWith('toggle_')) {
       obj.visible = false;
       obj.userData.isToggleMesh = true;
-      const label = obj.name.slice(7).replace(/_/g,' ').replace(/\w/g,c=>c.toUpperCase());
+      const label = obj.name.slice(7).replace(/_/g,' ');
       toggleMeshes.push({ name: obj.name, label });
     }
   });
   root.userData.toggleMeshes = toggleMeshes;
+
+  // Auto-detect socket_ Empties (Object3D with no mesh descendants)
+  const socketMap = {};
+  root.traverse(obj => {
+    if (!obj.name || !obj.name.toLowerCase().startsWith('socket_')) return;
+    let hasMesh = false;
+    obj.traverse(c => { if (c.isMesh) hasMesh = true; });
+    if (hasMesh) return;
+    const base = obj.name.replace(/\.\d+$/, '');
+    if (!socketMap[base]) socketMap[base] = [];
+    const pos  = new THREE.Vector3();
+    const quat = new THREE.Quaternion();
+    obj.getWorldPosition(pos);
+    obj.getWorldQuaternion(quat);
+    socketMap[base].push({
+      name: obj.name,
+      position: { x: pos.x, y: pos.y, z: pos.z },
+      quaternion: { x: quat.x, y: quat.y, z: quat.z, w: quat.w },
+    });
+  });
+  Object.values(socketMap).forEach(arr =>
+    arr.sort((a,b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+  );
+  root.userData.socketPositions = socketMap;
+
   return root;
 }
 
@@ -184,5 +209,6 @@ export function cloneModel(original) {
 export function clearModelCache() {
   modelCache.clear();
 }
+
 
 
