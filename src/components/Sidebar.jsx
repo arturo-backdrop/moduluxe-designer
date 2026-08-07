@@ -35,7 +35,7 @@ function ThumbPlaceholder() {
   );
 }
 
-function ProductItem({ item, onDragStart }) {
+function ProductItem({ item, onDragStart, units='ft' }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div className={`${styles.productItem} ${hovered ? styles.productItemHovered : ''}`}
@@ -56,7 +56,11 @@ function ProductItem({ item, onDragStart }) {
         : <ThumbPlaceholder />}
       <div className={styles.productInfo}>
         <div className={styles.productName}>{item.name}</div>
-        <div className={styles.productDims}>{item.dims || item.category || ''}</div>
+        <div className={styles.productDims}>
+          {item.w && item.d && item.h
+            ? `${toDisplay(item.w, units, true)} × ${toDisplay(item.d, units, true)} × ${toDisplay(item.h, units, true)}`
+            : item.dims || item.category || ''}
+        </div>
       </div>
       <div className={`${styles.dragLabel} ${hovered ? styles.dragLabelVisible : ''}`}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -68,7 +72,7 @@ function ProductItem({ item, onDragStart }) {
   );
 }
 
-export default function Sidebar({ config, mode, activeTool, onToolChange, onAddProduct }) {
+export default function Sidebar({ config, mode, activeTool, onToolChange, onAddProduct, units='ft' }) {
   const [catalog,      setCatalog]      = useState({});
   const [activeTab,    setActiveTab]    = useState(null);
   const [loading,      setLoading]      = useState(true);
@@ -183,6 +187,7 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
     </div>
   );
 }
+
 
 
 
