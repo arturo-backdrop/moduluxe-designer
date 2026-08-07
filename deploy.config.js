@@ -15,7 +15,7 @@ export const DEPLOY = {
   // URL to the manifest.json of the 3D model library.
   // Current: GitHub raw (public repo)
   // Private host: 'https://your-domain.com/library/manifest.json'
-  manifestUrl: 'https://github.com/arturo-backdrop/Backdrop-3D-Library/blob/ce8396d304b9296ca97bc765bfc99975f30e0ba9/models/manifest.json',
+  manifestUrl: 'https://github.com/arturo-backdrop/Backdrop-3D-Library/blob/b5cb66a0536a1d294ecc41355a540548d796d5e8/models/manifest-client.json',
 
   // ── App Info ─────────────────────────────────────────────────
   appName: 'Moduluxe Designer',
