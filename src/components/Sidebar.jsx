@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './Sidebar.module.css';
+import { toDisplay } from '../units.js';
 
 const Icons = {
   select: <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-7 1-4 7z"/></svg>,
@@ -187,6 +188,7 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
     </div>
   );
 }
+
 
 
 
