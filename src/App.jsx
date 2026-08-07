@@ -53,7 +53,19 @@ export default function App() {
       .then(async data => {
         const items = Array.isArray(data) ? data : (data.models || []);
         const map = {};
-        items.forEach(item => { map[item.id] = item; });
+        const accMap = {}; // accessoryFile -> { price, name }
+        items.forEach(item => {
+          map[item.id] = item;
+          // Index accessories by their file URL for price lookup
+          (item.sockets || []).forEach(s => {
+            if (s.accessoryFile && !accMap[s.accessoryFile]) {
+              // Find accessory definition in manifest
+              const accDef = items.find(i => i.file === s.accessoryFile);
+              if (accDef) accMap[s.accessoryFile] = accDef;
+            }
+          });
+        });
+        map.__accessories = accMap;
         setCatalog(map);
 
         // Prefetch all GLBs — primes glbParser cache so drag is instant
@@ -328,6 +340,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
