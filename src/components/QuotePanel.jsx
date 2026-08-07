@@ -6,7 +6,7 @@ const RENT_TEXT = 'Or rent for 1/3 of the price';
 
 // ── Quote Modal ───────────────────────────────────────────────
 const WALL_TYPES = new Set(['wall','column','door']);
-function QuoteModal({ config, sceneItems, onClose }) {
+function QuoteModal({ config, sceneItems, catalog, onClose }) {
   sceneItems = sceneItems.filter(i => !WALL_TYPES.has(i.type) && !i.isArrayClone);
   const [step,    setStep]    = useState(1);
   const [form,    setForm]    = useState({ reseller:'', client:'', eventName:'', eventDate:'', comments:'', privacy:false });
@@ -105,17 +105,67 @@ function QuoteModal({ config, sceneItems, onClose }) {
         {step === 2 && (
           <>
             <div className={styles.itemsList}>
-              {sceneItems.map(item => (
-                <div key={item.modelId} className={styles.quoteItem}>
-                  <span className={styles.quoteItemName}>{item.modelId}</span>
-                  <span className={styles.quoteItemQty}>x{item.count}</span>
+              {sceneItems.map(item => {
+                const def = catalog?.[item.modelId];
+                const modelPrice = (def?.price || 0) * (item.count || 1);
+                // Active accessories
+                const activeAccs = [];
+                (def?.sockets || []).forEach(s => {
+                  const state = item.socketStates?.[s.name];
+                  if (!state) return;
+                  const accDef = catalog?.__accessories?.[s.accessoryFile];
+                  const accPrice = accDef?.price || 0;
+                  if (s.behavior === 'fixed' && state.on) {
+                    activeAccs.push({ label: s.label, qty: 1, price: accPrice });
+                  } else if (s.behavior === 'distribute' && state.count > 0) {
+                    activeAccs.push({ label: s.label, qty: state.count, price: accPrice });
+                  } else if (s.behavior === 'positions' && state.positionIndex >= 0) {
+                    activeAccs.push({ label: s.label, qty: 1, price: accPrice });
+                  }
+                });
+                return (
+                  <div key={item.uid || item.modelId} className={styles.quoteItem}>
+                    <div style={{flex:1}}>
+                      <div style={{display:'flex',justifyContent:'space-between'}}>
+                        <span className={styles.quoteItemName}>{def?.name || item.modelId}</span>
+                        <span className={styles.quoteItemQty}>
+                          x{item.count || 1}
+                          {modelPrice > 0 && <span style={{marginLeft:8,color:'#b48b31'}}>${modelPrice.toLocaleString()}</span>}
+                        </span>
+                      </div>
+                      {activeAccs.map((a,i) => (
+                        <div key={i} style={{display:'flex',justifyContent:'space-between',fontSize:11,color:'#999',paddingLeft:12,marginTop:2}}>
+                          <span>↳ {a.label}{a.qty > 1 ? ` x${a.qty}` : ''}</span>
+                          {a.price > 0 && <span style={{color:'#b48b31'}}>${(a.price * a.qty).toLocaleString()}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {(() => {
+              const t = sceneItems.reduce((sum, item) => {
+                const def = catalog?.[item.modelId];
+                let s = (def?.price || 0) * (item.count || 1);
+                (def?.sockets || []).forEach(sock => {
+                  const state = item.socketStates?.[sock.name];
+                  const accDef = catalog?.__accessories?.[sock.accessoryFile];
+                  const p = accDef?.price || 0;
+                  if (!state || !p) return;
+                  if (sock.behavior === 'fixed' && state.on) s += p;
+                  else if (sock.behavior === 'distribute') s += p * (state.count || 0);
+                  else if (sock.behavior === 'positions' && state.positionIndex >= 0) s += p;
+                });
+                return sum + s;
+              }, 0);
+              return (
+                <div className={styles.totalRow}>
+                  <span>Estimated total</span>
+                  <span className={styles.totalAmt}>{t > 0 ? `$${t.toLocaleString()}` : 'Contact for pricing'}</span>
                 </div>
-              ))}
-            </div>
-            <div className={styles.totalRow}>
-              <span>Estimated total</span>
-              <span className={styles.totalAmt}>Contact for pricing</span>
-            </div>
+              );
+            })()}
             <label className={styles.privacyRow}>
               <input type="checkbox" name="privacy" checked={form.privacy} onChange={handleField} className={styles.privacyCheck} />
               <span>I agree to the <a href="#" className={styles.privacyLink}>Privacy Policy</a></span>
@@ -139,8 +189,18 @@ export default function QuotePanel({ config, sceneItems, catalog }) {
   const count = sceneItems.reduce((s, i) => s + i.count, 0);
 
   const total = sceneItems.reduce((sum, item) => {
-    const price = catalog?.[item.modelId]?.price || 0;
-    return sum + price * item.count;
+    const def = catalog?.[item.modelId];
+    let s = (def?.price || 0) * (item.count || 1);
+    (def?.sockets || []).forEach(sock => {
+      const state = item.socketStates?.[sock.name];
+      const accDef = catalog?.__accessories?.[sock.accessoryFile];
+      const p = accDef?.price || 0;
+      if (!state || !p) return;
+      if (sock.behavior === 'fixed' && state.on) s += p;
+      else if (sock.behavior === 'distribute') s += p * (state.count || 0);
+      else if (sock.behavior === 'positions' && state.positionIndex >= 0) s += p;
+    });
+    return sum + s;
   }, 0);
 
   const hasPrice = total > 0;
@@ -187,9 +247,10 @@ export default function QuotePanel({ config, sceneItems, catalog }) {
       </div>
 
       {open && (
-        <QuoteModal config={config} sceneItems={sceneItems} onClose={() => setOpen(false)} />
+        <QuoteModal config={config} sceneItems={sceneItems} catalog={catalog} onClose={() => setOpen(false)} />
       )}
     </>
   );
 }
+
 
