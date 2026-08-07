@@ -198,6 +198,7 @@ export default function App() {
         />
         <Sidebar
           config={CONFIG}
+          units={units}
           mode={mode}
           activeTool={activeTool}
           onToolChange={setActiveTool}
@@ -327,6 +328,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
