@@ -1398,7 +1398,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           acc.userData.socketName = socketName;
           acc.position.set(pos.position.x, pos.position.y, pos.position.z);
           if (pos.quaternion) acc.quaternion.set(pos.quaternion.x, pos.quaternion.y, pos.quaternion.z, pos.quaternion.w);
-          acc.rotateY(Math.PI);
+
           container.add(acc);
           sc[socketName] = acc;
         });
@@ -1415,7 +1415,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           acc.userData.socketName = socketName;
           acc.position.set(pos.position.x, pos.position.y, pos.position.z);
           if (pos.quaternion) acc.quaternion.set(pos.quaternion.x, pos.quaternion.y, pos.quaternion.z, pos.quaternion.w);
-          acc.rotateY(Math.PI);
+
           container.add(acc);
           sc[socketName] = acc;
         });
@@ -1441,7 +1441,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
             const acc = orig.clone(true);
             acc.position.set(capturedPos.position.x, capturedPos.position.y + offsetY, capturedPos.position.z);
             if (capturedPos.quaternion) acc.quaternion.set(capturedPos.quaternion.x, capturedPos.quaternion.y, capturedPos.quaternion.z, capturedPos.quaternion.w);
-            acc.rotateY(Math.PI);
+  
             grp.add(acc);
           });
         }
