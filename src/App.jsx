@@ -325,19 +325,14 @@ export default function App() {
                     const sockDef  = sockItem?.sockets?.find(s => s.name === data.name);
                     if (sockDef) {
                       const positions = (radialMenu.socketPositions||{})[data.name] || [];
-                      // Always use source uid (non-clone) so Viewport propagates correctly
                       setSceneItems(prev => {
                         const clickedItem = prev.find(i => i.uid === radialMenu.uid);
                         const groupId = clickedItem?.groupId;
-                        const sourceUid = groupId
-                          ? (prev.find(i => i.groupId === groupId && !i.isArrayClone)?.uid || radialMenu.uid)
-                          : radialMenu.uid;
-                        // Single call — Viewport.applySocket propagates to whole group internally
-                        viewportEngRef.current?.applySocket(sourceUid, data.name, data.state, { ...sockDef, socketPositions: positions });
-                        // Update sceneItems for all group members
                         const targetUids = groupId
                           ? prev.filter(i => i.groupId === groupId).map(i => i.uid)
-                          : [sourceUid];
+                          : [radialMenu.uid];
+                        // Apply to all uids directly — no itemsRef lookup needed
+                        viewportEngRef.current?.applySocketToUids(targetUids, data.name, data.state, { ...sockDef, socketPositions: positions });
                         return prev.map(i => {
                           if (!targetUids.includes(i.uid)) return i;
                           return { ...i, socketStates: { ...(i.socketStates||{}), [data.name]: data.state } };
