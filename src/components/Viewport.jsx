@@ -1385,12 +1385,9 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       socketLoadTokens.set(tokenKey, token);
 
       const applyWorldPosToLocal = (acc, pos) => {
-        // Convert world-space socket transform to container local space
-        container.updateWorldMatrix(true, false);
-        // Position
-        const wPos = new THREE.Vector3(pos.position.x, pos.position.y, pos.position.z);
-        acc.position.copy(container.worldToLocal(wPos));
-        // Quaternion
+        // Position is relative to model origin — use directly
+        acc.position.set(pos.position.x, pos.position.y, pos.position.z);
+        // Quaternion: remove container rotation to get local quat
         if (pos.quaternion) {
           const wQuat = new THREE.Quaternion(pos.quaternion.x, pos.quaternion.y, pos.quaternion.z, pos.quaternion.w);
           const cQuat = new THREE.Quaternion();
