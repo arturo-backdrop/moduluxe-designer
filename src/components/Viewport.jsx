@@ -1631,19 +1631,19 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       onChangeRef.current?.(next);
     }
 
-    // Apply socket to an explicit list of uids (bypasses itemsRef groupId lookup)
     function applySocketToUids(uids, socketName, state, socketDef) {
-      // Resolve ALL group members from Three.js userData — always current
       const firstUid = uids[0];
       const obj = itemGroup.children.find(x => x.userData.uid === firstUid);
       const groupId = obj?.userData.groupId;
 
-      // Apply to source first
-      const sourceUid = groupId
-        ? (itemGroup.children.find(x => x.userData.groupId === groupId && !x.userData.isArrayClone)?.userData.uid || firstUid)
-        : firstUid;
-      const sourceContainer = itemGroup.children.find(x => x.userData.uid === sourceUid);
+      // Find source (non-clone) and all existing clones
+      const sourceContainer = groupId
+        ? itemGroup.children.find(x => x.userData.groupId === groupId && !x.userData.isArrayClone)
+        : itemGroup.children.find(x => x.userData.uid === firstUid);
       if (!sourceContainer) return;
+      const sourceUid = sourceContainer.userData.uid;
+
+      // 1. Apply socket to source
       const sc = getSocketContainer(sourceUid);
       cancelSocketToken(sourceUid, socketName);
       if (sc[socketName]) { sourceContainer.remove(sc[socketName]); delete sc[socketName]; }
@@ -1651,27 +1651,36 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
       if (!groupId) return;
 
-      // After a short delay (let source load finish), clone source socket to all clones
-      setTimeout(() => {
+      // 2. After source loads, clone its accessory to all existing clones — same as applyArray
+      const existingClones = itemGroup.children
+        .filter(x => x.userData.groupId === groupId && x.userData.isArrayClone);
+
+      if (existingClones.length === 0) return;
+
+      // Wait for source accessory to finish loading then clone it
+      const waitAndSync = () => {
         const sourceAcc = getSocketContainer(sourceUid)[socketName];
-        const cloneUids = itemGroup.children
-          .filter(x => x.userData.groupId === groupId && x.userData.isArrayClone)
-          .map(x => x.userData.uid);
-        cloneUids.forEach(cuid => {
-          const cContainer = itemGroup.children.find(x => x.userData.uid === cuid);
-          if (!cContainer) return;
+        existingClones.forEach(cloneContainer => {
+          const cuid = cloneContainer.userData.uid;
           const cSc = getSocketContainer(cuid);
           cancelSocketToken(cuid, socketName);
-          if (cSc[socketName]) { cContainer.remove(cSc[socketName]); delete cSc[socketName]; }
+          if (cSc[socketName]) { cloneContainer.remove(cSc[socketName]); delete cSc[socketName]; }
           if (sourceAcc) {
             const copy = sourceAcc.clone(true);
             copy.userData.isSocketAccessory = true;
             copy.userData.socketName = socketName;
-            cContainer.add(copy);
+            cloneContainer.add(copy);
             cSc[socketName] = copy;
           }
         });
-      }, 300); // wait for loadModel promises to resolve
+      };
+
+      // loadModel is cached after first load — use a promise chain on the accessoryFile
+      if (socketDef?.accessoryFile) {
+        loadModel(socketDef.accessoryFile).then(waitAndSync);
+      } else {
+        waitAndSync();
+      }
     }
 
     engRef.current = {
