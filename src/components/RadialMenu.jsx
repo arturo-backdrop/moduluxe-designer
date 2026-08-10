@@ -236,7 +236,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
   }
   if (s.behavior === 'distribute') {
     const count   = state.count   ?? 1;
-    const spacing = state.spacing ?? 0;
+    const spacing = state.spacing ?? 0.15;
     const baseY   = state.baseY   ?? 0;
     const UNITS_MAP2 = { m:{factor:1}, ft:{factor:3.28084}, cm:{factor:100}, inch:{factor:39.3701} };
     const u = UNITS_MAP2[units] || UNITS_MAP2.ft;
@@ -307,7 +307,10 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
     currentColor: initialColor,
     currentRotY:  initialRotY,
     arrayState: initialArrayState ? { count: initialArrayState.count, spacing: initialArrayState.spacing } : { count: 1, spacing: 0 },
-    socketStates: Object.fromEntries(sockets.map(s=>[s.name,{...(s.state||{})}])),
+    socketStates: Object.fromEntries(sockets.map(s=>[s.name,{
+      ...(s.behavior==='distribute' ? { spacing: 0.15, baseY: 0, count: 1 } : {}),
+      ...(s.state||{})
+    }])),
   });
 
   // Keep unitsRef current and refresh card when units change
