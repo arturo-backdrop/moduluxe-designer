@@ -326,9 +326,20 @@ export default function App() {
                     const sockDef  = sockItem?.sockets?.find(s => s.name === data.name);
                     if (sockDef) {
                       const positions = (radialMenu.socketPositions||{})[data.name] || [];
-                      viewportEngRef.current?.applySocket(
-                        radialMenu.uid, data.name, data.state, { ...sockDef, socketPositions: positions }
-                      );
+                      const sourceItem = sceneItems.find(i => i.uid === radialMenu.uid);
+                      const groupId = sourceItem?.groupId;
+                      // Get all uids to apply to (array group or just this one)
+                      const targetUids = groupId
+                        ? sceneItems.filter(i => i.groupId === groupId || i.uid === radialMenu.uid).map(i => i.uid)
+                        : [radialMenu.uid];
+                      targetUids.forEach(uid => {
+                        viewportEngRef.current?.applySocket(uid, data.name, data.state, { ...sockDef, socketPositions: positions });
+                      });
+                      // Save socketStates on all targets in sceneItems
+                      setSceneItems(prev => prev.map(i => {
+                        if (!targetUids.includes(i.uid)) return i;
+                        return { ...i, socketStates: { ...(i.socketStates||{}), [data.name]: data.state } };
+                      }));
                     }
                   } else if (action === 'units') {
                     setUnits(data.units);
