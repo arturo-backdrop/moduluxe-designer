@@ -325,14 +325,15 @@ export default function App() {
                     const sockDef  = sockItem?.sockets?.find(s => s.name === data.name);
                     if (sockDef) {
                       const positions = (radialMenu.socketPositions||{})[data.name] || [];
+                      // Viewport resolves full group from Three.js userData internally
+                      viewportEngRef.current?.applySocketToUids([radialMenu.uid], data.name, data.state, { ...sockDef, socketPositions: positions });
+                      // Save state in sceneItems
                       setSceneItems(prev => {
                         const clickedItem = prev.find(i => i.uid === radialMenu.uid);
                         const groupId = clickedItem?.groupId;
                         const targetUids = groupId
                           ? prev.filter(i => i.groupId === groupId).map(i => i.uid)
                           : [radialMenu.uid];
-                        // Apply to all uids directly — no itemsRef lookup needed
-                        viewportEngRef.current?.applySocketToUids(targetUids, data.name, data.state, { ...sockDef, socketPositions: positions });
                         return prev.map(i => {
                           if (!targetUids.includes(i.uid)) return i;
                           return { ...i, socketStates: { ...(i.socketStates||{}), [data.name]: data.state } };
