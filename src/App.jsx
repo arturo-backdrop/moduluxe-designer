@@ -321,22 +321,23 @@ export default function App() {
                   } else if (action === 'toggle_mesh') {
                     viewportEngRef.current?.toggleMeshVisibility(radialMenu.uid, data.meshName, data.visible);
                   } else if (action === 'socket') {
-                    // Find socket definition with positions
                     const sockItem = catalog[radialMenu.modelId];
                     const sockDef  = sockItem?.sockets?.find(s => s.name === data.name);
                     if (sockDef) {
                       const positions = (radialMenu.socketPositions||{})[data.name] || [];
-                      const sourceItem = sceneItems.find(i => i.uid === radialMenu.uid);
-                      const groupId = sourceItem?.groupId;
-                      // Save socketStates on all targets using callback to avoid stale closure
+                      // Always use source uid (non-clone) so Viewport propagates correctly
                       setSceneItems(prev => {
+                        const clickedItem = prev.find(i => i.uid === radialMenu.uid);
+                        const groupId = clickedItem?.groupId;
+                        const sourceUid = groupId
+                          ? (prev.find(i => i.groupId === groupId && !i.isArrayClone)?.uid || radialMenu.uid)
+                          : radialMenu.uid;
+                        // Single call — Viewport.applySocket propagates to whole group internally
+                        viewportEngRef.current?.applySocket(sourceUid, data.name, data.state, { ...sockDef, socketPositions: positions });
+                        // Update sceneItems for all group members
                         const targetUids = groupId
                           ? prev.filter(i => i.groupId === groupId).map(i => i.uid)
-                          : [radialMenu.uid];
-                        // Apply to Three.js for each target
-                        targetUids.forEach(uid => {
-                          viewportEngRef.current?.applySocket(uid, data.name, data.state, { ...sockDef, socketPositions: positions });
-                        });
+                          : [sourceUid];
                         return prev.map(i => {
                           if (!targetUids.includes(i.uid)) return i;
                           return { ...i, socketStates: { ...(i.socketStates||{}), [data.name]: data.state } };
