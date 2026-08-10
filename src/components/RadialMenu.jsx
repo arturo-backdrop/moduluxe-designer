@@ -515,7 +515,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
         const dec = document.getElementById(`rm_dec_${s.name}`);
         const inc = document.getElementById(`rm_inc_${s.name}`);
         if (dec) dec.onclick = () => {
-          state.socketStates[s.name].count = Math.max(1, (state.socketStates[s.name].count||1)-1);
+          state.socketStates[s.name].count = Math.max(0, (state.socketStates[s.name].count||0)-1);
           onAction?.('socket',{name:s.name,state:state.socketStates[s.name]});
           const el = document.getElementById(`rm_count_${s.name}`);
           if (el) el.textContent = state.socketStates[s.name].count;
