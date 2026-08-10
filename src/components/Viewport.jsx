@@ -1631,11 +1631,23 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       onChangeRef.current?.(next);
     }
 
+    // Apply socket to an explicit list of uids (bypasses itemsRef groupId lookup)
+    function applySocketToUids(uids, socketName, state, socketDef) {
+      uids.forEach((uid, idx) => {
+        const container = itemGroup.children.find(x => x.userData.uid === uid);
+        if (!container) return;
+        const sc = getSocketContainer(uid);
+        cancelSocketToken(uid, socketName);
+        if (sc[socketName]) { container.remove(sc[socketName]); delete sc[socketName]; }
+        applySocketVisual(uid, container, sc, socketName, state, socketDef);
+      });
+    }
+
     engRef.current = {
       itemGroup, spawnContainer, pendingPositions, project3D, camera, controls,
       selectedUidRef: { current: null },
       deleteContainer, rotateObject, applyColor, duplicateObject, applyArray,
-      toggleMeshVisibility, applySocket,
+      toggleMeshVisibility, applySocket, applySocketToUids,
       syncWallItem, removeWallItem, rebuildHandles, wallMeshMap,
     };
     if (externalEngRef) externalEngRef.current = engRef.current;
