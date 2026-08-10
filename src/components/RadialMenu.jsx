@@ -308,7 +308,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
     currentRotY:  initialRotY,
     arrayState: initialArrayState ? { count: initialArrayState.count, spacing: initialArrayState.spacing } : { count: 1, spacing: 0 },
     socketStates: Object.fromEntries(sockets.map(s=>[s.name,{
-      ...(s.behavior==='distribute' ? { spacing: 0.15, baseY: 0, count: 1 } : {}),
+      ...(s.behavior==='distribute' ? { spacing: 0.15, baseY: 0, count: 0 } : {}),
       ...(s.state||{})
     }])),
   });
@@ -521,7 +521,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
           if (el) el.textContent = state.socketStates[s.name].count;
         };
         if (inc) inc.onclick = () => {
-          state.socketStates[s.name].count = Math.min(s.max||5, (state.socketStates[s.name].count||1)+1);
+          state.socketStates[s.name].count = Math.min(s.max||5, (state.socketStates[s.name].count||0)+1);
           onAction?.('socket',{name:s.name,state:state.socketStates[s.name]});
           const el = document.getElementById(`rm_count_${s.name}`);
           if (el) el.textContent = state.socketStates[s.name].count;
