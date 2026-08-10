@@ -1385,8 +1385,22 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       socketLoadTokens.set(tokenKey, token);
 
       const applyWorldPosToLocal = (acc, pos) => {
-        acc.position.set(pos.position.x, pos.position.y, pos.position.z);
-        if (pos.quaternion) acc.quaternion.set(pos.quaternion.x, pos.quaternion.y, pos.quaternion.z, pos.quaternion.w);
+        // Position: convert world to local
+        container.updateWorldMatrix(true, false);
+        const localPos = container.worldToLocal(
+          new THREE.Vector3(pos.position.x, pos.position.y, pos.position.z)
+        );
+        acc.position.copy(localPos);
+        // Quaternion: subtract container world rotation to get local rotation
+        if (pos.quaternion) {
+          const worldQuat = new THREE.Quaternion(
+            pos.quaternion.x, pos.quaternion.y, pos.quaternion.z, pos.quaternion.w
+          );
+          const containerWorldQuat = new THREE.Quaternion();
+          container.getWorldQuaternion(containerWorldQuat);
+          const localQuat = containerWorldQuat.clone().invert().multiply(worldQuat);
+          acc.quaternion.copy(localQuat);
+        }
       };
 
       const behavior = socketDef?.behavior || 'fixed';
