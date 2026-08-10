@@ -72,10 +72,16 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel, 
   // Aggregate active accessories across all scene items
   const accessoryPills = React.useMemo(() => {
     const accMap = new Map(); // label -> total count
+    // Only iterate sources (non-clones) and multiply by group size
     sceneItems.forEach(item => {
       if (WALL_TYPES.has(item.type)) return;
+      if (item.isArrayClone) return;
       if (!item.socketStates) return;
       const def = catalog?.[item.modelId];
+      // How many physical units does this source represent (1 + its clones)
+      const groupSize = item.groupId
+        ? sceneItems.filter(i => i.groupId === item.groupId).length
+        : 1;
       (def?.sockets || []).forEach(s => {
         const state = item.socketStates?.[s.name];
         if (!state) return;
@@ -85,7 +91,7 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel, 
         else if (s.behavior === 'positions' && state.positionIndex >= 0) qty = 1;
         if (qty > 0) {
           const label = s.label || s.name;
-          accMap.set(label, (accMap.get(label) || 0) + qty);
+          accMap.set(label, (accMap.get(label) || 0) + qty * groupSize);
         }
       });
     });
