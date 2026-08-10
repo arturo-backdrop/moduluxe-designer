@@ -1387,12 +1387,9 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       const applyWorldPosToLocal = (acc, pos) => {
         // Position is relative to model origin — use directly
         acc.position.set(pos.position.x, pos.position.y, pos.position.z);
-        // Quaternion: remove container rotation to get local quat
+        // Quaternion from parser is already local to the model origin — apply directly
         if (pos.quaternion) {
-          const wQuat = new THREE.Quaternion(pos.quaternion.x, pos.quaternion.y, pos.quaternion.z, pos.quaternion.w);
-          const cQuat = new THREE.Quaternion();
-          container.getWorldQuaternion(cQuat);
-          acc.quaternion.copy(cQuat.invert().multiply(wQuat));
+          acc.quaternion.set(pos.quaternion.x, pos.quaternion.y, pos.quaternion.z, pos.quaternion.w);
         }
       };
 
@@ -1403,7 +1400,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         if (positions.length === 0) return;
         const pos = positions[0];
         if (!socketDef?.accessoryFile) return;
-        console.log('[socket]', socketName, 'pos:', pos);
+
         loadModel(socketDef.accessoryFile).then(orig => {
           if (token.cancelled) return;
           const acc = orig.clone(true);
@@ -1847,6 +1844,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
 
