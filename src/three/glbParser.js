@@ -176,11 +176,16 @@ async function buildScene(json, bin) {
     const quat = new THREE.Quaternion();
     obj.getWorldPosition(pos);
     obj.getWorldQuaternion(quat);
-    socketMap[base].push({
+    const entry = {
       name: obj.name,
       position: { x: pos.x, y: pos.y, z: pos.z },
       quaternion: { x: quat.x, y: quat.y, z: quat.z, w: quat.w },
-    });
+    };
+    socketMap[base].push(entry);
+    // Also expose individual socket by its full name (e.g. socket_lamp.005)
+    if (obj.name !== base) {
+      socketMap[obj.name] = [entry];
+    }
   });
   Object.values(socketMap).forEach(arr =>
     arr.sort((a,b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
@@ -209,6 +214,7 @@ export function cloneModel(original) {
 export function clearModelCache() {
   modelCache.clear();
 }
+
 
 
 
