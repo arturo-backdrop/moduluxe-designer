@@ -1633,7 +1633,12 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
     // Apply socket to an explicit list of uids (bypasses itemsRef groupId lookup)
     function applySocketToUids(uids, socketName, state, socketDef) {
-      uids.forEach((uid, idx) => {
+      // Resolve full group from Three.js userData — always up to date
+      const firstUid = uids[0];
+      const sourceUid = getSourceUid(firstUid);
+      const allGroupUids = getGroupUids(sourceUid);
+      const targetUids = allGroupUids.length > 0 ? allGroupUids : uids;
+      targetUids.forEach(uid => {
         const container = itemGroup.children.find(x => x.userData.uid === uid);
         if (!container) return;
         const sc = getSocketContainer(uid);
