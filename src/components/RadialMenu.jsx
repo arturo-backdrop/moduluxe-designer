@@ -526,36 +526,36 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
         // Spacing controls
         const UNITS_MAP2 = { m:{factor:1}, ft:{factor:3.28084}, cm:{factor:100}, inch:{factor:39.3701} };
         const u = UNITS_MAP2[unitsRef.current] || UNITS_MAP2.ft;
-        const STEP_SP = 1 / u.factor; // 1 display unit in meters
+        const STEP_SP = 0.1 / u.factor; // 0.1 display units in meters
         const spDec = document.getElementById(`rm_sp_dec_${s.name}`);
         const spInc = document.getElementById(`rm_sp_inc_${s.name}`);
         if (spDec) spDec.onclick = () => {
-          state.socketStates[s.name].spacing = Math.max(0, ((state.socketStates[s.name].spacing||0) - STEP_SP));
+          state.socketStates[s.name].spacing = Math.max(0, parseFloat(((state.socketStates[s.name].spacing||0) - STEP_SP).toFixed(4)));
           onAction?.('socket',{name:s.name,state:state.socketStates[s.name]});
           const el = document.getElementById(`rm_sp_val_${s.name}`);
-          if (el) el.textContent = (state.socketStates[s.name].spacing * u.factor).toFixed(unitsRef.current==='m'?2:1);
+          if (el) el.textContent = (state.socketStates[s.name].spacing * u.factor).toFixed(1);
         };
         if (spInc) spInc.onclick = () => {
-          state.socketStates[s.name].spacing = ((state.socketStates[s.name].spacing||0) + STEP_SP);
+          state.socketStates[s.name].spacing = parseFloat(((state.socketStates[s.name].spacing||0) + STEP_SP).toFixed(4));
           onAction?.('socket',{name:s.name,state:state.socketStates[s.name]});
           const el = document.getElementById(`rm_sp_val_${s.name}`);
-          if (el) el.textContent = (state.socketStates[s.name].spacing * u.factor).toFixed(unitsRef.current==='m'?2:1);
+          if (el) el.textContent = (state.socketStates[s.name].spacing * u.factor).toFixed(1);
         };
         // Base height controls
-        const STEP_BY = 1 / u.factor;
+        const STEP_BY = 0.1 / u.factor;
         const byDec = document.getElementById(`rm_by_dec_${s.name}`);
         const byInc = document.getElementById(`rm_by_inc_${s.name}`);
         if (byDec) byDec.onclick = () => {
-          state.socketStates[s.name].baseY = Math.max(0, ((state.socketStates[s.name].baseY||0) - STEP_BY));
+          state.socketStates[s.name].baseY = parseFloat(((state.socketStates[s.name].baseY||0) - STEP_BY).toFixed(4));
           onAction?.('socket',{name:s.name,state:state.socketStates[s.name]});
           const el = document.getElementById(`rm_by_val_${s.name}`);
-          if (el) el.textContent = (state.socketStates[s.name].baseY * u.factor).toFixed(unitsRef.current==='m'?2:1);
+          if (el) el.textContent = (state.socketStates[s.name].baseY * u.factor).toFixed(1);
         };
         if (byInc) byInc.onclick = () => {
-          state.socketStates[s.name].baseY = ((state.socketStates[s.name].baseY||0) + STEP_BY);
+          state.socketStates[s.name].baseY = parseFloat(((state.socketStates[s.name].baseY||0) + STEP_BY).toFixed(4));
           onAction?.('socket',{name:s.name,state:state.socketStates[s.name]});
           const el = document.getElementById(`rm_by_val_${s.name}`);
-          if (el) el.textContent = (state.socketStates[s.name].baseY * u.factor).toFixed(unitsRef.current==='m'?2:1);
+          if (el) el.textContent = (state.socketStates[s.name].baseY * u.factor).toFixed(1);
         };
         // Positions slider
         const posSlider = document.getElementById(`rm_pos_${s.name}`);
