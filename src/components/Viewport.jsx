@@ -1636,17 +1636,22 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       const obj = itemGroup.children.find(x => x.userData.uid === firstUid);
       const groupId = obj?.userData.groupId;
 
-      // Get ALL containers in the group
       const allContainers = groupId
         ? itemGroup.children.filter(x => x.userData.groupId === groupId)
         : [obj].filter(Boolean);
 
-      // Redraw every one from scratch
       allContainers.forEach(container => {
         const uid = container.userData.uid;
         const sc = getSocketContainer(uid);
         cancelSocketToken(uid, socketName);
-        if (sc[socketName]) { container.remove(sc[socketName]); delete sc[socketName]; }
+
+        // Remove ALL socket accessories with this socketName from container — belt and suspenders
+        const toRemove = container.children.filter(c =>
+          c.userData.isSocketAccessory && c.userData.socketName === socketName
+        );
+        toRemove.forEach(c => container.remove(c));
+        delete sc[socketName];
+
         applySocketVisual(uid, container, sc, socketName, state, socketDef);
       });
     }
