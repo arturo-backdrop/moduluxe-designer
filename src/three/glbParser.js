@@ -173,11 +173,13 @@ async function buildScene(json, bin) {
     const base = obj.name.replace(/\.\d+$/, '');
     if (!socketMap[base]) socketMap[base] = [];
     const pos  = new THREE.Vector3();
+    const quat = new THREE.Quaternion();
     obj.getWorldPosition(pos);
+    obj.getWorldQuaternion(quat);
     const entry = {
       name: obj.name,
       position: { x: pos.x, y: pos.y, z: pos.z },
-      quaternion: { x: obj.quaternion.x, y: obj.quaternion.y, z: obj.quaternion.z, w: obj.quaternion.w },
+      quaternion: { x: quat.x, y: quat.y, z: quat.z, w: quat.w },
     };
     socketMap[base].push(entry);
     // Also expose individual socket by its full name (e.g. socket_lamp.005)
