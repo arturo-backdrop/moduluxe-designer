@@ -947,43 +947,51 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       let clampedX = Math.max(-floorW/2 - minX, Math.min(floorW/2 - maxX, rawX));
       let clampedZ = Math.max(-floorD/2 - minZ, Math.min(floorD/2 - maxZ, rawZ));
 
-      // Object-to-object edge snap
-      const OBJ_SNAP_R = 0.08; // meters — snap radius
+      // Object-to-object edge snap using model dimensions (exact, rotation-aware)
+      const OBJ_SNAP_R = 0.10; // meters — snap radius
       const draggingUids = new Set(Object.keys(dragOffsets));
-      // Compute AABB of the dragging group at proposed position
-      const draggedBoxes = [];
+
+      // Get half-extents for an object using catalog dims + rotation
+      function getObjEdges(obj, cx, cz) {
+        const def = catalogRef.current.find(m => m.id === obj.userData.modelId);
+        if (!def) return null;
+        const rotY = obj.rotation.y;
+        const hw0 = def.w / 2, hd0 = def.d / 2;
+        // Rotate dims by rotY to get axis-aligned half-extents
+        const hw = Math.abs(hw0 * Math.cos(rotY)) + Math.abs(hd0 * Math.sin(rotY));
+        const hd = Math.abs(hw0 * Math.sin(rotY)) + Math.abs(hd0 * Math.cos(rotY));
+        return { minX: cx - hw, maxX: cx + hw, minZ: cz - hd, maxZ: cz + hd };
+      }
+
+      // Build dragged group edges at proposed position
+      const ddxPre = clampedX - rawX, ddzPre = clampedZ - rawZ;
+      const draggedEdges = [];
       Object.entries(dragOffsets).forEach(([uid, off]) => {
         const obj = itemGroup.children.find(x => x.userData.uid === uid);
         if (!obj) return;
-        const proposedX = pt.x + off.dx + (clampedX - rawX);
-        const proposedZ = pt.z + off.dz + (clampedZ - rawZ);
-        const b = new THREE.Box3().setFromObject(obj);
-        const hw = (b.max.x - b.min.x) / 2, hd = (b.max.z - b.min.z) / 2;
-        draggedBoxes.push({ cx: proposedX, cz: proposedZ, hw, hd });
+        const cx = pt.x + off.dx + ddxPre;
+        const cz = pt.z + off.dz + ddzPre;
+        const e = getObjEdges(obj, cx, cz);
+        if (e) draggedEdges.push(e);
       });
-      // Check each stationary object's edges against dragging group edges
+
+      // Find best snap across all stationary objects
       let bestSnapDX = null, bestSnapDZ = null, bestDist = OBJ_SNAP_R;
       itemGroup.children.forEach(obj => {
         if (draggingUids.has(obj.userData.uid)) return;
         if (!obj.userData.uid) return;
-        const sb = new THREE.Box3().setFromObject(obj);
-        const shw = (sb.max.x - sb.min.x) / 2, shd = (sb.max.z - sb.min.z) / 2;
-        const scx = obj.position.x, scz = obj.position.z;
-        // Static object edges: minX, maxX, minZ, maxZ
-        const sMinX = scx - shw, sMaxX = scx + shw;
-        const sMinZ = scz - shd, sMaxZ = scz + shd;
-        draggedBoxes.forEach(db => {
-          const dMinX = db.cx - db.hw, dMaxX = db.cx + db.hw;
-          const dMinZ = db.cz - db.hd, dMaxZ = db.cz + db.hd;
-          // X-axis snaps: right edge of dragged to left edge of static, and vice versa
-          [[dMaxX, sMinX], [dMinX, sMaxX]].forEach(([de, se]) => {
-            const dist = Math.abs(de - se);
-            if (dist < bestDist) { bestDist = dist; bestSnapDX = se - de; bestSnapDZ = null; }
+        const se = getObjEdges(obj, obj.position.x, obj.position.z);
+        if (!se) return;
+        draggedEdges.forEach(de => {
+          // X snaps: dragged right → static left, dragged left → static right
+          [[de.maxX, se.minX], [de.minX, se.maxX]].forEach(([d, s]) => {
+            const dist = Math.abs(d - s);
+            if (dist < bestDist) { bestDist = dist; bestSnapDX = s - d; bestSnapDZ = null; }
           });
-          // Z-axis snaps
-          [[dMaxZ, sMinZ], [dMinZ, sMaxZ]].forEach(([de, se]) => {
-            const dist = Math.abs(de - se);
-            if (dist < bestDist) { bestDist = dist; bestSnapDZ = se - de; bestSnapDX = null; }
+          // Z snaps
+          [[de.maxZ, se.minZ], [de.minZ, se.maxZ]].forEach(([d, s]) => {
+            const dist = Math.abs(d - s);
+            if (dist < bestDist) { bestDist = dist; bestSnapDZ = s - d; bestSnapDX = null; }
           });
         });
       });
