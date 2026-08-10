@@ -235,14 +235,32 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
       </div>`;
   }
   if (s.behavior === 'distribute') {
-    const count = state.count ?? 1;
+    const count   = state.count   ?? 1;
+    const spacing = state.spacing ?? 0;
+    const baseY   = state.baseY   ?? 0;
+    const UNITS_MAP2 = { m:{factor:1}, ft:{factor:3.28084}, cm:{factor:100}, inch:{factor:39.3701} };
+    const u = UNITS_MAP2[units] || UNITS_MAP2.ft;
+    const spDisplay  = (spacing * u.factor).toFixed(units==='m'?2:1);
+    const baseDisplay= (baseY   * u.factor).toFixed(units==='m'?2:1);
     return `
-      <div style="font-size:9px;color:#999;margin-bottom:4px;">${modelName}</div>
-      <div style="font-weight:900;font-size:12px;color:#1a1a1a;">${s.label}</div>
-      <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
+      <div style="font-size:9px;color:#999;margin-bottom:2px;">${modelName}</div>
+      <div style="font-weight:900;font-size:12px;color:#1a1a1a;margin-bottom:6px;">${s.label}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
         <button id="rm_dec_${s.name}" style="width:26px;height:26px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;">&#8722;</button>
-        <span id="rm_count_${s.name}" style="font-weight:900;font-size:22px;color:#1a1a1a;">${count}</span>
+        <span id="rm_count_${s.name}" style="font-weight:900;font-size:22px;color:#1a1a1a;min-width:24px;text-align:center;">${count}</span>
         <button id="rm_inc_${s.name}" style="width:26px;height:26px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;">+</button>
+      </div>
+      <div style="font-size:10px;color:#666;margin-bottom:2px;">Spacing (${units})</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <button id="rm_sp_dec_${s.name}" style="width:22px;height:22px;border-radius:50%;border:none;background:#f0f0f0;font-size:14px;cursor:pointer;">&#8722;</button>
+        <span id="rm_sp_val_${s.name}" style="font-weight:700;font-size:14px;color:#1a1a1a;min-width:28px;text-align:center;">${spDisplay}</span>
+        <button id="rm_sp_inc_${s.name}" style="width:22px;height:22px;border-radius:50%;border:none;background:#f0f0f0;font-size:14px;cursor:pointer;">+</button>
+      </div>
+      <div style="font-size:10px;color:#666;margin-bottom:2px;">Base height (${units})</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button id="rm_by_dec_${s.name}" style="width:22px;height:22px;border-radius:50%;border:none;background:#f0f0f0;font-size:14px;cursor:pointer;">&#8722;</button>
+        <span id="rm_by_val_${s.name}" style="font-weight:700;font-size:14px;color:#1a1a1a;min-width:28px;text-align:center;">${baseDisplay}</span>
+        <button id="rm_by_inc_${s.name}" style="width:22px;height:22px;border-radius:50%;border:none;background:#f0f0f0;font-size:14px;cursor:pointer;">+</button>
       </div>`;
   }
   if (s.behavior === 'positions') {
@@ -505,6 +523,40 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
           const el = document.getElementById(`rm_count_${s.name}`);
           if (el) el.textContent = state.socketStates[s.name].count;
         };
+        // Spacing controls
+        const UNITS_MAP2 = { m:{factor:1}, ft:{factor:3.28084}, cm:{factor:100}, inch:{factor:39.3701} };
+        const u = UNITS_MAP2[unitsRef.current] || UNITS_MAP2.ft;
+        const STEP_SP = 1 / u.factor; // 1 display unit in meters
+        const spDec = document.getElementById(`rm_sp_dec_${s.name}`);
+        const spInc = document.getElementById(`rm_sp_inc_${s.name}`);
+        if (spDec) spDec.onclick = () => {
+          state.socketStates[s.name].spacing = Math.max(0, ((state.socketStates[s.name].spacing||0) - STEP_SP));
+          onAction?.('socket',{name:s.name,state:state.socketStates[s.name]});
+          const el = document.getElementById(`rm_sp_val_${s.name}`);
+          if (el) el.textContent = (state.socketStates[s.name].spacing * u.factor).toFixed(unitsRef.current==='m'?2:1);
+        };
+        if (spInc) spInc.onclick = () => {
+          state.socketStates[s.name].spacing = ((state.socketStates[s.name].spacing||0) + STEP_SP);
+          onAction?.('socket',{name:s.name,state:state.socketStates[s.name]});
+          const el = document.getElementById(`rm_sp_val_${s.name}`);
+          if (el) el.textContent = (state.socketStates[s.name].spacing * u.factor).toFixed(unitsRef.current==='m'?2:1);
+        };
+        // Base height controls
+        const STEP_BY = 1 / u.factor;
+        const byDec = document.getElementById(`rm_by_dec_${s.name}`);
+        const byInc = document.getElementById(`rm_by_inc_${s.name}`);
+        if (byDec) byDec.onclick = () => {
+          state.socketStates[s.name].baseY = Math.max(0, ((state.socketStates[s.name].baseY||0) - STEP_BY));
+          onAction?.('socket',{name:s.name,state:state.socketStates[s.name]});
+          const el = document.getElementById(`rm_by_val_${s.name}`);
+          if (el) el.textContent = (state.socketStates[s.name].baseY * u.factor).toFixed(unitsRef.current==='m'?2:1);
+        };
+        if (byInc) byInc.onclick = () => {
+          state.socketStates[s.name].baseY = ((state.socketStates[s.name].baseY||0) + STEP_BY);
+          onAction?.('socket',{name:s.name,state:state.socketStates[s.name]});
+          const el = document.getElementById(`rm_by_val_${s.name}`);
+          if (el) el.textContent = (state.socketStates[s.name].baseY * u.factor).toFixed(unitsRef.current==='m'?2:1);
+        };
         // Positions slider
         const posSlider = document.getElementById(`rm_pos_${s.name}`);
         const setPos = (idx) => {
@@ -692,6 +744,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       onClick={e=>e.stopPropagation()} />
   );
 }
+
 
 
 
