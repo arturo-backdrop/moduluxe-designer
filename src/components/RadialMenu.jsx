@@ -235,7 +235,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
       </div>`;
   }
   if (s.behavior === 'distribute') {
-    const count   = state.count   ?? 1;
+    const count   = state.count   ?? 0;
     const spacing = state.spacing ?? 0.15;
     const baseY   = state.baseY   ?? 0;
     const UNITS_MAP2 = { m:{factor:1}, ft:{factor:3.28084}, cm:{factor:100}, inch:{factor:39.3701} };
