@@ -59,9 +59,7 @@ export default function App() {
           // Index accessories by their file URL for price lookup
           (item.sockets || []).forEach(s => {
             if (s.accessoryFile && !accMap[s.accessoryFile]) {
-              // Find accessory definition in manifest
-              const accDef = items.find(i => i.file === s.accessoryFile);
-              if (accDef) accMap[s.accessoryFile] = accDef;
+              accMap[s.accessoryFile] = { price: s.price || 0, name: s.label || s.name };
             }
           });
         });
