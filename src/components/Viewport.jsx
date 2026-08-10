@@ -1637,22 +1637,41 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       const firstUid = uids[0];
       const obj = itemGroup.children.find(x => x.userData.uid === firstUid);
       const groupId = obj?.userData.groupId;
-      let targetUids;
-      if (groupId) {
-        targetUids = itemGroup.children
-          .filter(x => x.userData.groupId === groupId)
+
+      // Apply to source first
+      const sourceUid = groupId
+        ? (itemGroup.children.find(x => x.userData.groupId === groupId && !x.userData.isArrayClone)?.userData.uid || firstUid)
+        : firstUid;
+      const sourceContainer = itemGroup.children.find(x => x.userData.uid === sourceUid);
+      if (!sourceContainer) return;
+      const sc = getSocketContainer(sourceUid);
+      cancelSocketToken(sourceUid, socketName);
+      if (sc[socketName]) { sourceContainer.remove(sc[socketName]); delete sc[socketName]; }
+      applySocketVisual(sourceUid, sourceContainer, sc, socketName, state, socketDef);
+
+      if (!groupId) return;
+
+      // After a short delay (let source load finish), clone source socket to all clones
+      setTimeout(() => {
+        const sourceAcc = getSocketContainer(sourceUid)[socketName];
+        const cloneUids = itemGroup.children
+          .filter(x => x.userData.groupId === groupId && x.userData.isArrayClone)
           .map(x => x.userData.uid);
-      } else {
-        targetUids = [firstUid];
-      }
-      targetUids.forEach(uid => {
-        const container = itemGroup.children.find(x => x.userData.uid === uid);
-        if (!container) return;
-        const sc = getSocketContainer(uid);
-        cancelSocketToken(uid, socketName);
-        if (sc[socketName]) { container.remove(sc[socketName]); delete sc[socketName]; }
-        applySocketVisual(uid, container, sc, socketName, state, socketDef);
-      });
+        cloneUids.forEach(cuid => {
+          const cContainer = itemGroup.children.find(x => x.userData.uid === cuid);
+          if (!cContainer) return;
+          const cSc = getSocketContainer(cuid);
+          cancelSocketToken(cuid, socketName);
+          if (cSc[socketName]) { cContainer.remove(cSc[socketName]); delete cSc[socketName]; }
+          if (sourceAcc) {
+            const copy = sourceAcc.clone(true);
+            copy.userData.isSocketAccessory = true;
+            copy.userData.socketName = socketName;
+            cContainer.add(copy);
+            cSc[socketName] = copy;
+          }
+        });
+      }, 300); // wait for loadModel promises to resolve
     }
 
     engRef.current = {
