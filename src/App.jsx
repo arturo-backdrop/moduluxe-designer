@@ -221,11 +221,14 @@ export default function App() {
         <VideoWidget config={CONFIG} />
         {radialMenu && (() => {
           const item    = catalog[radialMenu.modelId];
+          const sceneItem = sceneItems.find(i => i.uid === radialMenu.uid);
           // Merge manifest sockets with auto-detected toggle meshes from GLB
           const socketPositions = radialMenu.socketPositions || {};
+          const savedSocketStates = sceneItem?.socketStates || {};
           const manifestSockets = (item?.sockets || []).map(s => ({
             ...s,
             socketPositions: socketPositions[s.name] || [],
+            state: savedSocketStates[s.name] || s.state || {},
           }));
           const toggleSockets = (radialMenu.toggleMeshes || []).map(t => ({
             name:     t.name,
@@ -340,6 +343,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
