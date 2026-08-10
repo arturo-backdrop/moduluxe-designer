@@ -1384,6 +1384,19 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       const token = { cancelled: false };
       socketLoadTokens.set(tokenKey, token);
 
+      // Convert world-space socket position/quaternion to container-local space
+      const applyWorldPosToLocal = (acc, pos) => {
+        container.updateWorldMatrix(true, false);
+        const localPos = container.worldToLocal(new THREE.Vector3(pos.position.x, pos.position.y, pos.position.z));
+        acc.position.copy(localPos);
+        if (pos.quaternion) {
+          const worldQuat = new THREE.Quaternion(pos.quaternion.x, pos.quaternion.y, pos.quaternion.z, pos.quaternion.w);
+          const containerQuat = new THREE.Quaternion();
+          container.getWorldQuaternion(containerQuat);
+          acc.quaternion.copy(containerQuat.clone().invert().multiply(worldQuat));
+        }
+      };
+
       const behavior = socketDef?.behavior || 'fixed';
       if (behavior === 'fixed') {
         if (!state?.on) return;
@@ -1396,9 +1409,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           const acc = orig.clone(true);
           acc.userData.isSocketAccessory = true;
           acc.userData.socketName = socketName;
-          acc.position.set(pos.position.x, pos.position.y, pos.position.z);
-          if (pos.quaternion) acc.quaternion.set(pos.quaternion.x, pos.quaternion.y, pos.quaternion.z, pos.quaternion.w);
-
+          applyWorldPosToLocal(acc, pos);
           container.add(acc);
           sc[socketName] = acc;
         });
@@ -1413,9 +1424,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           const acc = orig.clone(true);
           acc.userData.isSocketAccessory = true;
           acc.userData.socketName = socketName;
-          acc.position.set(pos.position.x, pos.position.y, pos.position.z);
-          if (pos.quaternion) acc.quaternion.set(pos.quaternion.x, pos.quaternion.y, pos.quaternion.z, pos.quaternion.w);
-
+          applyWorldPosToLocal(acc, pos);
           container.add(acc);
           sc[socketName] = acc;
         });
