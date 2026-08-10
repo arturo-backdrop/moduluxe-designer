@@ -1375,22 +1375,13 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       return socketContainers.get(uid);
     }
 
-    function applySocket(uid, socketName, state, socketDef) {
-      // socketDef: { behavior, accessoryFile, positions: [{position,quaternion},...] }
-      const container = itemGroup.children.find(x=>x.userData.uid===uid);
-      if (!container) return;
-      const sc = getSocketContainer(uid);
-
-      // Remove existing accessory for this socket
-      if (sc[socketName]) { container.remove(sc[socketName]); delete sc[socketName]; }
-
+    function applySocketVisual(uid, container, sc, socketName, state, socketDef) {
       const behavior = socketDef?.behavior || 'fixed';
-
       if (behavior === 'fixed') {
-        if (!state?.on) return; // off
+        if (!state?.on) return;
         const positions = socketDef?.socketPositions || [];
         if (positions.length === 0) return;
-        const pos  = positions[0];
+        const pos = positions[0];
         if (!socketDef?.accessoryFile) return;
         loadModel(socketDef.accessoryFile).then(orig => {
           const acc = orig.clone(true);
@@ -1398,13 +1389,12 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           acc.userData.socketName = socketName;
           acc.position.set(pos.position.x, pos.position.y, pos.position.z);
           if (pos.quaternion) acc.quaternion.set(pos.quaternion.x, pos.quaternion.y, pos.quaternion.z, pos.quaternion.w);
-          acc.rotateY(Math.PI); // flip to face outward
+          acc.rotateY(Math.PI);
           container.add(acc);
           sc[socketName] = acc;
         });
-
       } else if (behavior === 'positions') {
-        const posIdx = state?.positionIndex ?? -1; // -1 = off
+        const posIdx = state?.positionIndex ?? -1;
         if (posIdx < 0) return;
         const positions = socketDef?.socketPositions || [];
         const pos = positions[posIdx];
@@ -1415,15 +1405,14 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           acc.userData.socketName = socketName;
           acc.position.set(pos.position.x, pos.position.y, pos.position.z);
           if (pos.quaternion) acc.quaternion.set(pos.quaternion.x, pos.quaternion.y, pos.quaternion.z, pos.quaternion.w);
-          acc.rotateY(Math.PI); // flip to face outward
+          acc.rotateY(Math.PI);
           container.add(acc);
           sc[socketName] = acc;
         });
-
       } else if (behavior === 'distribute') {
-        const count    = state?.count ?? 0;
-        const spacing  = state?.spacing ?? 0;   // extra gap between shelves (meters)
-        const baseY    = state?.baseY ?? 0;      // height offset from socket position (meters)
+        const count   = state?.count ?? 0;
+        const spacing = state?.spacing ?? 0;
+        const baseY   = state?.baseY ?? 0;
         if (count === 0) return;
         const positions = socketDef?.socketPositions || [];
         if (!socketDef?.accessoryFile || positions.length === 0) return;
@@ -1432,7 +1421,6 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         grp.userData.socketName = socketName;
         container.add(grp);
         sc[socketName] = grp;
-        // Distribute evenly across available positions — capture pos per iteration
         const step = (positions.length - 1) / Math.max(count - 1, 1);
         for (let i = 0; i < count; i++) {
           const idx = Math.min(Math.round(i * step), positions.length - 1);
@@ -1442,15 +1430,40 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
             const acc = orig.clone(true);
             acc.position.set(capturedPos.position.x, capturedPos.position.y + offsetY, capturedPos.position.z);
             if (capturedPos.quaternion) acc.quaternion.set(capturedPos.quaternion.x, capturedPos.quaternion.y, capturedPos.quaternion.z, capturedPos.quaternion.w);
-            acc.rotateY(Math.PI); // flip to face outward (Blender Y-forward vs Three.js Z-forward)
+            acc.rotateY(Math.PI);
             grp.add(acc);
           });
         }
       }
+    }
 
-      // Save socket state in sceneItems
+    function applySocket(uid, socketName, state, socketDef) {
+      const container = itemGroup.children.find(x=>x.userData.uid===uid);
+      if (!container) return;
+      const sc = getSocketContainer(uid);
+      // Remove existing accessory for this socket
+      if (sc[socketName]) { container.remove(sc[socketName]); delete sc[socketName]; }
+      // Apply visual to this uid
+      applySocketVisual(uid, container, sc, socketName, state, socketDef);
+
+      // Save socket state in sceneItems — propagate to whole group
+      const item = itemsRef.current.find(i => i.uid === uid);
+      const groupId = item?.groupId;
+      const targetUids = groupId
+        ? itemsRef.current.filter(i => i.groupId === groupId).map(i => i.uid)
+        : [uid];
+      // Apply Three.js visuals to all group members
+      targetUids.forEach(tuid => {
+        if (tuid === uid) return; // already applied above
+        const tContainer = itemGroup.children.find(x => x.userData.uid === tuid);
+        if (!tContainer) return;
+        const tSc = getSocketContainer(tuid);
+        if (tSc[socketName]) { tContainer.remove(tSc[socketName]); delete tSc[socketName]; }
+        // Re-run the same behavior for this uid
+        applySocketVisual(tuid, tContainer, tSc, socketName, state, socketDef);
+      });
       const next = itemsRef.current.map(i => {
-        if (i.uid !== uid) return i;
+        if (!targetUids.includes(i.uid)) return i;
         const socketStates = { ...(i.socketStates||{}), [socketName]: state };
         return { ...i, socketStates };
       });
