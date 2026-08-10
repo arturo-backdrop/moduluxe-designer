@@ -60,7 +60,7 @@ function buildButtons(sockets=[], itemType=null) {
   if (itemType === 'door')   return distributeAngles(DOOR_BASE);
   const socketBtns = sockets.slice(0, 4).map(s => ({
     id:s.name, icon:BEHAVIOR_ICONS[s.behavior]||'ti-adjustments',
-    label:s.label||s.name, size:48, hasProps:true, socket:s,
+    label:s.label||s.name, size:48, hasProps:s.behavior!=='fixed', socket:s,
   }));
   // Interleave: socket1, array, socket2, color, socket3, rotate, socket4, dup, del
   const order = [];
@@ -646,11 +646,34 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       state.btnEls[b.id]    = el;
       state.circleEls[b.id] = circle;
 
+      // If fixed socket is already on, show active color immediately
+      if (b.socket?.behavior === 'fixed' && state.socketStates[b.socket.name]?.on) {
+        circle.style.background = ACCENT;
+        const icon = circle.querySelector('i');
+        if (icon) icon.style.color = 'white';
+      }
+
       circle.addEventListener('mouseenter', () => { circle.style.background='#f5f5f5'; applyHoverNudge(b.id); });
-      circle.addEventListener('mouseleave', () => { circle.style.background = state.activeBtn===b.id ? ACCENT : 'white'; applyHoverNudge(null); });
+      circle.addEventListener('mouseleave', () => {
+        const isFixedOn = b.socket?.behavior === 'fixed' && state.socketStates[b.socket.name]?.on;
+        circle.style.background = (state.activeBtn===b.id || isFixedOn) ? ACCENT : 'white';
+        applyHoverNudge(null);
+      });
 
       el.addEventListener('click', e => {
         e.stopPropagation();
+        // Fixed socket — toggle directly on the button, no panel
+        if (b.socket?.behavior === 'fixed') {
+          const curOn = state.socketStates[b.socket.name]?.on;
+          state.socketStates[b.socket.name] = { ...state.socketStates[b.socket.name], on: !curOn };
+          onAction?.('socket', { name: b.socket.name, state: state.socketStates[b.socket.name] });
+          const isOn = !curOn;
+          circle.style.background = isOn ? ACCENT : 'white';
+          const icon = circle.querySelector('i');
+          if (icon) icon.style.color = isOn ? 'white' : '#1a1a1a';
+          popScale(circle);
+          return;
+        }
         if (!b.hasProps) {
           if (b.id === 'del')    { onAction?.('del'); triggerClose(); }
           else if (b.id === 'rotate') {
@@ -747,6 +770,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       onClick={e=>e.stopPropagation()} />
   );
 }
+
 
 
 
