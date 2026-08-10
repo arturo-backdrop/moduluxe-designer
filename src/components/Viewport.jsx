@@ -12,7 +12,7 @@ import {
 
 // ── Constants ─────────────────────────────────────────────────
 const DRAG_THRESHOLD = 5;   // px before drag is armed
-const GRID_SNAP      = 0.05; // meters
+const GRID_SNAP      = 0.25; // meters
 const ANIM_DURATION  = 280;  // ms for spawn spring
 const LIVE_OOB_MAT   = new THREE.MeshStandardMaterial({ color:0xff3333, transparent:true, opacity:0.35, depthWrite:false });
 
@@ -944,8 +944,52 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         minX=-hw; maxX=hw; minZ=-hd; maxZ=hd;
       }
       const rawX = snap(pt.x + anchorOff.dx), rawZ = snap(pt.z + anchorOff.dz);
-      const clampedX = Math.max(-floorW/2 - minX, Math.min(floorW/2 - maxX, rawX));
-      const clampedZ = Math.max(-floorD/2 - minZ, Math.min(floorD/2 - maxZ, rawZ));
+      let clampedX = Math.max(-floorW/2 - minX, Math.min(floorW/2 - maxX, rawX));
+      let clampedZ = Math.max(-floorD/2 - minZ, Math.min(floorD/2 - maxZ, rawZ));
+
+      // Object-to-object edge snap
+      const OBJ_SNAP_R = 0.08; // meters — snap radius
+      const draggingUids = new Set(Object.keys(dragOffsets));
+      // Compute AABB of the dragging group at proposed position
+      const draggedBoxes = [];
+      Object.entries(dragOffsets).forEach(([uid, off]) => {
+        const obj = itemGroup.children.find(x => x.userData.uid === uid);
+        if (!obj) return;
+        const proposedX = pt.x + off.dx + (clampedX - rawX);
+        const proposedZ = pt.z + off.dz + (clampedZ - rawZ);
+        const b = new THREE.Box3().setFromObject(obj);
+        const hw = (b.max.x - b.min.x) / 2, hd = (b.max.z - b.min.z) / 2;
+        draggedBoxes.push({ cx: proposedX, cz: proposedZ, hw, hd });
+      });
+      // Check each stationary object's edges against dragging group edges
+      let bestSnapDX = null, bestSnapDZ = null, bestDist = OBJ_SNAP_R;
+      itemGroup.children.forEach(obj => {
+        if (draggingUids.has(obj.userData.uid)) return;
+        if (!obj.userData.uid) return;
+        const sb = new THREE.Box3().setFromObject(obj);
+        const shw = (sb.max.x - sb.min.x) / 2, shd = (sb.max.z - sb.min.z) / 2;
+        const scx = obj.position.x, scz = obj.position.z;
+        // Static object edges: minX, maxX, minZ, maxZ
+        const sMinX = scx - shw, sMaxX = scx + shw;
+        const sMinZ = scz - shd, sMaxZ = scz + shd;
+        draggedBoxes.forEach(db => {
+          const dMinX = db.cx - db.hw, dMaxX = db.cx + db.hw;
+          const dMinZ = db.cz - db.hd, dMaxZ = db.cz + db.hd;
+          // X-axis snaps: right edge of dragged to left edge of static, and vice versa
+          [[dMaxX, sMinX], [dMinX, sMaxX]].forEach(([de, se]) => {
+            const dist = Math.abs(de - se);
+            if (dist < bestDist) { bestDist = dist; bestSnapDX = se - de; bestSnapDZ = null; }
+          });
+          // Z-axis snaps
+          [[dMaxZ, sMinZ], [dMinZ, sMaxZ]].forEach(([de, se]) => {
+            const dist = Math.abs(de - se);
+            if (dist < bestDist) { bestDist = dist; bestSnapDZ = se - de; bestSnapDX = null; }
+          });
+        });
+      });
+      if (bestSnapDX !== null) clampedX += bestSnapDX;
+      if (bestSnapDZ !== null) clampedZ += bestSnapDZ;
+
       const ddx = clampedX - (pt.x + anchorOff.dx);
       const ddz = clampedZ - (pt.z + anchorOff.dz);
       // Move ALL members including OOB clones
