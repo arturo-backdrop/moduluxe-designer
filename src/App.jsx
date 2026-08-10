@@ -328,18 +328,20 @@ export default function App() {
                       const positions = (radialMenu.socketPositions||{})[data.name] || [];
                       const sourceItem = sceneItems.find(i => i.uid === radialMenu.uid);
                       const groupId = sourceItem?.groupId;
-                      // Get all uids to apply to (array group or just this one)
-                      const targetUids = groupId
-                        ? sceneItems.filter(i => i.groupId === groupId || i.uid === radialMenu.uid).map(i => i.uid)
-                        : [radialMenu.uid];
-                      targetUids.forEach(uid => {
-                        viewportEngRef.current?.applySocket(uid, data.name, data.state, { ...sockDef, socketPositions: positions });
+                      // Save socketStates on all targets using callback to avoid stale closure
+                      setSceneItems(prev => {
+                        const targetUids = groupId
+                          ? prev.filter(i => i.groupId === groupId).map(i => i.uid)
+                          : [radialMenu.uid];
+                        // Apply to Three.js for each target
+                        targetUids.forEach(uid => {
+                          viewportEngRef.current?.applySocket(uid, data.name, data.state, { ...sockDef, socketPositions: positions });
+                        });
+                        return prev.map(i => {
+                          if (!targetUids.includes(i.uid)) return i;
+                          return { ...i, socketStates: { ...(i.socketStates||{}), [data.name]: data.state } };
+                        });
                       });
-                      // Save socketStates on all targets in sceneItems
-                      setSceneItems(prev => prev.map(i => {
-                        if (!targetUids.includes(i.uid)) return i;
-                        return { ...i, socketStates: { ...(i.socketStates||{}), [data.name]: data.state } };
-                      }));
                     }
                   } else if (action === 'units') {
                     setUnits(data.units);
