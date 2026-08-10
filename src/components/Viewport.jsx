@@ -1452,14 +1452,13 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       const targetUids = groupId
         ? itemsRef.current.filter(i => i.groupId === groupId).map(i => i.uid)
         : [uid];
-      // Apply Three.js visuals to all group members
+      // Apply Three.js visuals to all OTHER group members
       targetUids.forEach(tuid => {
         if (tuid === uid) return; // already applied above
         const tContainer = itemGroup.children.find(x => x.userData.uid === tuid);
         if (!tContainer) return;
         const tSc = getSocketContainer(tuid);
         if (tSc[socketName]) { tContainer.remove(tSc[socketName]); delete tSc[socketName]; }
-        // Re-run the same behavior for this uid
         applySocketVisual(tuid, tContainer, tSc, socketName, state, socketDef);
       });
       const next = itemsRef.current.map(i => {
