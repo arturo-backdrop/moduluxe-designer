@@ -165,29 +165,53 @@ async function buildScene(json, bin) {
 
   // Auto-detect socket_ Empties (Object3D with no mesh descendants)
   const socketMap = {};
-  root.updateWorldMatrix(true, true);
-  root.traverse(obj => {
-    if (!obj.name || !obj.name.toLowerCase().startsWith('socket_')) return;
-    let hasMesh = false;
-    obj.traverse(c => { if (c.isMesh) hasMesh = true; });
-    if (hasMesh) return;
-    const base = obj.name.replace(/\.\d+$/, '');
-    if (!socketMap[base]) socketMap[base] = [];
-    const pos  = new THREE.Vector3();
-    const quat = new THREE.Quaternion();
-    obj.getWorldPosition(pos);
-    obj.getWorldQuaternion(quat);
-    const entry = {
-      name: obj.name,
-      position: { x: pos.x, y: pos.y, z: pos.z },
-      quaternion: { x: quat.x, y: quat.y, z: quat.z, w: quat.w },
+  // Build socket map directly from GLB JSON — getWorldQuaternion unreliable before scene attach
+  function multiplyQuat(a, b) {
+    return {
+      x: a.w*b.x + a.x*b.w + a.y*b.z - a.z*b.y,
+      y: a.w*b.y - a.x*b.z + a.y*b.w + a.z*b.x,
+      z: a.w*b.z + a.x*b.y - a.y*b.x + a.z*b.w,
+      w: a.w*b.w - a.x*b.x - a.y*b.y - a.z*b.z,
     };
-    socketMap[base].push(entry);
-    // Also expose individual socket by its full name (e.g. socket_lamp.005)
-    if (obj.name !== base) {
-      socketMap[obj.name] = [entry];
+  }
+  function getNodeWorldTransform(json, nodeIdx, parentPos, parentQuat) {
+    const nd = json.nodes[nodeIdx];
+    const lPos = nd.translation ? { x: nd.translation[0], y: nd.translation[1], z: nd.translation[2] } : { x:0,y:0,z:0 };
+    const lQuat = nd.rotation ? { x: nd.rotation[0], y: nd.rotation[1], z: nd.rotation[2], w: nd.rotation[3] } : { x:0,y:0,z:0,w:1 };
+    // Rotate parent quat by local quat
+    const wQuat = multiplyQuat(parentQuat, lQuat);
+    // Rotate local position by parent quaternion and add parent position
+    const p = parentQuat;
+    const v = lPos;
+    const wPos = {
+      x: parentPos.x + v.x + 2*(p.y*v.z - p.z*v.y)*p.w + 2*(p.x*(p.x*v.x+p.y*v.y+p.z*v.z) - v.x*(p.x*p.x+p.y*p.y+p.z*p.z)),
+      y: parentPos.y + v.y + 2*(p.z*v.x - p.x*v.z)*p.w + 2*(p.y*(p.x*v.x+p.y*v.y+p.z*v.z) - v.y*(p.x*p.x+p.y*p.y+p.z*p.z)),
+      z: parentPos.z + v.z + 2*(p.x*v.y - p.y*v.x)*p.w + 2*(p.z*(p.x*v.x+p.y*v.y+p.z*v.z) - v.z*(p.x*p.x+p.y*p.y+p.z*p.z)),
+    };
+    return { pos: wPos, quat: wQuat };
+  }
+  function traverseNodes(json, nodeIdx, parentPos, parentQuat) {
+    const nd = json.nodes[nodeIdx];
+    const { pos: wPos, quat: wQuat } = getNodeWorldTransform(json, nodeIdx, parentPos, parentQuat);
+    if (nd.name && nd.name.toLowerCase().startsWith('socket_') && nd.mesh == null) {
+      const base = nd.name.replace(/\.\d+$/, '');
+      if (!socketMap[base]) socketMap[base] = [];
+      const entry = {
+        name: nd.name,
+        position: { x: wPos.x, y: wPos.y, z: wPos.z },
+        quaternion: { x: wQuat.x, y: wQuat.y, z: wQuat.z, w: wQuat.w },
+      };
+      socketMap[base].push(entry);
+      if (nd.name !== base) socketMap[nd.name] = [entry];
     }
-  });
+    if (nd.children) {
+      for (const ci of nd.children) traverseNodes(json, ci, wPos, wQuat);
+    }
+  }
+  const sceneDef2 = json.scenes[json.scene || 0];
+  const identity = { x:0,y:0,z:0,w:1 };
+  const origin   = { x:0,y:0,z:0 };
+  for (const ni of sceneDef2.nodes) traverseNodes(json, ni, origin, identity);
   Object.values(socketMap).forEach(arr =>
     arr.sort((a,b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
   );
