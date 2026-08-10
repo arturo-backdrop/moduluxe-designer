@@ -1397,7 +1397,6 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       if (behavior === 'fixed') {
         if (!state?.on) return;
         const positions = socketDef?.socketPositions || [];
-        console.log('[socket debug]', socketName, 'positions:', positions, 'quat[0]:', positions[0]?.quaternion);
         if (positions.length === 0) return;
         const pos = positions[0];
         if (!socketDef?.accessoryFile) return;
