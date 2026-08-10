@@ -1636,51 +1636,19 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       const obj = itemGroup.children.find(x => x.userData.uid === firstUid);
       const groupId = obj?.userData.groupId;
 
-      // Find source (non-clone) and all existing clones
-      const sourceContainer = groupId
-        ? itemGroup.children.find(x => x.userData.groupId === groupId && !x.userData.isArrayClone)
-        : itemGroup.children.find(x => x.userData.uid === firstUid);
-      if (!sourceContainer) return;
-      const sourceUid = sourceContainer.userData.uid;
+      // Get ALL containers in the group
+      const allContainers = groupId
+        ? itemGroup.children.filter(x => x.userData.groupId === groupId)
+        : [obj].filter(Boolean);
 
-      // 1. Apply socket to source
-      const sc = getSocketContainer(sourceUid);
-      cancelSocketToken(sourceUid, socketName);
-      if (sc[socketName]) { sourceContainer.remove(sc[socketName]); delete sc[socketName]; }
-      applySocketVisual(sourceUid, sourceContainer, sc, socketName, state, socketDef);
-
-      if (!groupId) return;
-
-      // 2. After source loads, clone its accessory to all existing clones — same as applyArray
-      const existingClones = itemGroup.children
-        .filter(x => x.userData.groupId === groupId && x.userData.isArrayClone);
-
-      if (existingClones.length === 0) return;
-
-      // Wait for source accessory to finish loading then clone it
-      const waitAndSync = () => {
-        const sourceAcc = getSocketContainer(sourceUid)[socketName];
-        existingClones.forEach(cloneContainer => {
-          const cuid = cloneContainer.userData.uid;
-          const cSc = getSocketContainer(cuid);
-          cancelSocketToken(cuid, socketName);
-          if (cSc[socketName]) { cloneContainer.remove(cSc[socketName]); delete cSc[socketName]; }
-          if (sourceAcc) {
-            const copy = sourceAcc.clone(true);
-            copy.userData.isSocketAccessory = true;
-            copy.userData.socketName = socketName;
-            cloneContainer.add(copy);
-            cSc[socketName] = copy;
-          }
-        });
-      };
-
-      // loadModel is cached after first load — use a promise chain on the accessoryFile
-      if (socketDef?.accessoryFile) {
-        loadModel(socketDef.accessoryFile).then(waitAndSync);
-      } else {
-        waitAndSync();
-      }
+      // Redraw every one from scratch
+      allContainers.forEach(container => {
+        const uid = container.userData.uid;
+        const sc = getSocketContainer(uid);
+        cancelSocketToken(uid, socketName);
+        if (sc[socketName]) { container.remove(sc[socketName]); delete sc[socketName]; }
+        applySocketVisual(uid, container, sc, socketName, state, socketDef);
+      });
     }
 
     engRef.current = {
