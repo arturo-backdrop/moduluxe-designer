@@ -165,6 +165,7 @@ async function buildScene(json, bin) {
 
   // Auto-detect socket_ Empties (Object3D with no mesh descendants)
   const socketMap = {};
+  root.updateWorldMatrix(true, true);
   root.traverse(obj => {
     if (!obj.name || !obj.name.toLowerCase().startsWith('socket_')) return;
     let hasMesh = false;
