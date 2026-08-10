@@ -105,9 +105,13 @@ function QuoteModal({ config, sceneItems, catalog, onClose }) {
         {step === 2 && (
           <>
             <div className={styles.itemsList}>
-              {sceneItems.map(item => {
+              {sceneItems.filter(item => !item.isArrayClone && !['wall','column','door'].includes(item.type)).map(item => {
                 const def = catalog?.[item.modelId];
-                const modelPrice = (def?.price || 0) * (item.count || 1);
+                const groupSize = item.groupId
+                  ? sceneItems.filter(i => i.groupId === item.groupId).length
+                  : 1;
+                const totalUnits = groupSize;
+                const modelPrice = (def?.price || 0) * totalUnits;
                 // Active accessories
                 const activeAccs = [];
                 (def?.sockets || []).forEach(s => {
@@ -116,11 +120,11 @@ function QuoteModal({ config, sceneItems, catalog, onClose }) {
                   const accDef = catalog?.__accessories?.[s.accessoryFile];
                   const accPrice = accDef?.price || 0;
                   if (s.behavior === 'fixed' && state.on) {
-                    activeAccs.push({ label: s.label, qty: 1, price: accPrice });
+                    activeAccs.push({ label: s.label, qty: totalUnits, price: accPrice });
                   } else if (s.behavior === 'distribute' && state.count > 0) {
-                    activeAccs.push({ label: s.label, qty: state.count, price: accPrice });
+                    activeAccs.push({ label: s.label, qty: state.count * totalUnits, price: accPrice });
                   } else if (s.behavior === 'positions' && state.positionIndex >= 0) {
-                    activeAccs.push({ label: s.label, qty: 1, price: accPrice });
+                    activeAccs.push({ label: s.label, qty: totalUnits, price: accPrice });
                   }
                 });
                 return (
@@ -129,7 +133,7 @@ function QuoteModal({ config, sceneItems, catalog, onClose }) {
                       <div style={{display:'flex',justifyContent:'space-between'}}>
                         <span className={styles.quoteItemName}>{def?.name || item.modelId}</span>
                         <span className={styles.quoteItemQty}>
-                          x{item.count || 1}
+                          x{totalUnits}
                           {modelPrice > 0 && <span style={{marginLeft:8,color:'#b48b31'}}>${modelPrice.toLocaleString()}</span>}
                         </span>
                       </div>
@@ -145,17 +149,20 @@ function QuoteModal({ config, sceneItems, catalog, onClose }) {
               })}
             </div>
             {(() => {
-              const t = sceneItems.reduce((sum, item) => {
+              const t = sceneItems.filter(i => !i.isArrayClone && !['wall','column','door'].includes(i.type)).reduce((sum, item) => {
                 const def = catalog?.[item.modelId];
-                let s = (def?.price || 0) * (item.count || 1);
+                const groupSize = item.groupId
+                  ? sceneItems.filter(i => i.groupId === item.groupId).length
+                  : 1;
+                let s = (def?.price || 0) * groupSize;
                 (def?.sockets || []).forEach(sock => {
                   const state = item.socketStates?.[sock.name];
                   const accDef = catalog?.__accessories?.[sock.accessoryFile];
                   const p = accDef?.price || 0;
                   if (!state || !p) return;
-                  if (sock.behavior === 'fixed' && state.on) s += p;
-                  else if (sock.behavior === 'distribute') s += p * (state.count || 0);
-                  else if (sock.behavior === 'positions' && state.positionIndex >= 0) s += p;
+                  if (sock.behavior === 'fixed' && state.on) s += p * groupSize;
+                  else if (sock.behavior === 'distribute') s += p * (state.count || 0) * groupSize;
+                  else if (sock.behavior === 'positions' && state.positionIndex >= 0) s += p * groupSize;
                 });
                 return sum + s;
               }, 0);
@@ -252,5 +259,6 @@ export default function QuotePanel({ config, sceneItems, catalog }) {
     </>
   );
 }
+
 
 
