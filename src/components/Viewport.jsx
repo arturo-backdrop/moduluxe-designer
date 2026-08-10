@@ -1405,6 +1405,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         if (positions.length === 0) return;
         const pos = positions[0];
         if (!socketDef?.accessoryFile) return;
+        console.log('[socket]', socketName, 'pos:', pos);
         loadModel(socketDef.accessoryFile).then(orig => {
           if (token.cancelled) return;
           const acc = orig.clone(true);
