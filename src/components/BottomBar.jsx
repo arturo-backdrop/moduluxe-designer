@@ -69,6 +69,29 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel, 
     return Array.from(map.values());
   }, [sceneItems]);
 
+  // Aggregate active accessories across all scene items
+  const accessoryPills = React.useMemo(() => {
+    const accMap = new Map(); // label -> total count
+    sceneItems.forEach(item => {
+      if (WALL_TYPES.has(item.type)) return;
+      if (!item.socketStates) return;
+      const def = catalog?.[item.modelId];
+      (def?.sockets || []).forEach(s => {
+        const state = item.socketStates?.[s.name];
+        if (!state) return;
+        let qty = 0;
+        if (s.behavior === 'fixed' && state.on) qty = 1;
+        else if (s.behavior === 'distribute' && state.count > 0) qty = state.count;
+        else if (s.behavior === 'positions' && state.positionIndex >= 0) qty = 1;
+        if (qty > 0) {
+          const label = s.label || s.name;
+          accMap.set(label, (accMap.get(label) || 0) + qty);
+        }
+      });
+    });
+    return Array.from(accMap.entries()).map(([label, count]) => ({ label, count }));
+  }, [sceneItems, catalog]);
+
   // Reset selection when items change
   useEffect(() => {
     if (sceneItems.length === 0) setSelectedId(null);
@@ -147,6 +170,22 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel, 
                   onClick={() => handleSelect(item.modelId)}
                 />
               ))}
+              {accessoryPills.map(({ label, count }) => (
+                <div key={label} className={styles.productCard} style={{opacity:0.85}}>
+                  <div className={styles.cardThumb}>
+                    <svg width="18" height="26" viewBox="0 0 18 26" fill="none">
+                      <rect x="1" y="1" width="16" height="24" rx="3" stroke="#b48b31" strokeWidth="1.2"/>
+                      <line x1="4" y1="10" x2="14" y2="10" stroke="#b48b31" strokeWidth="1.5"/>
+                      <line x1="4" y1="16" x2="14" y2="16" stroke="#b48b31" strokeWidth="1.5"/>
+                    </svg>
+                  </div>
+                  <div className={styles.cardInfo}>
+                    <div className={styles.cardName}>{label}</div>
+                    <div className={styles.cardDims}>Accessory</div>
+                  </div>
+                  <div className={styles.cardCount}>x{count}</div>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -164,6 +203,7 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel, 
     </div>
   );
 }
+
 
 
 
