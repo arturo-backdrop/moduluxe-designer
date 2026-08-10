@@ -348,7 +348,24 @@ export default function App() {
                     setUnits(data.units);
                   }
                 }}
-                onClose={() => setRadialMenu(null)}
+                onClose={() => {
+                  // On close, resync all group members' sockets from source
+                  const closingItem = sceneItems.find(i => i.uid === radialMenu.uid);
+                  const groupId = closingItem?.groupId;
+                  if (groupId) {
+                    const sourceItem = sceneItems.find(i => i.groupId === groupId && !i.isArrayClone);
+                    if (sourceItem?.socketStates) {
+                      const item = catalog[sourceItem.modelId];
+                      Object.entries(sourceItem.socketStates).forEach(([socketName, state]) => {
+                        const sockDef = item?.sockets?.find(s => s.name === socketName);
+                        if (!sockDef) return;
+                        const positions = (radialMenu.socketPositions||{})[socketName] || [];
+                        viewportEngRef.current?.applySocket(sourceItem.uid, socketName, state, { ...sockDef, socketPositions: positions });
+                      });
+                    }
+                  }
+                  setRadialMenu(null);
+                }}
               />
             </div>
           );
