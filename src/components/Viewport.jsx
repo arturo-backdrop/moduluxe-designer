@@ -1385,21 +1385,16 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       socketLoadTokens.set(tokenKey, token);
 
       const applyWorldPosToLocal = (acc, pos) => {
-        // Position: convert world to local
-        container.updateWorldMatrix(true, false);
-        const localPos = container.worldToLocal(
-          new THREE.Vector3(pos.position.x, pos.position.y, pos.position.z)
-        );
-        acc.position.copy(localPos);
-        // Quaternion: subtract container world rotation to get local rotation
+        // Position direct — already in correct space
+        acc.position.set(pos.position.x, pos.position.y, pos.position.z);
+        // Quaternion: convert world to local by removing container rotation
         if (pos.quaternion) {
           const worldQuat = new THREE.Quaternion(
             pos.quaternion.x, pos.quaternion.y, pos.quaternion.z, pos.quaternion.w
           );
           const containerWorldQuat = new THREE.Quaternion();
           container.getWorldQuaternion(containerWorldQuat);
-          const localQuat = containerWorldQuat.clone().invert().multiply(worldQuat);
-          acc.quaternion.copy(localQuat);
+          acc.quaternion.copy(containerWorldQuat.clone().invert().multiply(worldQuat));
         }
       };
 
