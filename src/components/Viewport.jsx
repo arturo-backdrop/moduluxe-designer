@@ -12,7 +12,7 @@ import {
 
 // ── Constants ─────────────────────────────────────────────────
 const DRAG_THRESHOLD = 5;   // px before drag is armed
-const GRID_SNAP      = 0.25; // meters
+const GRID_SNAP      = 0.05; // meters
 const ANIM_DURATION  = 280;  // ms for spawn spring
 const LIVE_OOB_MAT   = new THREE.MeshStandardMaterial({ color:0xff3333, transparent:true, opacity:0.35, depthWrite:false });
 
