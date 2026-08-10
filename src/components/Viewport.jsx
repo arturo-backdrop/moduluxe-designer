@@ -1398,6 +1398,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           acc.userData.socketName = socketName;
           acc.position.set(pos.position.x, pos.position.y, pos.position.z);
           if (pos.quaternion) acc.quaternion.set(pos.quaternion.x, pos.quaternion.y, pos.quaternion.z, pos.quaternion.w);
+          acc.rotateY(Math.PI); // flip to face outward
           container.add(acc);
           sc[socketName] = acc;
         });
@@ -1414,12 +1415,15 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           acc.userData.socketName = socketName;
           acc.position.set(pos.position.x, pos.position.y, pos.position.z);
           if (pos.quaternion) acc.quaternion.set(pos.quaternion.x, pos.quaternion.y, pos.quaternion.z, pos.quaternion.w);
+          acc.rotateY(Math.PI); // flip to face outward
           container.add(acc);
           sc[socketName] = acc;
         });
 
       } else if (behavior === 'distribute') {
-        const count = state?.count ?? 0;
+        const count    = state?.count ?? 0;
+        const spacing  = state?.spacing ?? 0;   // extra gap between shelves (meters)
+        const baseY    = state?.baseY ?? 0;      // height offset from socket position (meters)
         if (count === 0) return;
         const positions = socketDef?.socketPositions || [];
         if (!socketDef?.accessoryFile || positions.length === 0) return;
@@ -1428,15 +1432,17 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         grp.userData.socketName = socketName;
         container.add(grp);
         sc[socketName] = grp;
-        // Distribute evenly across available positions
+        // Distribute evenly across available positions — capture pos per iteration
         const step = (positions.length - 1) / Math.max(count - 1, 1);
         for (let i = 0; i < count; i++) {
           const idx = Math.min(Math.round(i * step), positions.length - 1);
-          const pos = positions[idx];
+          const capturedPos = positions[idx];
+          const offsetY = baseY + i * spacing;
           loadModel(socketDef.accessoryFile).then(orig => {
             const acc = orig.clone(true);
-            acc.position.set(pos.position.x, pos.position.y, pos.position.z);
-            if (pos.quaternion) acc.quaternion.set(pos.quaternion.x, pos.quaternion.y, pos.quaternion.z, pos.quaternion.w);
+            acc.position.set(capturedPos.position.x, capturedPos.position.y + offsetY, capturedPos.position.z);
+            if (capturedPos.quaternion) acc.quaternion.set(capturedPos.quaternion.x, capturedPos.quaternion.y, capturedPos.quaternion.z, capturedPos.quaternion.w);
+            acc.rotateY(Math.PI); // flip to face outward (Blender Y-forward vs Three.js Z-forward)
             grp.add(acc);
           });
         }
@@ -1777,6 +1783,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
 
