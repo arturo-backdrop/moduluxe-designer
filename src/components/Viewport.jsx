@@ -1375,7 +1375,15 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       return socketContainers.get(uid);
     }
 
+    // Cancellation tokens for async socket loads: "uid:socketName" -> token object
+    const socketLoadTokens = new Map();
+
     function applySocketVisual(uid, container, sc, socketName, state, socketDef) {
+      // Cancel any pending async loads for this uid+socket
+      const tokenKey = uid + ':' + socketName;
+      const token = { cancelled: false };
+      socketLoadTokens.set(tokenKey, token);
+
       const behavior = socketDef?.behavior || 'fixed';
       if (behavior === 'fixed') {
         if (!state?.on) return;
@@ -1384,6 +1392,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         const pos = positions[0];
         if (!socketDef?.accessoryFile) return;
         loadModel(socketDef.accessoryFile).then(orig => {
+          if (token.cancelled) return;
           const acc = orig.clone(true);
           acc.userData.isSocketAccessory = true;
           acc.userData.socketName = socketName;
@@ -1400,6 +1409,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         const pos = positions[posIdx];
         if (!pos || !socketDef?.accessoryFile) return;
         loadModel(socketDef.accessoryFile).then(orig => {
+          if (token.cancelled) return;
           const acc = orig.clone(true);
           acc.userData.isSocketAccessory = true;
           acc.userData.socketName = socketName;
@@ -1427,6 +1437,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           const capturedPos = positions[idx];
           const offsetY = baseY + i * spacing;
           loadModel(socketDef.accessoryFile).then(orig => {
+            if (token.cancelled) return;
             const acc = orig.clone(true);
             acc.position.set(capturedPos.position.x, capturedPos.position.y + offsetY, capturedPos.position.z);
             if (capturedPos.quaternion) acc.quaternion.set(capturedPos.quaternion.x, capturedPos.quaternion.y, capturedPos.quaternion.z, capturedPos.quaternion.w);
@@ -1437,27 +1448,34 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       }
     }
 
+    function cancelSocketToken(uid, socketName) {
+      const tokenKey = uid + ':' + socketName;
+      const old = socketLoadTokens.get(tokenKey);
+      if (old) old.cancelled = true;
+    }
+
     function applySocket(uid, socketName, state, socketDef) {
       const container = itemGroup.children.find(x=>x.userData.uid===uid);
       if (!container) return;
       const sc = getSocketContainer(uid);
-      // Remove existing accessory for this socket
+      // Cancel pending async loads and remove existing accessory
+      cancelSocketToken(uid, socketName);
       if (sc[socketName]) { container.remove(sc[socketName]); delete sc[socketName]; }
       // Apply visual to this uid
       applySocketVisual(uid, container, sc, socketName, state, socketDef);
 
-      // Save socket state in sceneItems — propagate to whole group
+      // Propagate to whole group
       const item = itemsRef.current.find(i => i.uid === uid);
       const groupId = item?.groupId;
       const targetUids = groupId
         ? itemsRef.current.filter(i => i.groupId === groupId).map(i => i.uid)
         : [uid];
-      // Apply Three.js visuals to all OTHER group members
       targetUids.forEach(tuid => {
-        if (tuid === uid) return; // already applied above
+        if (tuid === uid) return;
         const tContainer = itemGroup.children.find(x => x.userData.uid === tuid);
         if (!tContainer) return;
         const tSc = getSocketContainer(tuid);
+        cancelSocketToken(tuid, socketName);
         if (tSc[socketName]) { tContainer.remove(tSc[socketName]); delete tSc[socketName]; }
         applySocketVisual(tuid, tContainer, tSc, socketName, state, socketDef);
       });
