@@ -130,7 +130,7 @@ export default function Onboarding({ config, presets: manifestPresets = [], onCo
   // Derive floorSize from preset
   function getPresetFloorSize(preset) {
     if (preset.floorSize) return preset.floorSize;
-    const normalize = s => s.toLowerCase().replace(/×/g, 'x').replace(/[^0-9x]/g, '');
+    const normalize = s => s.toLowerCase().replace(/×/g, 'x').replace(/\s+/g, '');
     if (preset.sizes?.length) {
       const match = floorSizes.find(f => normalize(f.label) === normalize(preset.sizes[0]));
       if (match) return match;
