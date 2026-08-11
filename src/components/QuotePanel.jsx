@@ -11,8 +11,9 @@ function buildLineItems(sceneItems, catalog) {
   });
   const modelGroups = {};
   items.forEach(item => {
-    const groupSize = item.groupId
-      ? sceneItems.filter(i => i.groupId === item.groupId).length
+    // isPresetGroup items are individual — don't multiply by group size
+    const groupSize = (item.groupId && !item.isPresetGroup)
+      ? sceneItems.filter(i => i.groupId === item.groupId && !i.isArrayClone).length
       : 1;
     if (!modelGroups[item.modelId]) {
       modelGroups[item.modelId] = { item, count: 0 };
