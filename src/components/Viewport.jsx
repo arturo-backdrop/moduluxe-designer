@@ -2050,6 +2050,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     });
 
     // Add new product items
+    itemsRef.current = sceneItems; // update ref before spawn so color/rotY are available
     sceneItems.forEach((item, idx) => {
       if (item.isArrayClone) return;
       if (wallTypes.has(item.type)) return; // handled above
