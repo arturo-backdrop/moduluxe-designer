@@ -303,7 +303,8 @@ export default function App() {
           onLoadPreset={handleLoadPreset}
         />
         <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
-        <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
+        <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog}
+          onSelectModel={modelId => viewportEngRef.current?.highlightModel(modelId)} />
         <VideoWidget config={CONFIG} />
         {tourActive && <Tour onDone={doneTour} onAction={handleTourAction} />}
         {radialMenu && (() => {
