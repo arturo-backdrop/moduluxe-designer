@@ -153,6 +153,17 @@ export default function Header({
               </button>
             ))}
           </div>
+
+          {onStartTour && (
+            <>
+              <div className={styles.pillDivider} />
+              <button
+                onClick={onStartTour}
+                title="How to use"
+                className={styles.tourBtn}
+              >?</button>
+            </>
+          )}
         </div>
 
         {/* Mode toggle */}
@@ -171,27 +182,10 @@ export default function Header({
         </div>
       </div>
 
-      {/* Tour button */}
-      {onStartTour && (
-        <button
-          onClick={onStartTour}
-          title="How to use"
-          style={{
-            position:'absolute', right:20, top:'50%', transform:'translateY(-50%)',
-            width:32, height:32, borderRadius:'50%', border:'2px solid #e8e8e8',
-            background:'white', color:'#aaa', fontSize:14, fontWeight:700,
-            cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
-            fontFamily:'Figtree,sans-serif', transition:'all 0.15s',
-            boxShadow:'0 2px 8px rgba(0,0,0,0.08)',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor='#b48b31'; e.currentTarget.style.color='#b48b31'; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor='#e8e8e8'; e.currentTarget.style.color='#aaa'; }}
-        >?</button>
-      )}
-
       {/* Version — fixed bottom right */}
       <div className={styles.version}>v{APP_VERSION}</div>
     </>
   );
 }
+
 
