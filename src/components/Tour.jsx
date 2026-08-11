@@ -7,7 +7,7 @@ const STEPS = [
     id: 'sidebar',
     title: 'Browse Models',
     body: 'Browse the catalog on the left. Drag any model onto the floor to place it.',
-    arrow: 'left',
+    arrow: 'right',
     position: 'mid-left',
     action: 'drop_model',
     actionHint: 'Try dragging a model to the floor →',
@@ -16,8 +16,8 @@ const STEPS = [
     id: 'presets-tab',
     title: 'Catalogue',
     body: 'Here you have your catalogue. Use the ‹ › arrows to scroll through categories.',
-    arrow: 'left',
-    position: 'top-left',
+    arrow: 'right',
+    position: 'mid-left',
     actionHint: 'Press the arrows.',
   },
   {
@@ -31,15 +31,15 @@ const STEPS = [
     id: 'camera',
     title: 'Navigate the Scene',
     body: 'Left-click + drag on empty space to orbit · Right-click + drag to pan · Scroll or use the viewport buttons (+,-) to zoom.',
-    arrow: 'top',
-    position: 'center',
+    arrow: 'bottom',
+    position: 'top-center',
   },
   {
     id: 'select',
     title: 'Select & Move',
     body: 'Click any object to select it (white outline). Drag to move it. Arrow keys nudge 1cm at a time.',
     arrow: 'bottom',
-    position: 'center',
+    position: 'top-center',
     center: true,
     action: 'select_object',
     actionHint: 'Try clicking an object →',
@@ -48,8 +48,8 @@ const STEPS = [
     id: 'select',
     title: 'Right-click for Options',
     body: 'Right-click any object to open its options menu.',
-    arrow: 'bottom',
-    position: 'center',
+    arrow: 'top',
+    position: 'bot-center',
     center: true,
     action: 'open_radial',
     actionHint: 'Try right-clicking an object →',
@@ -57,7 +57,12 @@ const STEPS = [
   {
     id: 'radial',
     title: 'What You Can Do',
-    body: '• Rotate — spin 90° at a time\n• Color — change the panel color\n• Array — duplicate in a row with spacing\n• Accessories — lamps, shelves and more\n\nNote: accessories vary by model — some have more options than others.',
+    body: '• Rotate — spin 90° at a time
+• Color — change the panel color
+• Array — duplicate in a row with spacing
+• Accessories — lamps, shelves and more
+
+Note: accessories vary by model — some have more options than others.',
     arrow: 'bottom',
     position: 'center',
     center: true,
