@@ -43,6 +43,21 @@ export default function App() {
   const [units,          setUnits]          = useState('ft');
   const [radialMenu,     setRadialMenu]     = useState(null);
   const { active: tourActive, start: startTour, done: doneTour } = useTour();
+  const tourAdvanceRef = useRef(null);
+  const tourActionRef  = useRef(null);
+
+  const handleTourAction = useCallback((action, advance) => {
+    tourActionRef.current  = action;
+    tourAdvanceRef.current = advance;
+  }, []);
+
+  // Auto-advance tour when user does the right action
+  const checkTourAction = useCallback((action) => {
+    if (!tourActive) return;
+    if (tourActionRef.current === action && tourAdvanceRef.current) {
+      tourAdvanceRef.current();
+    }
+  }, [tourActive]);
   const radialMenuWrapperRef = useRef(null);
   const viewportEngRef       = useRef(null);
   const [history,        setHistory]        = useState([[]])
@@ -218,7 +233,8 @@ export default function App() {
       pushHistory(next);
       return next;
     });
-  }, [pushHistory]);
+    checkTourAction('drop_model');
+  }, [pushHistory, checkTourAction]);
 
   if (!catalogReady) {
     const { loaded, total } = loadProgress;
@@ -250,8 +266,12 @@ export default function App() {
         onSceneItemsChange={items => { setSceneItems(items); pushHistory(items); }}
         mode={mode}
         activeTool={activeTool}
-        onToolChange={setActiveTool}
-        onRadialMenu={(data) => setRadialMenu(data ? { ...data, groupId: data.uid ? sceneItems.find(i=>i.uid===data.uid)?.groupId : null } : null)}
+        onToolChange={(t) => { setActiveTool(t); if (t === 'wall') checkTourAction('select_wall'); }}
+        onSelect={() => checkTourAction('select_object')}
+        onRadialMenu={(data) => {
+          setRadialMenu(data ? { ...data, groupId: data.uid ? sceneItems.find(i=>i.uid===data.uid)?.groupId : null } : null);
+          if (data) checkTourAction('open_radial');
+        }}
         radialMenuWrapperRef={radialMenuWrapperRef}
         engRef={viewportEngRef}
       />
@@ -261,7 +281,7 @@ export default function App() {
           projectName={projectName}
           onProjectNameChange={setProjectName}
           mode={mode}
-          onModeChange={setMode}
+          onModeChange={(m) => { setMode(m); if (m === 'draw') checkTourAction('switch_draw'); }}
           canUndo={canUndo}
           canRedo={canRedo}
           onUndo={undo}
@@ -276,7 +296,8 @@ export default function App() {
           units={units}
           mode={mode}
           activeTool={activeTool}
-          onToolChange={setActiveTool}
+          onToolChange={(t) => { setActiveTool(t); if (t === 'wall') checkTourAction('select_wall'); }}
+        onSelect={() => checkTourAction('select_object')}
           onAddProduct={addSceneItem}
           presets={presets}
           onLoadPreset={handleLoadPreset}
@@ -284,7 +305,7 @@ export default function App() {
         <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
         <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
         <VideoWidget config={CONFIG} />
-        {tourActive && <Tour onDone={doneTour} />}
+        {tourActive && <Tour onDone={doneTour} onAction={handleTourAction} />}
         {radialMenu && (() => {
           // Preset group — show Ungroup button instead of radial menu
           if (radialMenu.itemType === 'preset_group') {
