@@ -110,7 +110,7 @@ function ListModal({ sceneItems, catalog, onClose }) {
             <div style={{ fontSize:22, fontWeight:900, color:'#1a1a1a', lineHeight:1 }}>
               {grandTotal > 0 ? fmt(grandTotal) : 'Contact for pricing'}
             </div>
-            <div style={{ fontSize:10, color:'#ccc', marginTop:4 }}>Final price may vary based on customization</div>
+            <div style={{ fontSize:10, color:'#ccc', marginTop:4 }}>Final price may vary</div>
           </div>
         </div>
 
