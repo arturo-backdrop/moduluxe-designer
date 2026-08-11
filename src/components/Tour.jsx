@@ -57,12 +57,12 @@ const STEPS = [
   {
     id: 'radial',
     title: 'What You Can Do',
-    body: '• Rotate — spin 90° at a time
+    body: `• Rotate — spin 90° at a time
 • Color — change the panel color
 • Array — duplicate in a row with spacing
 • Accessories — lamps, shelves and more
 
-Note: accessories vary by model — some have more options than others.',
+Note: accessories vary by model — some have more options than others.`,
     arrow: 'bottom',
     position: 'center',
     center: true,
@@ -327,3 +327,4 @@ export default function Tour({ onDone, onAction }) {
     </div>
   );
 }
+
