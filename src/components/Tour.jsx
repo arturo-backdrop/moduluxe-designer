@@ -57,12 +57,7 @@ const STEPS = [
   {
     id: 'radial',
     title: 'What You Can Do',
-    body: '• Rotate — spin 90° at a time
-• Color — change the panel color
-• Array — duplicate in a row with spacing
-• Accessories — lamps, shelves and more
-
-Note: accessories vary by model — some have more options than others.',
+    body: '• Rotate — spin 90° at a time\n• Color — change the panel color\n• Array — duplicate in a row with spacing\n• Accessories — lamps, shelves and more\n\nNote: accessories vary by model — some have more options than others.',
     arrow: 'bottom',
     position: 'center',
     center: true,
