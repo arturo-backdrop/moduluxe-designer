@@ -203,7 +203,6 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
         {/* Tools */}
         <div className={styles.toolsContainer}>
           <ToolBtn id="select"  label="Select"  icon={Icons.select}  active={activeTool==='select'}  onClick={onToolChange} />
-          <ToolBtn id="measure" label="Measure" icon={Icons.measure} active={activeTool==='measure'} onClick={onToolChange} />
 
           <div className={`${styles.drawTools} ${!isPlace ? styles.drawToolsVisible : styles.drawToolsHidden}`}>
             <div className={styles.toolDivider} />
@@ -217,6 +216,7 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
     </div>
   );
 }
+
 
 
 
