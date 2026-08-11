@@ -146,7 +146,7 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel, 
   }
 
   return (
-    <div className={styles.bottomBar} style={{ pointerEvents: 'all', left: offsetLeft }}>
+    <div className={styles.bottomBar} style={{ pointerEvents: 'all', left: offsetLeft }} data-tour="bottom-bar">
       <div className={styles.barTitle}>{BAR_TITLE}</div>
 
       <div className={styles.scrollRow}>
@@ -209,6 +209,7 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel, 
     </div>
   );
 }
+
 
 
 
