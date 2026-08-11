@@ -52,6 +52,7 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel, 
     sceneItems.forEach(item => {
       if (item.isArrayClone) return;
       if (WALL_TYPES.has(item.type)) return; // exclude layout items
+      if (catalog?.[item.modelId]?.category === 'Props') return; // exclude props
       const c = item.count || 1;
       if (map.has(item.modelId)) {
         map.get(item.modelId).count += c;
