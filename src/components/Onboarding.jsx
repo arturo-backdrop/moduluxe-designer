@@ -15,7 +15,7 @@ function FloorPreview({ w, h }) {
 }
 
 // ── Preset thumbnail ──────────────────────────────────────────
-function PresetThumb({ blocks, selected }) {
+function PresetThumb({ blocks, selected, thumbnail }) {
   return (
     <div className={`${styles.presetThumbInner} ${selected ? styles.presetThumbSelected : ''}`}>
       {blocks.map((b, i) => (
@@ -37,14 +37,14 @@ function StepIndicator({ step }) {
 }
 
 // ── Main Onboarding component ─────────────────────────────────
-export default function Onboarding({ config, onComplete }) {
+export default function Onboarding({ config, presets: manifestPresets = [], onComplete }) {
   const [step,           setStep]           = useState(1);
   const [selectedFloor,  setSelectedFloor]  = useState(null);
   const [selectedPreset, setSelectedPreset] = useState(null);
   const [exiting,        setExiting]        = useState(false);
 
   const floorSizes = config.floorSizes;
-  const presets    = config.presets || [];
+  const presets    = manifestPresets.length > 0 ? manifestPresets : (config.presets || []);
 
   function goToStep2() {
     setExiting(true);
@@ -117,10 +117,10 @@ export default function Onboarding({ config, onComplete }) {
                     onClick={() => setSelectedPreset(preset.id)}
                   >
                     <div className={styles.presetThumb}>
-                      <PresetThumb
-                        blocks={preset.blocks || []}
-                        selected={selectedPreset === preset.id}
-                      />
+                      {preset.thumbnail
+                        ? <img src={preset.thumbnail} alt={preset.name} style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:8 }} />
+                        : <PresetThumb blocks={preset.blocks || []} selected={selectedPreset === preset.id} />
+                      }
                       {selectedPreset === preset.id && (
                         <div className={styles.presetBadge}>Selected</div>
                       )}
@@ -161,3 +161,4 @@ export default function Onboarding({ config, onComplete }) {
     </div>
   );
 }
+
