@@ -1,70 +1,62 @@
 import React, { useState } from 'react';
 import styles from './QuotePanel.module.css';
 
-// ── Configurable copy ─────────────────────────────────────────
-const RENT_TEXT = 'Or rent for 1/3 of the price';
-
-// ── Quote Modal ───────────────────────────────────────────────
 const WALL_TYPES = new Set(['wall','column','door']);
-function QuoteModal({ config, sceneItems, catalog, onClose }) {
-  sceneItems = sceneItems.filter(i => !WALL_TYPES.has(i.type) && !i.isArrayClone);
-  const [step,    setStep]    = useState(1);
-  const [form,    setForm]    = useState({ reseller:'', client:'', eventName:'', eventDate:'', comments:'', privacy:false });
-  const [sending, setSending] = useState(false);
-  const [sent,    setSent]    = useState(false);
 
-  function handleField(e) {
-    const { name, value, type, checked } = e.target;
-    setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
-  }
+function buildLineItems(sceneItems, catalog) {
+  // Filter out walls/doors/columns and array clones
+  const items = sceneItems.filter(i => !WALL_TYPES.has(i.type) && !i.isArrayClone);
 
-  function canSubmit() { return form.client.trim() && form.eventName.trim() && form.privacy; }
-
-  async function handleSubmit() {
-    setSending(true);
-    if (config.hubspotPortalId && config.hubspotFormId) {
-      try {
-        await fetch(`https://api.hsforms.com/submissions/v3/integration/submit/${config.hubspotPortalId}/${config.hubspotFormId}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fields: [
-            { name: 'company',    value: form.reseller },
-            { name: 'firstname',  value: form.client },
-            { name: 'event_name', value: form.eventName },
-            { name: 'event_date', value: form.eventDate },
-            { name: 'message',    value: form.comments },
-          ]}),
-        });
-      } catch(e) { console.warn('HubSpot submit failed:', e); }
+  // Group by modelId — count instances
+  const modelGroups = {};
+  items.forEach(item => {
+    const groupSize = item.groupId
+      ? sceneItems.filter(i => i.groupId === item.groupId).length
+      : 1;
+    if (!modelGroups[item.modelId]) {
+      modelGroups[item.modelId] = { item, count: 0, groupSize };
     }
-    setSending(false);
-    setSent(true);
-  }
+    modelGroups[item.modelId].count += groupSize;
+  });
 
-  if (sent) {
-    return (
-      <div className={styles.modalOverlay} onClick={onClose}>
-        <div className={styles.modal} onClick={e => e.stopPropagation()}>
-          <div className={styles.successWrap}>
-            <div className={styles.successIcon}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </div>
-            <div className={styles.successTitle}>Quote sent!</div>
-            <div className={styles.successSub}>We'll get back to you shortly.</div>
-            <button className={styles.btnPrimary} onClick={onClose}>Close</button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Build line items
+  return Object.values(modelGroups).map(({ item, count }) => {
+    const def = catalog?.[item.modelId];
+    const unitPrice = def?.price || 0;
+    const total = unitPrice * count;
+
+    // Active accessories
+    const accs = [];
+    (def?.sockets || []).forEach(s => {
+      const state = item.socketStates?.[s.name];
+      if (!state) return;
+      const accPrice = catalog?.__accessories?.[s.accessoryFile]?.price || 0;
+      if (s.behavior === 'fixed' && state.on) {
+        accs.push({ label: s.label || s.name, qty: count, unitPrice: accPrice, total: accPrice * count });
+      } else if (s.behavior === 'distribute' && state.count > 0) {
+        accs.push({ label: s.label || s.name, qty: state.count * count, unitPrice: accPrice, total: accPrice * state.count * count });
+      } else if (s.behavior === 'positions' && state.positionIndex >= 0) {
+        accs.push({ label: s.label || s.name, qty: count, unitPrice: accPrice, total: accPrice * count });
+      }
+    });
+
+    return { name: def?.name || item.modelId, count, unitPrice, total, accs };
+  });
+}
+
+function fmt(n) {
+  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+function ListModal({ sceneItems, catalog, onClose }) {
+  const lines = buildLineItems(sceneItems, catalog);
+  const grandTotal = lines.reduce((s, l) => s + l.total + l.accs.reduce((a, acc) => a + acc.total, 0), 0);
 
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <div className={styles.modalTitle}>Request a Quote</div>
+          <div className={styles.modalTitle}>Your List</div>
           <button className={styles.closeBtn} onClick={onClose}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -72,119 +64,71 @@ function QuoteModal({ config, sceneItems, catalog, onClose }) {
           </button>
         </div>
 
-        {step === 1 && (
-          <>
-            <div className={styles.fieldGrid}>
-              <div className={styles.field}>
-                <label className={styles.fieldLabel}>Reseller / Company</label>
-                <input className={styles.fieldInput} name="reseller" value={form.reseller} onChange={handleField} placeholder="Your company name" />
-              </div>
-              <div className={styles.field}>
-                <label className={styles.fieldLabel}>Client name <span className={styles.req}>*</span></label>
-                <input className={styles.fieldInput} name="client" value={form.client} onChange={handleField} placeholder="End client name" />
-              </div>
-              <div className={styles.field}>
-                <label className={styles.fieldLabel}>Event name <span className={styles.req}>*</span></label>
-                <input className={styles.fieldInput} name="eventName" value={form.eventName} onChange={handleField} placeholder="e.g. CES 2025" />
-              </div>
-              <div className={styles.field}>
-                <label className={styles.fieldLabel}>Event date</label>
-                <input className={styles.fieldInput} name="eventDate" value={form.eventDate} onChange={handleField} type="date" />
-              </div>
-            </div>
-            <div className={styles.field} style={{ marginTop:12 }}>
-              <label className={styles.fieldLabel}>Comments</label>
-              <textarea className={styles.fieldTextarea} name="comments" value={form.comments} onChange={handleField} placeholder="Any special requirements..." rows={3} />
-            </div>
-            <button className={styles.btnPrimary} style={{ marginTop:16 }} onClick={() => setStep(2)}>
-              Review my quote →
-            </button>
-          </>
-        )}
+        {/* Column headers */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 48px 80px 80px', gap:'0 8px', padding:'0 4px 8px', borderBottom:'1px solid #f0f0f0', marginBottom:8 }}>
+          <span style={{ fontSize:10, color:'#aaa', fontWeight:600, textTransform:'uppercase' }}>Item</span>
+          <span style={{ fontSize:10, color:'#aaa', fontWeight:600, textTransform:'uppercase', textAlign:'center' }}>Qty</span>
+          <span style={{ fontSize:10, color:'#aaa', fontWeight:600, textTransform:'uppercase', textAlign:'right' }}>Unit</span>
+          <span style={{ fontSize:10, color:'#aaa', fontWeight:600, textTransform:'uppercase', textAlign:'right' }}>Total</span>
+        </div>
 
-        {step === 2 && (
-          <>
-            <div className={styles.itemsList}>
-              {sceneItems.filter(item => !item.isArrayClone && !['wall','column','door'].includes(item.type)).map(item => {
-                const def = catalog?.[item.modelId];
-                const groupSize = item.groupId
-                  ? sceneItems.filter(i => i.groupId === item.groupId).length
-                  : 1;
-                const totalUnits = groupSize;
-                const modelPrice = (def?.price || 0) * totalUnits;
-                // Active accessories
-                const activeAccs = [];
-                (def?.sockets || []).forEach(s => {
-                  const state = item.socketStates?.[s.name];
-                  if (!state) return;
-                  const accDef = catalog?.__accessories?.[s.accessoryFile];
-                  const accPrice = accDef?.price || 0;
-                  if (s.behavior === 'fixed' && state.on) {
-                    activeAccs.push({ label: s.label, qty: totalUnits, price: accPrice });
-                  } else if (s.behavior === 'distribute' && state.count > 0) {
-                    activeAccs.push({ label: s.label, qty: state.count * totalUnits, price: accPrice });
-                  } else if (s.behavior === 'positions' && state.positionIndex >= 0) {
-                    activeAccs.push({ label: s.label, qty: totalUnits, price: accPrice });
-                  }
-                });
-                return (
-                  <div key={item.uid || item.modelId} className={styles.quoteItem}>
-                    <div style={{flex:1}}>
-                      <div style={{display:'flex',justifyContent:'space-between'}}>
-                        <span className={styles.quoteItemName}>{def?.name || item.modelId}</span>
-                        <span className={styles.quoteItemQty}>
-                          x{totalUnits}
-                          {modelPrice > 0 && <span style={{marginLeft:8,color:'#b48b31'}}>${modelPrice.toLocaleString()}</span>}
-                        </span>
-                      </div>
-                      {activeAccs.map((a,i) => (
-                        <div key={i} style={{display:'flex',justifyContent:'space-between',fontSize:11,color:'#999',paddingLeft:12,marginTop:2}}>
-                          <span>↳ {a.label}{a.qty > 1 ? ` x${a.qty}` : ''}</span>
-                          {a.price > 0 && <span style={{color:'#b48b31'}}>${(a.price * a.qty).toLocaleString()}</span>}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            {(() => {
-              const t = sceneItems.filter(i => !i.isArrayClone && !['wall','column','door'].includes(i.type)).reduce((sum, item) => {
-                const def = catalog?.[item.modelId];
-                const groupSize = item.groupId
-                  ? sceneItems.filter(i => i.groupId === item.groupId).length
-                  : 1;
-                let s = (def?.price || 0) * groupSize;
-                (def?.sockets || []).forEach(sock => {
-                  const state = item.socketStates?.[sock.name];
-                  const accDef = catalog?.__accessories?.[sock.accessoryFile];
-                  const p = accDef?.price || 0;
-                  if (!state || !p) return;
-                  if (sock.behavior === 'fixed' && state.on) s += p * groupSize;
-                  else if (sock.behavior === 'distribute') s += p * (state.count || 0) * groupSize;
-                  else if (sock.behavior === 'positions' && state.positionIndex >= 0) s += p * groupSize;
-                });
-                return sum + s;
-              }, 0);
-              return (
-                <div className={styles.totalRow}>
-                  <span>Estimated total</span>
-                  <span className={styles.totalAmt}>{t > 0 ? `$${t.toLocaleString()}` : 'Contact for pricing'}</span>
+        <div className={styles.itemsList}>
+          {lines.length === 0 && (
+            <div style={{ textAlign:'center', color:'#bbb', fontSize:13, padding:'24px 0' }}>No items in scene</div>
+          )}
+          {lines.map((line, i) => (
+            <div key={i} className={styles.quoteItem}>
+              {/* Model row */}
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 48px 80px 80px', gap:'0 8px', alignItems:'center' }}>
+                <span className={styles.quoteItemName}>{line.name}</span>
+                <span style={{ textAlign:'center', fontSize:13, color:'#666' }}>{line.count}</span>
+                <span style={{ textAlign:'right', fontSize:13, color:'#666' }}>
+                  {line.unitPrice > 0 ? fmt(line.unitPrice) : '—'}
+                </span>
+                <span style={{ textAlign:'right', fontSize:13, fontWeight:600, color: line.total > 0 ? '#1a1a1a' : '#bbb' }}>
+                  {line.total > 0 ? fmt(line.total) : '—'}
+                </span>
+              </div>
+              {/* Accessories */}
+              {line.accs.map((acc, j) => (
+                <div key={j} style={{ display:'grid', gridTemplateColumns:'1fr 48px 80px 80px', gap:'0 8px', alignItems:'center', marginTop:4, paddingLeft:12 }}>
+                  <span style={{ fontSize:11, color:'#999' }}>↳ {acc.label}</span>
+                  <span style={{ textAlign:'center', fontSize:11, color:'#999' }}>{acc.qty}</span>
+                  <span style={{ textAlign:'right', fontSize:11, color:'#999' }}>
+                    {acc.unitPrice > 0 ? fmt(acc.unitPrice) : '—'}
+                  </span>
+                  <span style={{ textAlign:'right', fontSize:11, color: acc.total > 0 ? '#b48b31' : '#bbb' }}>
+                    {acc.total > 0 ? fmt(acc.total) : '—'}
+                  </span>
                 </div>
-              );
-            })()}
-            <label className={styles.privacyRow}>
-              <input type="checkbox" name="privacy" checked={form.privacy} onChange={handleField} className={styles.privacyCheck} />
-              <span>I agree to the <a href="#" className={styles.privacyLink}>Privacy Policy</a></span>
-            </label>
-            <div className={styles.modalFooter}>
-              <button className={styles.btnSecondary} onClick={() => setStep(1)}>← Back</button>
-              <button className={styles.btnPrimary} disabled={!canSubmit() || sending} onClick={handleSubmit}>
-                {sending ? 'Sending...' : 'Send quote request'}
-              </button>
+              ))}
             </div>
-          </>
-        )}
+          ))}
+        </div>
+
+        {/* Estimated total */}
+        <div className={styles.totalRow}>
+          <div>
+            <div style={{ fontWeight:700, fontSize:14, color:'#1a1a1a' }}>Estimated Price</div>
+            <div style={{ fontSize:10, color:'#aaa', marginTop:2 }}>Final price may vary based on customization</div>
+          </div>
+          <span className={styles.totalAmt}>{grandTotal > 0 ? fmt(grandTotal) : 'Contact for pricing'}</span>
+        </div>
+
+        {/* CTA */}
+        <div style={{ marginTop:20, padding:'16px', background:'#fdf8ef', borderRadius:12, textAlign:'center' }}>
+          <div style={{ fontSize:13, color:'#666', marginBottom:6 }}>Want to get a quote?</div>
+          <a href="tel:8887652711" style={{
+            fontSize:18, fontWeight:700, color:'#b48b31', textDecoration:'none',
+            display:'flex', alignItems:'center', justifyContent:'center', gap:8,
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.5a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            (888) 765-2711
+          </a>
+        </div>
+
       </div>
     </div>
   );
@@ -193,72 +137,36 @@ function QuoteModal({ config, sceneItems, catalog, onClose }) {
 // ── QuotePanel pill ───────────────────────────────────────────
 export default function QuotePanel({ config, sceneItems, catalog }) {
   const [open, setOpen] = useState(false);
-  const count = sceneItems.reduce((s, i) => s + i.count, 0);
 
-  const total = sceneItems.reduce((sum, item) => {
-    const def = catalog?.[item.modelId];
-    let s = (def?.price || 0) * (item.count || 1);
-    (def?.sockets || []).forEach(sock => {
-      const state = item.socketStates?.[sock.name];
-      const accDef = catalog?.__accessories?.[sock.accessoryFile];
-      const p = accDef?.price || 0;
-      if (!state || !p) return;
-      if (sock.behavior === 'fixed' && state.on) s += p;
-      else if (sock.behavior === 'distribute') s += p * (state.count || 0);
-      else if (sock.behavior === 'positions' && state.positionIndex >= 0) s += p;
-    });
-    return sum + s;
-  }, 0);
+  const items = sceneItems.filter(i => !WALL_TYPES.has(i.type) && !i.isArrayClone);
+  const count = items.length;
 
-  const hasPrice = total > 0;
+  const total = buildLineItems(sceneItems, catalog).reduce(
+    (s, l) => s + l.total + l.accs.reduce((a, acc) => a + acc.total, 0), 0
+  );
 
   function formatPrice(n) {
-    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   }
 
   return (
     <>
-      <div className={styles.quotePill} style={{ pointerEvents: 'all' }}>
-
+      <div className={styles.quotePill} style={{ pointerEvents:'all' }}>
         <div className={styles.itemCount}>{count} item{count !== 1 ? 's' : ''}</div>
-
         <div className={styles.totalBlock}>
-          <div className={styles.totalLabel}>Estimated Total</div>
-          <div className={styles.totalValue}>
-            {hasPrice ? formatPrice(total) : 'Contact for pricing'}
-          </div>
-          <div className={styles.rentText}>{RENT_TEXT}</div>
+          <div className={styles.totalLabel}>Estimated Price</div>
+          <div className={styles.totalValue}>{total > 0 ? formatPrice(total) : 'Contact for pricing'}</div>
         </div>
-
-        <button
-          className={styles.quoteBtn}
-          onClick={() => setOpen(true)}
-          disabled={count === 0}
-        >
-          Get a quote
+        <button className={styles.quoteBtn} onClick={() => setOpen(true)} disabled={count === 0}>
+          Get List
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <line x1="5" y1="12" x2="19" y2="12"/>
             <polyline points="12 5 19 12 12 19"/>
           </svg>
         </button>
-
-        {config.phone && (
-          <div className={styles.phoneRow}>
-            or call us at<br />
-            <a href={`tel:${config.phoneHref}`} className={styles.phoneLink}>
-              {config.phone}
-            </a>
-          </div>
-        )}
-
       </div>
 
-      {open && (
-        <QuoteModal config={config} sceneItems={sceneItems} catalog={catalog} onClose={() => setOpen(false)} />
-      )}
+      {open && <ListModal sceneItems={sceneItems} catalog={catalog} onClose={() => setOpen(false)} />}
     </>
   );
 }
-
-
-
