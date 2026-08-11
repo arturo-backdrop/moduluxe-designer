@@ -321,7 +321,7 @@ export default function App() {
             });
             return (
               <div style={{ position:'absolute', inset:0, pointerEvents:'none', zIndex:9 }}>
-                <div style={{
+                <div ref={radialMenuWrapperRef} style={{
                   position:'absolute',
                   left: radialMenu.x,
                   top: radialMenu.y - 60,
