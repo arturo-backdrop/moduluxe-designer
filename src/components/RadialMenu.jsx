@@ -242,15 +242,15 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
     return `
       <div style="font-size:9px;color:#999;margin-bottom:4px;">${modelName}</div>
       <div style="font-weight:900;font-size:12px;color:#1a1a1a;margin-bottom:8px;">${label}</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:130px;">
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;width:100px;">
         ${members.map((s, i) => {
           const on = (socketStates[s.name] || s.state || {}).on;
           return `<div id="rm_grp_${s.name.replace(/\./g,'_')}"
             data-socket="${s.name}"
-            style="width:32px;height:32px;border-radius:8px;cursor:pointer;
+            style="width:44px;height:44px;border-radius:8px;cursor:pointer;
               background:${on ? ACCENT : '#e8e8e8'};
               display:flex;align-items:center;justify-content:center;
-              font-size:10px;font-weight:700;color:${on ? 'white' : '#666'};
+              font-size:11px;font-weight:700;color:${on ? 'white' : '#666'};
               border:2px solid ${on ? ACCENT : 'transparent'};
               transition:all 0.15s;">
             ${i + 1}
