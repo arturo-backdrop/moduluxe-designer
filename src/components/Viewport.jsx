@@ -947,56 +947,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       let clampedX = Math.max(-floorW/2 - minX, Math.min(floorW/2 - maxX, rawX));
       let clampedZ = Math.max(-floorD/2 - minZ, Math.min(floorD/2 - maxZ, rawZ));
 
-      // Object-to-object edge snap using model dimensions (exact, rotation-aware)
-      const OBJ_SNAP_R = 0.10; // meters — snap radius
       const draggingUids = new Set(Object.keys(dragOffsets));
-
-      // Get half-extents for an object using catalog dims + rotation
-      function getObjEdges(obj, cx, cz) {
-        const def = catalogRef.current.find(m => m.id === obj.userData.modelId);
-        if (!def) return null;
-        const rotY = obj.rotation.y;
-        const hw0 = def.w / 2, hd0 = def.d / 2;
-        // Rotate dims by rotY to get axis-aligned half-extents
-        const hw = Math.abs(hw0 * Math.cos(rotY)) + Math.abs(hd0 * Math.sin(rotY));
-        const hd = Math.abs(hw0 * Math.sin(rotY)) + Math.abs(hd0 * Math.cos(rotY));
-        return { minX: cx - hw, maxX: cx + hw, minZ: cz - hd, maxZ: cz + hd };
-      }
-
-      // Build dragged group edges at proposed position
-      const ddxPre = clampedX - rawX, ddzPre = clampedZ - rawZ;
-      const draggedEdges = [];
-      Object.entries(dragOffsets).forEach(([uid, off]) => {
-        const obj = itemGroup.children.find(x => x.userData.uid === uid);
-        if (!obj) return;
-        const cx = pt.x + off.dx + ddxPre;
-        const cz = pt.z + off.dz + ddzPre;
-        const e = getObjEdges(obj, cx, cz);
-        if (e) draggedEdges.push(e);
-      });
-
-      // Find best snap across all stationary objects
-      let bestSnapDX = null, bestSnapDZ = null, bestDist = OBJ_SNAP_R;
-      itemGroup.children.forEach(obj => {
-        if (draggingUids.has(obj.userData.uid)) return;
-        if (!obj.userData.uid) return;
-        const se = getObjEdges(obj, obj.position.x, obj.position.z);
-        if (!se) return;
-        draggedEdges.forEach(de => {
-          // X snaps: dragged right → static left, dragged left → static right
-          [[de.maxX, se.minX], [de.minX, se.maxX]].forEach(([d, s]) => {
-            const dist = Math.abs(d - s);
-            if (dist < bestDist) { bestDist = dist; bestSnapDX = s - d; bestSnapDZ = null; }
-          });
-          // Z snaps
-          [[de.maxZ, se.minZ], [de.minZ, se.maxZ]].forEach(([d, s]) => {
-            const dist = Math.abs(d - s);
-            if (dist < bestDist) { bestDist = dist; bestSnapDZ = s - d; bestSnapDX = null; }
-          });
-        });
-      });
-      if (bestSnapDX !== null) clampedX += bestSnapDX;
-      if (bestSnapDZ !== null) clampedZ += bestSnapDZ;
 
       const ddx = clampedX - (pt.x + anchorOff.dx);
       const ddz = clampedZ - (pt.z + anchorOff.dz);
@@ -1071,7 +1022,57 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           }
         }
       } else {
-        // Drag ended — update positions in React state for all moved objects
+        // Drag ended — snap to nearest object edge if within radius, then commit
+        const SNAP_ON_DROP_R = 0.15; // meters
+        const draggingUidsSet = new Set(Object.keys(dragOffsets));
+
+        function getEdges(modelId, rotY, cx, cz) {
+          const def = catalogRef.current.find(m => m.id === modelId);
+          if (!def) return null;
+          const hw0 = def.w / 2, hd0 = def.d / 2;
+          const hw = Math.abs(hw0 * Math.cos(rotY)) + Math.abs(hd0 * Math.sin(rotY));
+          const hd = Math.abs(hw0 * Math.sin(rotY)) + Math.abs(hd0 * Math.cos(rotY));
+          return { minX: cx - hw, maxX: cx + hw, minZ: cz - hd, maxZ: cz + hd };
+        }
+
+        // Build edges of dragged group at current position
+        const draggedEdges = [];
+        Object.keys(dragOffsets).forEach(uid => {
+          const obj = itemGroup.children.find(x => x.userData.uid === uid);
+          if (!obj) return;
+          const e = getEdges(obj.userData.modelId, obj.rotation.y, obj.position.x, obj.position.z);
+          if (e) draggedEdges.push({ uid, obj, edges: e });
+        });
+
+        // Find best snap against stationary objects
+        let bestDX = 0, bestDZ = 0, bestDist = SNAP_ON_DROP_R;
+        itemGroup.children.forEach(staticObj => {
+          if (draggingUidsSet.has(staticObj.userData.uid)) return;
+          if (!staticObj.userData.modelId) return;
+          const se = getEdges(staticObj.userData.modelId, staticObj.rotation.y, staticObj.position.x, staticObj.position.z);
+          if (!se) return;
+          draggedEdges.forEach(({ edges: de }) => {
+            // X axis: right→left, left→right
+            [[de.maxX, se.minX], [de.minX, se.maxX]].forEach(([d, s]) => {
+              const dist = Math.abs(d - s);
+              if (dist < bestDist) { bestDist = dist; bestDX = s - d; bestDZ = 0; }
+            });
+            // Z axis
+            [[de.maxZ, se.minZ], [de.minZ, se.maxZ]].forEach(([d, s]) => {
+              const dist = Math.abs(d - s);
+              if (dist < bestDist) { bestDist = dist; bestDZ = s - d; bestDX = 0; }
+            });
+          });
+        });
+
+        // Apply snap offset to all dragged objects
+        if (bestDX !== 0 || bestDZ !== 0) {
+          Object.keys(dragOffsets).forEach(uid => {
+            const obj = itemGroup.children.find(x => x.userData.uid === uid);
+            if (obj) { obj.position.x += bestDX; obj.position.z += bestDZ; }
+          });
+        }
+
         const sourceUid = getSourceUid(draggingUid);
         selectedUid  = sourceUid;
         selectedUids = getGroupUids(draggingUid);
