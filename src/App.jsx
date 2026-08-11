@@ -70,7 +70,29 @@ export default function App() {
         });
         map.__accessories = accMap;
         setCatalog(map);
-        setPresets(manifestPresets);
+
+        // Fetch external preset files if they have a `file` URL
+        const resolvedPresets = await Promise.all(manifestPresets.map(async preset => {
+          if (!preset.file) return preset;
+          try {
+            const r = await fetch(preset.file);
+            const data = await r.json();
+            // Booth Planner project format
+            if (data.items) {
+              return { ...preset, items: data.items.map(it => ({
+                modelId: it.modelId || it.catalogId,
+                x: it.x || 0, z: it.z || 0, rotY: it.rotY || 0, color: it.color || null,
+              }))};
+            }
+            // Already an items array
+            if (Array.isArray(data)) return { ...preset, items: data };
+            return preset;
+          } catch(e) {
+            console.warn('Failed to load preset file:', preset.file, e);
+            return preset;
+          }
+        }));
+        setPresets(resolvedPresets);
 
         // Prefetch all GLBs
         const withFile = items.filter(i => i.file && i.type !== 'preset');
