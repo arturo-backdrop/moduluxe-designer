@@ -20,7 +20,7 @@ const STEPS = [
   {
     id: 'camera',
     title: 'Navigate the Scene',
-    body: 'Left-click + drag on empty space to orbit · Scroll to zoom · Middle-click to pan.',
+    body: 'Left-click + drag on empty space to orbit · Right-click + drag to pan · Scroll or use the viewport buttons to zoom.',
     arrow: 'bottom',
     center: true,
   },
