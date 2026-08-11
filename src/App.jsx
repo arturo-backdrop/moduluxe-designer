@@ -407,6 +407,7 @@ export default function App() {
                 initialRotY={radialMenu.initialRotY || 0}
                 initialColor={radialMenu.initialColor || '#cccccc'}
                 initialArrayState={radialMenu.initialArrayState || null}
+                paintable={item?.paintable !== false}
                 itemType={radialMenu.itemType || null}
                 wallProps={radialMenu.wallProps || null}
                 initialActiveBtn={radialMenu.initialActiveBtn || null}
