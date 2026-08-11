@@ -1077,43 +1077,13 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           if(engRef.current) engRef.current.selectedUidRef.current = null;
           onRadialMenuRef.current?.(null);
         } else {
-          // Select whole group, outline all
-          setGroupOutline(selectedUids, false); // clear old
+          // Select whole group, outline all — radial opens on right click
+          setGroupOutline(selectedUids, false);
           selectedUid  = sourceUid;
           selectedUids = clickedGroupUids;
           if(engRef.current) engRef.current.selectedUidRef.current = sourceUid;
           setGroupOutline(selectedUids, true);
-          // Show radial menu over the source object
-          const sourceObj = itemGroup.children.find(x => x.userData.uid === sourceUid);
-          if (sourceObj) {
-            const sp = project3D(sourceObj);
-            panCameraToShowMenu(sp);
-            const savedItem = itemsRef.current.find(i => i.uid === sourceUid);
-            // Collect toggle meshes and socket positions from loaded GLB
-            const toggleMeshes = [];
-            const socketPositions = {};
-            sourceObj.traverse(child => {
-              if (child.userData.isToggleMesh) toggleMeshes.push({ name: child.name, visible: child.visible });
-            });
-            // Get socketPositions from the GLB root userData
-            const glbRoot = sourceObj.children.find(c => c.userData.socketPositions);
-            if (glbRoot?.userData.socketPositions) Object.assign(socketPositions, glbRoot.userData.socketPositions);
-            // Also check direct children
-            sourceObj.traverse(c => { if (c.userData?.socketPositions) Object.assign(socketPositions, c.userData.socketPositions); });
-            const isPresetGroup = savedItem?.isPresetGroup && savedItem?.groupId;
-            onRadialMenuRef.current?.({
-              x: sp.x, y: sp.y, uid: sourceUid,
-              modelId: sourceObj.userData.modelId,
-              initialRotY: sourceObj.rotation.y,
-              initialColor: savedItem?.color || null,
-              initialArrayState: savedItem?.groupId && !isPresetGroup
-                ? { count: itemsRef.current.filter(i=>i.groupId===savedItem.groupId).length, spacing: savedItem?.arrayGap || 0 }
-                : null,
-              toggleMeshes,
-              socketPositions,
-              itemType: isPresetGroup ? 'preset_group' : null,
-            });
-          }
+          onRadialMenuRef.current?.(null);
         }
       } else {
         hideSnapLine();
@@ -1183,24 +1153,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         });
         onChangeRef.current?.(next);
 
-        // Reshow menu over source
-        const sourceObj = itemGroup.children.find(x => x.userData.uid === sourceUid);
-        if (sourceObj) {
-          const sp = project3D(sourceObj);
-          panCameraToShowMenu(sp);
-          const savedItem2 = itemsRef.current.find(i => i.uid === sourceUid);
-          const isPresetGrp = savedItem2?.isPresetGroup && savedItem2?.groupId;
-          onRadialMenuRef.current?.({
-            x: sp.x, y: sp.y, uid: sourceUid,
-            modelId: sourceObj.userData.modelId,
-            initialRotY: sourceObj.rotation.y,
-            initialColor: savedItem2?.color || null,
-            initialArrayState: savedItem2?.groupId && !isPresetGrp
-              ? { count: itemsRef.current.filter(i=>i.groupId===savedItem2.groupId).length, spacing: savedItem2?.arrayGap || 0 }
-              : null,
-            itemType: isPresetGrp ? 'preset_group' : null,
-          });
-        }
+        // After drag — just keep selection, radial opens on right click
         canvas.style.cursor = hoveredUid ? 'grab' : 'default';
       }
       draggingUid = null; dragArmed = false; dragOffsets = {};
@@ -1348,7 +1301,45 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       onChangeRef.current?.(next);
     };
 
-    const onContextMenu = e => { if (modeRef.current === 'draw') e.preventDefault(); };
+    const onContextMenu = e => {
+      e.preventDefault();
+      if (modeRef.current === 'draw') return;
+      // Right click — open radial menu on hovered object
+      const hit = getHitContainer(e.clientX, e.clientY);
+      if (!hit?.userData.uid) return;
+      const uid = hit.userData.uid;
+      const sourceUid = getSourceUid(uid);
+      const savedItem = itemsRef.current.find(i => i.uid === sourceUid);
+      // Select the group
+      setGroupOutline(selectedUids, false);
+      selectedUid  = sourceUid;
+      selectedUids = getGroupUids(uid);
+      if (engRef.current) engRef.current.selectedUidRef.current = sourceUid;
+      setGroupOutline(selectedUids, true);
+      // Open radial menu
+      const sourceObj = itemGroup.children.find(x => x.userData.uid === sourceUid);
+      if (!sourceObj) return;
+      const sp = project3D(sourceObj);
+      panCameraToShowMenu(sp);
+      const toggleMeshes = [];
+      const socketPositions = {};
+      sourceObj.traverse(child => {
+        if (child.userData.isToggleMesh) toggleMeshes.push({ name: child.name, visible: child.visible });
+      });
+      sourceObj.traverse(c => { if (c.userData?.socketPositions) Object.assign(socketPositions, c.userData.socketPositions); });
+      const isPresetGrp = savedItem?.isPresetGroup && savedItem?.groupId;
+      onRadialMenuRef.current?.({
+        x: sp.x, y: sp.y, uid: sourceUid,
+        modelId: sourceObj.userData.modelId,
+        initialRotY: sourceObj.rotation.y,
+        initialColor: savedItem?.color || null,
+        initialArrayState: savedItem?.groupId && !isPresetGrp
+          ? { count: itemsRef.current.filter(i=>i.groupId===savedItem.groupId).length, spacing: savedItem?.arrayGap || 0 }
+          : null,
+        toggleMeshes, socketPositions,
+        itemType: isPresetGrp ? 'preset_group' : null,
+      });
+    };
     canvas.addEventListener('pointerdown', onPointerDown);
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup',   onPointerUp);
