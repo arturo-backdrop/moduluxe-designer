@@ -950,34 +950,36 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       const anchorObj = itemGroup.children.find(x => x.userData.uid === draggingUid);
       if (!anchorOff || !anchorObj) return;
 
-      // Helper: get half-extents from catalog dims + rotation (exact, no Box3 distortion)
-      function getHW(modelId, rotY) {
-        const def = catalogRef.current.find(m => m.id === modelId);
-        if (!def) return { hw: 0.5, hd: 0.5 };
-        const step = Math.round(rotY / (Math.PI / 2)) % 4;
-        const isRotated = step === 1 || step === -1 || step === 3 || step === -3;
-        return { hw: (isRotated ? def.d : def.w) / 2, hd: (isRotated ? def.w : def.d) / 2 };
+      // Helper: get exact bounds offset using Box3 — accounts for non-centered origins
+      // Returns { minX, maxX, minZ, maxZ } relative to obj.position
+      function getObjBoundsLocal(obj) {
+        const b = new THREE.Box3().setFromObject(obj);
+        const cx = (b.min.x + b.max.x) / 2, cz = (b.min.z + b.max.z) / 2;
+        const hw = (b.max.x - b.min.x) / 2, hd = (b.max.z - b.min.z) / 2;
+        // Offset from obj.position to box center
+        const ox = cx - obj.position.x, oz = cz - obj.position.z;
+        return { minX: ox - hw, maxX: ox + hw, minZ: oz - hd, maxZ: oz + hd };
       }
 
-      // Clamp using only in-bounds members (OOB clones don't constrain movement)
+      // Clamp using only in-bounds members
       let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
       Object.entries(dragOffsets).forEach(([uid, off]) => {
         const obj = itemGroup.children.find(x => x.userData.uid === uid);
         if (!obj || obj.userData.outOfBounds) return;
         const relX = off.dx - anchorOff.dx, relZ = off.dz - anchorOff.dz;
-        const { hw, hd } = getHW(obj.userData.modelId, obj.rotation.y);
-        minX = Math.min(minX, relX - hw); maxX = Math.max(maxX, relX + hw);
-        minZ = Math.min(minZ, relZ - hd); maxZ = Math.max(maxZ, relZ + hd);
+        const b = getObjBoundsLocal(obj);
+        minX = Math.min(minX, relX + b.minX); maxX = Math.max(maxX, relX + b.maxX);
+        minZ = Math.min(minZ, relZ + b.minZ); maxZ = Math.max(maxZ, relZ + b.maxZ);
       });
       if (minX === Infinity) {
-        const { hw, hd } = getHW(anchorObj.userData.modelId, anchorObj.rotation.y);
-        minX=-hw; maxX=hw; minZ=-hd; maxZ=hd;
+        const b = getObjBoundsLocal(anchorObj);
+        minX = b.minX; maxX = b.maxX; minZ = b.minZ; maxZ = b.maxZ;
       }
       // For preset groups, clamp only by anchor object
       const anchorItem = itemsRef.current.find(i => i.uid === draggingUid);
       if (anchorItem?.isPresetGroup) {
-        const { hw, hd } = getHW(anchorObj.userData.modelId, anchorObj.rotation.y);
-        minX=-hw; maxX=hw; minZ=-hd; maxZ=hd;
+        const b = getObjBoundsLocal(anchorObj);
+        minX = b.minX; maxX = b.maxX; minZ = b.minZ; maxZ = b.maxZ;
       }
       const rawX = snap(pt.x + anchorOff.dx), rawZ = snap(pt.z + anchorOff.dz);
       let clampedX = Math.max(-floorW/2 - minX, Math.min(floorW/2 - maxX, rawX));
