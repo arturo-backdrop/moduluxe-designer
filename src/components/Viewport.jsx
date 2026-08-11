@@ -1029,9 +1029,11 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         function getEdges(modelId, rotY, cx, cz) {
           const def = catalogRef.current.find(m => m.id === modelId);
           if (!def) return null;
-          const hw0 = def.w / 2, hd0 = def.d / 2;
-          const hw = Math.abs(hw0 * Math.cos(rotY)) + Math.abs(hd0 * Math.sin(rotY));
-          const hd = Math.abs(hw0 * Math.sin(rotY)) + Math.abs(hd0 * Math.cos(rotY));
+          // Snap rotY to nearest 90° step to determine which dim maps to which axis
+          const step = Math.round(rotY / (Math.PI / 2)) % 4;
+          const isRotated = step === 1 || step === -1 || step === 3 || step === -3;
+          const hw = (isRotated ? def.d : def.w) / 2;
+          const hd = (isRotated ? def.w : def.d) / 2;
           return { minX: cx - hw, maxX: cx + hw, minZ: cz - hd, maxZ: cz + hd };
         }
 
