@@ -284,46 +284,90 @@ export default function App() {
         {radialMenu && (() => {
           // Preset group — show Ungroup button instead of radial menu
           if (radialMenu.itemType === 'preset_group') {
+            const btnStyle = (accent=false) => ({
+              background: accent ? '#b48b31' : 'white',
+              color: accent ? 'white' : '#1a1a1a',
+              border: 'none', borderRadius: 10,
+              width: 44, height: 44,
+              display:'flex', alignItems:'center', justifyContent:'center',
+              cursor:'pointer', boxShadow:'0 2px 8px rgba(0,0,0,0.12)',
+              flexShrink: 0,
+            });
             return (
               <div style={{ position:'absolute', inset:0, pointerEvents:'none', zIndex:9 }}>
                 <div style={{
                   position:'absolute',
                   left: radialMenu.x,
-                  top: radialMenu.y - 48,
+                  top: radialMenu.y - 60,
                   transform:'translateX(-50%)',
                   pointerEvents:'all',
-                  display:'flex', gap:8,
+                  display:'flex', gap:6, alignItems:'center',
+                  background:'white', borderRadius:14, padding:6,
+                  boxShadow:'0 4px 20px rgba(0,0,0,0.15)',
                 }}>
-                  <button
-                    onClick={() => {
-                      setSceneItems(prev => prev.map(i =>
-                        i.groupId === radialMenu.groupId
-                          ? { ...i, groupId: undefined, isPresetGroup: undefined }
-                          : i
-                      ));
-                      setRadialMenu(null);
-                    }}
-                    style={{
-                      background:'#1a1a1a', color:'white', border:'none',
-                      borderRadius:20, padding:'8px 18px', fontSize:12,
-                      fontWeight:700, cursor:'pointer', fontFamily:'Figtree,sans-serif',
-                      boxShadow:'0 4px 16px rgba(0,0,0,0.25)',
-                      display:'flex', alignItems:'center', gap:6,
-                    }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                      <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
+                  {/* Ungroup */}
+                  <button title="Ungroup" style={btnStyle()} onClick={() => {
+                    setSceneItems(prev => prev.map(i =>
+                      i.groupId === radialMenu.groupId
+                        ? { ...i, groupId: undefined, isPresetGroup: undefined }
+                        : i
+                    ));
+                    setRadialMenu(null);
+                  }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/>
+                      <rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="8" height="8" rx="1"/>
                     </svg>
-                    Ungroup
                   </button>
-                  <button
-                    onClick={() => setRadialMenu(null)}
-                    style={{
-                      background:'#f0f0f0', color:'#666', border:'none',
-                      borderRadius:20, padding:'8px 14px', fontSize:12,
-                      fontWeight:600, cursor:'pointer', fontFamily:'Figtree,sans-serif',
-                    }}>
-                    ✕
+                  {/* Rotate */}
+                  <button title="Rotate 90°" style={btnStyle()} onClick={() => {
+                    const gid = radialMenu.groupId;
+                    setSceneItems(prev => prev.map(i => {
+                      if (i.groupId !== gid) return i;
+                      const newRotY = ((i.rotY || 0) + Math.PI/2) % (Math.PI*2);
+                      viewportEngRef.current?.rotateObject(i.uid, newRotY);
+                      return { ...i, rotY: newRotY };
+                    }));
+                  }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+                      <path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+                    </svg>
                   </button>
+                  {/* Color */}
+                  <label title="Color" style={{ ...btnStyle(), position:'relative', overflow:'hidden', cursor:'pointer' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/>
+                      <circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/>
+                      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+                    </svg>
+                    <input type="color" style={{ position:'absolute', opacity:0, width:'100%', height:'100%', top:0, left:0, cursor:'pointer' }}
+                      onChange={e => {
+                        const color = e.target.value;
+                        const gid = radialMenu.groupId;
+                        setSceneItems(prev => prev.map(i => {
+                          if (i.groupId !== gid) return i;
+                          viewportEngRef.current?.applyColor(i.uid, color);
+                          return { ...i, color };
+                        }));
+                      }} />
+                  </label>
+                  {/* Delete */}
+                  <button title="Delete group" style={btnStyle()} onClick={() => {
+                    const gid = radialMenu.groupId;
+                    const groupItems = sceneItems.filter(i => i.groupId === gid);
+                    groupItems.forEach(i => viewportEngRef.current?.deleteContainer(i.uid));
+                    setTimeout(() => {
+                      setSceneItems(prev => prev.filter(i => i.groupId !== gid));
+                    }, 380);
+                    setRadialMenu(null);
+                  }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round">
+                      <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                    </svg>
+                  </button>
+                  {/* Close */}
+                  <button style={{ ...btnStyle(), color:'#aaa' }} onClick={() => setRadialMenu(null)}>✕</button>
                 </div>
               </div>
             );
