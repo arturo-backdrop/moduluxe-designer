@@ -64,7 +64,7 @@ export const CONFIG = {
   // ── Floor sizes ────────────────────────────────────────────
   floorSizes: [
     { label: '10×10 ft', w: 3.05, d: 3.05 },
-    { label: '10×20 ft', w: 6.10, d: 3.05 },
+    { label: '20×10 ft', w: 6.10, d: 3.05 },
     { label: '20×20 ft', w: 6.10, d: 6.10 },
     { label: '20×30 ft', w: 9.14, d: 6.10 },
     { label: '30×30 ft', w: 9.14, d: 9.14 },
@@ -85,4 +85,5 @@ export const CONFIG = {
   },
 
 };
+
 
