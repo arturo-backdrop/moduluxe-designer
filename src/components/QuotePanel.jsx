@@ -4,7 +4,11 @@ import styles from './QuotePanel.module.css';
 const WALL_TYPES = new Set(['wall','column','door']);
 
 function buildLineItems(sceneItems, catalog) {
-  const items = sceneItems.filter(i => !WALL_TYPES.has(i.type) && !i.isArrayClone);
+  const items = sceneItems.filter(i => {
+    if (WALL_TYPES.has(i.type) || i.isArrayClone) return false;
+    if (catalog?.[i.modelId]?.category === 'Props') return false;
+    return true;
+  });
   const modelGroups = {};
   items.forEach(item => {
     const groupSize = item.groupId
@@ -139,7 +143,11 @@ const RENT_TEXT = 'Or rent for 1/3 of the price';
 export default function QuotePanel({ config, sceneItems, catalog }) {
   const [open, setOpen] = useState(false);
 
-  const items = sceneItems.filter(i => !WALL_TYPES.has(i.type) && !i.isArrayClone);
+  const items = sceneItems.filter(i => {
+    if (WALL_TYPES.has(i.type) || i.isArrayClone) return false;
+    if (catalog?.[i.modelId]?.category === 'Props') return false;
+    return true;
+  });
   const count = items.reduce((s, i) => s + (i.count || 1), 0);
 
   const total = buildLineItems(sceneItems, catalog).reduce(
