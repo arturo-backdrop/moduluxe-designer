@@ -1204,8 +1204,43 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         onToolChangeRef.current?.('select');
         return;
       }
-      if (e.key!=='Delete' && e.key!=='Backspace') return;
       if (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+
+      // Arrow keys — move selected object 1cm at a time, camera-relative
+      if (e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='ArrowUp'||e.key==='ArrowDown') {
+        if (!selectedUid || !selectedUids.length) return;
+        e.preventDefault();
+        const STEP = 0.01; // 1cm
+        const cam = camera;
+        const target = controls.target;
+        const camForward = new THREE.Vector3().subVectors(target, cam.position).setY(0).normalize();
+        const camRight = new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0), camForward).normalize();
+        const isHorizontal = e.key==='ArrowLeft'||e.key==='ArrowRight';
+        const sign = (e.key==='ArrowLeft'||e.key==='ArrowUp') ? 1 : -1;
+        const camAxis = isHorizontal ? camRight : camForward;
+
+        const next = itemsRef.current.map(i => {
+          if (!selectedUids.includes(i.uid)) return i;
+          const rotY = i.rotY || 0;
+          const localX = new THREE.Vector3(Math.cos(rotY), 0, -Math.sin(rotY));
+          const localZ = new THREE.Vector3(Math.sin(rotY), 0,  Math.cos(rotY));
+          const dotX = Math.abs(localX.dot(camAxis));
+          const dotZ = Math.abs(localZ.dot(camAxis));
+          let moveAxis, axisSign;
+          if (dotX >= dotZ) { moveAxis = localX; axisSign = localX.dot(camAxis) >= 0 ? sign : -sign; }
+          else               { moveAxis = localZ; axisSign = localZ.dot(camAxis) >= 0 ? sign : -sign; }
+          const dx = moveAxis.x * axisSign * STEP;
+          const dz = moveAxis.z * axisSign * STEP;
+          // Also move the Three.js container so it's visually instant
+          const obj = itemGroup.children.find(x => x.userData.uid === i.uid);
+          if (obj) { obj.position.x += dx; obj.position.z += dz; }
+          return { ...i, x: i.x + dx, z: i.z + dz };
+        });
+        onChangeRef.current?.(next);
+        return;
+      }
+
+      if (e.key!=='Delete' && e.key!=='Backspace') return;
       if (!selectedUid) return;
       // Remove all selected group members with animation
       const uidsToRemove = new Set(selectedUids);
