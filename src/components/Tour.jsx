@@ -51,6 +51,14 @@ const STEPS = [
     actionHint: 'Try switching to Draw Layout →',
   },
   {
+    id: 'mode-toggle',
+    title: 'Back to Place Products',
+    body: 'Switch back to Place Products mode to continue adding models to your design.',
+    arrow: 'top',
+    action: 'switch_place',
+    actionHint: 'Switch back to Place Products →',
+  },
+  {
     id: 'tool-wall',
     title: 'Wall Tool',
     body: 'Click to start a wall, click again to place it. Walls snap to 45° — hold Shift for free angle. Esc to cancel.',
