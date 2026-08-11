@@ -70,7 +70,7 @@ Note: accessories vary by model — some have more options than others.`,
   {
     id: 'mode-toggle',
     title: 'Draw Layout Mode',
-    body: "Switch to Draw Layout to add walls, columns and doors to your space. You won't be able to select any product.",
+    body: 'Switch to Draw Layout to add walls, columns and doors to your booth.',
     arrow: 'top',
     position: 'top-center',
     action: 'switch_draw',
