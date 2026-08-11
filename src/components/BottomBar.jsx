@@ -80,7 +80,7 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel, 
       if (!item.socketStates) return;
       const def = catalog?.[item.modelId];
       // How many physical units does this source represent (1 + its clones)
-      const groupSize = item.groupId
+      const groupSize = (item.groupId && !item.isPresetGroup)
         ? sceneItems.filter(i => i.groupId === item.groupId).length
         : 1;
       (def?.sockets || []).forEach(s => {
