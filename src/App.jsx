@@ -281,7 +281,7 @@ export default function App() {
           projectName={projectName}
           onProjectNameChange={setProjectName}
           mode={mode}
-          onModeChange={(m) => { setMode(m); if (m === 'draw') checkTourAction('switch_draw'); }}
+          onModeChange={(m) => { setMode(m); if (m === 'draw') checkTourAction('switch_draw'); if (m === 'place') checkTourAction('switch_place'); }}
           canUndo={canUndo}
           canRedo={canRedo}
           onUndo={undo}
