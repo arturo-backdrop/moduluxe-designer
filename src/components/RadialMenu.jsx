@@ -54,7 +54,7 @@ function distributeAngles(btns, startAngle = -90) {
   return btns.map((b, i) => ({ ...b, angle: startAngle + step * i }));
 }
 
-function buildButtons(sockets=[], itemType=null) {
+function buildButtons(sockets=[], itemType=null, paintable=true) {
   if (itemType === 'wall')   return distributeAngles(WALL_BASE);
   if (itemType === 'column') return distributeAngles(COLUMN_BASE);
   if (itemType === 'door')   return distributeAngles(DOOR_BASE);
@@ -67,6 +67,7 @@ function buildButtons(sockets=[], itemType=null) {
     groups[label].push(s);
   });
 
+  const baseActions = paintable ? BASE_ACTIONS : BASE_ACTIONS.filter(b => b.id !== 'color');
   const socketBtns = Object.entries(groups).map(([label, members]) => {
     if (members.length === 1) {
       const s = members[0];
@@ -79,7 +80,7 @@ function buildButtons(sockets=[], itemType=null) {
   });
   // Interleave: socket1, array, socket2, color, socket3, rotate, socket4, dup, del
   const order = [];
-  const fixed = [...BASE_ACTIONS];
+  const fixed = [...baseActions];
   const sock  = [...socketBtns];
   // Place sockets between fixed actions for even spread
   const total = fixed.length + sock.length;
@@ -370,7 +371,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
     const state = stateRef.current;
     if (!root) return;
 
-    state.buttons = buildButtons(sockets, itemType);
+    state.buttons = buildButtons(sockets, itemType, paintable);
     state.wallProps = wallProps ? { ...wallProps } : null;
     if (initialActiveBtn) { state.activeBtn = initialActiveBtn; }
 
