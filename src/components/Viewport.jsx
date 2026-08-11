@@ -1504,17 +1504,19 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         const mats = Array.isArray(child.material) ? child.material : [child.material];
         mats.forEach(m => { if (m.name === 'paint_color') hasPaintMat = true; });
       });
+      // If no paint_color material found, don't recolor anything
+      if (!hasPaintMat) return;
       c.traverse(child => {
         if (!child.isMesh || child.userData.isMeta) return;
         if (Array.isArray(child.material)) {
           child.material = child.material.map(m => {
-            if (hasPaintMat && m.name !== 'paint_color') return m;
-            const cloned = m.clone(); // clone so we don't affect other instances
+            if (m.name !== 'paint_color') return m;
+            const cloned = m.clone();
             cloned.color.set(paintColor);
             return cloned;
           });
         } else {
-          if (hasPaintMat && child.material.name !== 'paint_color') return;
+          if (child.material.name !== 'paint_color') return;
           child.material = child.material.clone();
           child.material.color.set(paintColor);
         }
