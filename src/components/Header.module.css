@@ -191,3 +191,25 @@
 }
 .unitBtn:hover { color: #555; background: #f5f5f5; }
 .unitBtnActive { color: #b48b31 !important; font-weight: 700; background: #fdf8ef !important; }
+
+.tourBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #e8e8e8;
+  background: white;
+  color: #aaa;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Figtree', sans-serif;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.tourBtn:hover {
+  border-color: #b48b31;
+  color: #b48b31;
+}
