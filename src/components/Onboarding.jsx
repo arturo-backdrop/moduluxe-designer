@@ -160,8 +160,7 @@ export default function Onboarding({ config, presets: manifestPresets = [], onCo
                   ))}
                 </div>
               );
-            })()
-            ) : (
+            })()) : (
               <div className={styles.noPresets}>No presets available yet.</div>
             )}
 
