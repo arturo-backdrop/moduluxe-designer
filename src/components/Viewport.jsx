@@ -1082,16 +1082,18 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
             if (glbRoot?.userData.socketPositions) Object.assign(socketPositions, glbRoot.userData.socketPositions);
             // Also check direct children
             sourceObj.traverse(c => { if (c.userData?.socketPositions) Object.assign(socketPositions, c.userData.socketPositions); });
+            const isPresetGroup = savedItem?.isPresetGroup && savedItem?.groupId;
             onRadialMenuRef.current?.({
               x: sp.x, y: sp.y, uid: sourceUid,
               modelId: sourceObj.userData.modelId,
               initialRotY: sourceObj.rotation.y,
               initialColor: savedItem?.color || null,
-              initialArrayState: savedItem?.groupId
+              initialArrayState: savedItem?.groupId && !isPresetGroup
                 ? { count: itemsRef.current.filter(i=>i.groupId===savedItem.groupId).length, spacing: savedItem?.arrayGap || 0 }
                 : null,
               toggleMeshes,
               socketPositions,
+              itemType: isPresetGroup ? 'preset_group' : null,
             });
           }
         }
