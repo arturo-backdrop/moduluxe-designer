@@ -71,12 +71,50 @@ async function buildTexture(json, bin, texIndex) {
   } catch(e) { console.warn('Texture decode failed:', e); return null; }
 }
 
+// Global material cache — shared across all GLBs for texture-free materials
+// paint_color materials are excluded so each instance can be colored independently
+const globalMatCache = new Map();
+
+function makeGlobalMatKey(m, pbr, bc) {
+  const r = (pbr.roughnessFactor ?? 0.6).toFixed(3);
+  const me = (pbr.metallicFactor ?? 0.1).toFixed(3);
+  const c = bc.map(v => v.toFixed(4)).join(',');
+  const ds = m.doubleSided ? '1' : '0';
+  return `${m.name||''}|${c}|${r}|${me}|${ds}`;
+}
+
 async function buildMaterial(json, bin, matIndex, matCache) {
   if (matIndex == null || !json.materials) return new THREE.MeshStandardMaterial({ color: 0x999999, roughness: 0.5, metalness: 0.1 });
   if (matCache.has(matIndex)) return matCache.get(matIndex);
   const m   = json.materials[matIndex] || {};
   const pbr = m.pbrMetallicRoughness || {};
   const bc  = pbr.baseColorFactor || [1,1,1,1];
+  const hasTexture = !!pbr.baseColorTexture;
+  const isPaintColor = m.name === 'paint_color';
+
+  // Reuse global cache for texture-free, non-paint materials
+  if (!hasTexture && !isPaintColor) {
+    const key = makeGlobalMatKey(m, pbr, bc);
+    if (globalMatCache.has(key)) {
+      const cached = globalMatCache.get(key);
+      matCache.set(matIndex, cached);
+      return cached;
+    }
+    const mat = new THREE.MeshStandardMaterial({
+      color:       new THREE.Color(bc[0], bc[1], bc[2]),
+      roughness:   pbr.roughnessFactor ?? 0.6,
+      metalness:   pbr.metallicFactor  ?? 0.1,
+      transparent: bc[3] < 1,
+      opacity:     bc[3] ?? 1,
+    });
+    if (m.name) mat.name = m.name;
+    if (m.doubleSided) mat.side = THREE.DoubleSide;
+    globalMatCache.set(key, mat);
+    matCache.set(matIndex, mat);
+    return mat;
+  }
+
+  // Textured or paint_color — always create new (per-GLB cache only)
   const mat = new THREE.MeshStandardMaterial({
     color:       new THREE.Color(bc[0], bc[1], bc[2]),
     roughness:   pbr.roughnessFactor ?? 0.6,
@@ -85,8 +123,8 @@ async function buildMaterial(json, bin, matIndex, matCache) {
     opacity:     bc[3] ?? 1,
   });
   if (m.name) mat.name = m.name;
-  if (m.doubleSided) mat.side = THREE.DoubleSide;  // respect Blender Backface Culling OFF
-  if (pbr.baseColorTexture) {
+  if (m.doubleSided) mat.side = THREE.DoubleSide;
+  if (hasTexture) {
     const tex = await buildTexture(json, bin, pbr.baseColorTexture.index);
     if (tex) mat.map = tex;
   }
@@ -238,7 +276,9 @@ export function cloneModel(original) {
 
 export function clearModelCache() {
   modelCache.clear();
+  globalMatCache.clear();
 }
+
 
 
 
