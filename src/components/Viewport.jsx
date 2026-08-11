@@ -802,10 +802,16 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     let snapPreviewLine = null;
     function showSnapLine(x1, z1, x2, z2) {
       if (snapPreviewLine) scene.remove(snapPreviewLine);
-      const points = [new THREE.Vector3(x1, 0.01, z1), new THREE.Vector3(x2, 0.01, z2)];
-      const geo = new THREE.BufferGeometry().setFromPoints(points);
-      const mat = new THREE.LineBasicMaterial({ color: 0x00e5ff, linewidth: 2, depthTest: false });
-      snapPreviewLine = new THREE.Line(geo, mat);
+      // Use a flat mesh — linewidth > 1 is not supported in WebGL2
+      const dx = x2 - x1, dz = z2 - z1;
+      const len = Math.sqrt(dx*dx + dz*dz) || 0.001;
+      const thickness = 0.03; // meters
+      const geo = new THREE.PlaneGeometry(len, thickness);
+      const mat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, depthTest: false, transparent: true, opacity: 0.9 });
+      snapPreviewLine = new THREE.Mesh(geo, mat);
+      snapPreviewLine.rotation.x = -Math.PI / 2;
+      snapPreviewLine.rotation.z = -Math.atan2(dz, dx);
+      snapPreviewLine.position.set((x1+x2)/2, 0.015, (z1+z2)/2);
       snapPreviewLine.raycast = () => {};
       snapPreviewLine.renderOrder = 10;
       scene.add(snapPreviewLine);
