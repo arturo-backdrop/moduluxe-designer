@@ -1307,19 +1307,52 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     const onContextMenu = e => {
       e.preventDefault();
       if (modeRef.current === 'draw') return;
-      // Right click — open radial menu on hovered object
+
+      // Check walls/columns/doors first
+      const raw = groundPt(e.clientX, e.clientY);
+      raycaster.setFromCamera(pointer, camera);
+      const wallHit = raycaster.intersectObjects(wallGroup.children, true)
+        .filter(h => !h.object.userData.isMeta && !h.object.userData.isWallOutline);
+      if (wallHit.length > 0) {
+        let cur = wallHit[0].object;
+        while (cur && !cur.userData?.uid) cur = cur.parent;
+        const uid = cur?.userData?.uid;
+        if (uid) {
+          const item = itemsRef.current.find(i => i.uid === uid);
+          if (item) {
+            if (selectedWallUid && selectedWallUid !== uid) setWallHighlight(selectedWallUid, 'none');
+            selectedWallUid = uid;
+            setWallHighlight(uid, 'select');
+            const mesh = wallMeshMap.get(uid);
+            if (mesh) {
+              const box = new THREE.Box3().setFromObject(mesh);
+              const top = new THREE.Vector3(); box.getCenter(top);
+              top.y = box.max.y + 0.5;
+              top.project(camera);
+              const rect = canvas.getBoundingClientRect();
+              const sp = {
+                x: (top.x + 1) / 2 * rect.width + rect.left,
+                y: (-top.y + 1) / 2 * rect.height + rect.top,
+              };
+              panCameraToShowMenu(sp);
+              openWallRadialMenu(item, sp);
+            }
+          }
+        }
+        return;
+      }
+
+      // Check models
       const hit = getHitContainer(e.clientX, e.clientY);
       if (!hit?.userData.uid) return;
       const uid = hit.userData.uid;
       const sourceUid = getSourceUid(uid);
       const savedItem = itemsRef.current.find(i => i.uid === sourceUid);
-      // Select the group
       setGroupOutline(selectedUids, false);
       selectedUid  = sourceUid;
       selectedUids = getGroupUids(uid);
       if (engRef.current) engRef.current.selectedUidRef.current = sourceUid;
       setGroupOutline(selectedUids, true);
-      // Open radial menu
       const sourceObj = itemGroup.children.find(x => x.userData.uid === sourceUid);
       if (!sourceObj) return;
       const sp = project3D(sourceObj);
