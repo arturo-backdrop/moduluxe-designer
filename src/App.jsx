@@ -324,8 +324,8 @@ export default function App() {
                 <div ref={radialMenuWrapperRef} style={{
                   position:'absolute',
                   left: radialMenu.x,
-                  top: radialMenu.y - 60,
-                  transform:'translateX(-50%)',
+                  top: radialMenu.y,
+                  transform:'translate(-50%, -110%)',
                   pointerEvents:'all',
                   display:'flex', gap:6, alignItems:'center',
                   background:'white', borderRadius:14, padding:6,
