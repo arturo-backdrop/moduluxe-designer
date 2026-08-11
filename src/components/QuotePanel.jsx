@@ -106,7 +106,7 @@ function ListModal({ sceneItems, catalog, onClose }) {
         {/* Estimated total */}
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', padding:'14px 4px 0', borderTop:'2px solid #f0f0f0', marginTop:4 }}>
           <div>
-            <div style={{ fontSize:11, color:'#bbb', marginBottom:2, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Estimated Price</div>
+            <div style={{ fontSize:11, color:'#1a1a1a', marginBottom:2, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Estimated Price</div>
             <div style={{ fontSize:22, fontWeight:900, color:'#1a1a1a', lineHeight:1 }}>
               {grandTotal > 0 ? fmt(grandTotal) : 'Contact for pricing'}
             </div>
