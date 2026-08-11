@@ -73,9 +73,10 @@ function ProductItem({ item, onDragStart, units='ft' }) {
   );
 }
 
-export default function Sidebar({ config, mode, activeTool, onToolChange, onAddProduct, units='ft' }) {
+export default function Sidebar({ config, mode, activeTool, onToolChange, onAddProduct, units='ft', presets=[], onLoadPreset }) {
   const [catalog,      setCatalog]      = useState({});
   const [activeTab,    setActiveTab]    = useState(null);
+  const [showPresets,  setShowPresets]  = useState(false);
   const [loading,      setLoading]      = useState(true);
   const [logoHeight,   setLogoHeight]   = useState(76);
   const tabsRef   = useRef(null);
@@ -135,22 +136,50 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
             <div className={styles.tabs} ref={tabsRef}>
               {tabs.map(tab => (
                 <button key={tab}
-                  className={`${styles.tab} ${activeTab === tab ? styles.tabActive : ''}`}
-                  onClick={() => setActiveTab(tab)}>{tab}</button>
+                  className={`${styles.tab} ${!showPresets && activeTab === tab ? styles.tabActive : ''}`}
+                  onClick={() => { setActiveTab(tab); setShowPresets(false); }}>{tab}</button>
               ))}
+              {presets.length > 0 && (
+                <button
+                  className={`${styles.tab} ${showPresets ? styles.tabActive : ''}`}
+                  onClick={() => setShowPresets(true)}>Presets</button>
+              )}
             </div>
             <button className={styles.tabArrow} onClick={() => scrollTabs(1)}>{Icons.chevRight}</button>
           </div>
         )}
 
         <div className={styles.productList}>
-          {loading && <div className={styles.emptyState}>Loading catalog...</div>}
-          {!loading && tabs.length === 0 && <div className={styles.emptyState}>No products available.</div>}
-          {!loading && activeTab && (catalog[activeTab] || []).map(item => (
-            <ProductItem key={item.id} item={item} onDragStart={i => {
-              // Only set dataTransfer — drop handler in canvas manages the rest
-            }} />
-          ))}
+          {showPresets ? (
+            presets.map(preset => (
+              <div key={preset.id} className={styles.productItem} style={{ cursor:'pointer' }}
+                onClick={() => onLoadPreset?.(preset)}>
+                {preset.thumbnail
+                  ? <img src={preset.thumbnail} alt={preset.name} className={styles.thumbImg} />
+                  : <div className={styles.thumbPlaceholder}>
+                      <svg width="18" height="26" viewBox="0 0 18 26" fill="none">
+                        <rect x="1" y="1" width="16" height="24" rx="3" stroke="#bbb" strokeWidth="1.2"/>
+                        <line x1="4" y1="8" x2="14" y2="8" stroke="#bbb" strokeWidth="1"/>
+                        <line x1="4" y1="13" x2="14" y2="13" stroke="#bbb" strokeWidth="1"/>
+                      </svg>
+                    </div>
+                }
+                <div className={styles.productInfo}>
+                  <div className={styles.productName}>{preset.name}</div>
+                  <div className={styles.productDims}>{preset.description || `${(preset.items||[]).length} items`}</div>
+                </div>
+                <div className={styles.dragLabel} style={{ opacity:1, fontSize:10, padding:'4px 8px' }}>Load</div>
+              </div>
+            ))
+          ) : (
+            <>
+              {loading && <div className={styles.emptyState}>Loading catalog...</div>}
+              {!loading && tabs.length === 0 && <div className={styles.emptyState}>No products available.</div>}
+              {!loading && activeTab && (catalog[activeTab] || []).map(item => (
+                <ProductItem key={item.id} item={item} onDragStart={i => {}} units={units} />
+              ))}
+            </>
+          )}
         </div>
       </div>
 
@@ -188,6 +217,7 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
     </div>
   );
 }
+
 
 
 
