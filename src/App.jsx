@@ -193,6 +193,7 @@ export default function App() {
     if (sceneItems.length > 0) {
       if (!window.confirm(`Load preset "${preset.name}"? This will replace your current items.`)) return;
     }
+    const groupId = `preset_group_${Date.now()}`;
     const items = preset.items.map((it, i) => ({
       uid: `${it.modelId}_preset_${Date.now()}_${i}`,
       modelId: it.modelId,
@@ -200,6 +201,8 @@ export default function App() {
       z: it.z || 0,
       rotY: it.rotY || 0,
       color: it.color || null,
+      groupId,
+      isPresetGroup: true,
     }));
     setSceneItems(items);
     pushHistory(items);
@@ -246,7 +249,7 @@ export default function App() {
         mode={mode}
         activeTool={activeTool}
         onToolChange={setActiveTool}
-        onRadialMenu={setRadialMenu}
+        onRadialMenu={(data) => setRadialMenu(data ? { ...data, groupId: data.uid ? sceneItems.find(i=>i.uid===data.uid)?.groupId : null } : null)}
         radialMenuWrapperRef={radialMenuWrapperRef}
         engRef={viewportEngRef}
       />
@@ -279,6 +282,53 @@ export default function App() {
         <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
         <VideoWidget config={CONFIG} />
         {radialMenu && (() => {
+          // Preset group — show Ungroup button instead of radial menu
+          if (radialMenu.itemType === 'preset_group') {
+            return (
+              <div style={{ position:'absolute', inset:0, pointerEvents:'none', zIndex:9 }}>
+                <div style={{
+                  position:'absolute',
+                  left: radialMenu.x,
+                  top: radialMenu.y - 48,
+                  transform:'translateX(-50%)',
+                  pointerEvents:'all',
+                  display:'flex', gap:8,
+                }}>
+                  <button
+                    onClick={() => {
+                      setSceneItems(prev => prev.map(i =>
+                        i.groupId === radialMenu.groupId
+                          ? { ...i, groupId: undefined, isPresetGroup: undefined }
+                          : i
+                      ));
+                      setRadialMenu(null);
+                    }}
+                    style={{
+                      background:'#1a1a1a', color:'white', border:'none',
+                      borderRadius:20, padding:'8px 18px', fontSize:12,
+                      fontWeight:700, cursor:'pointer', fontFamily:'Figtree,sans-serif',
+                      boxShadow:'0 4px 16px rgba(0,0,0,0.25)',
+                      display:'flex', alignItems:'center', gap:6,
+                    }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                      <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
+                    </svg>
+                    Ungroup
+                  </button>
+                  <button
+                    onClick={() => setRadialMenu(null)}
+                    style={{
+                      background:'#f0f0f0', color:'#666', border:'none',
+                      borderRadius:20, padding:'8px 14px', fontSize:12,
+                      fontWeight:600, cursor:'pointer', fontFamily:'Figtree,sans-serif',
+                    }}>
+                    ✕
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
           const item    = catalog[radialMenu.modelId];
           const sceneItem = sceneItems.find(i => i.uid === radialMenu.uid);
           const socketPositions = radialMenu.socketPositions || {};
@@ -313,7 +363,14 @@ export default function App() {
                 initialActiveBtn={radialMenu.initialActiveBtn || null}
                 wrapperRef={radialMenuWrapperRef}
                 onAction={(action, data) => {
-                  if (action === 'del') {
+                  if (action === 'ungroup') {
+                    setSceneItems(prev => prev.map(i =>
+                      i.groupId === radialMenu.groupId
+                        ? { ...i, groupId: undefined, isPresetGroup: undefined }
+                        : i
+                    ));
+                    setRadialMenu(null);
+                  } else if (action === 'del') {
                     const uid = radialMenu.uid;
                     const item = sceneItems.find(i => i.uid === uid);
                     const wallTypes = new Set(['wall','column','door']);
