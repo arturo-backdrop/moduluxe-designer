@@ -821,6 +821,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     }
 
     const onPointerMove = e => {
+      // Don't process hover/drag when a modal overlay is open
+      if (document.querySelector('[class*="modalOverlay"]')) return;
       // ── Draw Layout mode move ─────────────────────────────
       if (modeRef.current === 'draw') {
         const raw = groundPt(e.clientX, e.clientY);
