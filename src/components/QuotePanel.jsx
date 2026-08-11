@@ -10,6 +10,8 @@ function buildLineItems(sceneItems, catalog) {
     return true;
   });
   const modelGroups = {};
+  console.log('[QuotePanel] sceneItems:', sceneItems.length, 'filtered items:', items.length);
+  console.log('[QuotePanel] items:', items.map(i => ({modelId: i.modelId, groupId: i.groupId, isPresetGroup: i.isPresetGroup})));
   items.forEach(item => {
     // isPresetGroup items are individual — don't multiply by group size
     const groupSize = (item.groupId && !item.isPresetGroup)
