@@ -1418,7 +1418,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         root.userData.uid     = uid;
         root.userData.modelId = modelId;
         root.traverse(c => { if (c.isMesh) { c.castShadow=c.receiveShadow=true; } });
-        applyPaintColor(root, def?.color);
+        if (def?.paintable !== false) applyPaintColor(root, def?.color);
         container.remove(ph);
         container.add(root);
         attachOutlines(root);
