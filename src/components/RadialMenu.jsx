@@ -371,7 +371,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
     const state = stateRef.current;
     if (!root) return;
 
-    state.buttons = buildButtons(sockets, itemType, paintable);
+    state.buttons = buildButtons(sockets, itemType, paintableRef.current);
     state.wallProps = wallProps ? { ...wallProps } : null;
     if (initialActiveBtn) { state.activeBtn = initialActiveBtn; }
 
