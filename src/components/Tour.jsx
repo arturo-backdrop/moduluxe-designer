@@ -4,7 +4,7 @@ const TOUR_KEY = 'moduluxe_tour_done_v2';
 
 const STEPS = [
   {
-    id: 'sidebar',
+    id: 'presets-tab',
     title: 'Browse Models',
     body: 'Browse the catalog on the left. Drag any model onto the floor to place it.',
     arrow: 'right',
@@ -31,15 +31,15 @@ const STEPS = [
     id: 'camera',
     title: 'Navigate the Scene',
     body: 'Left-click + drag on empty space to orbit · Right-click + drag to pan · Scroll or use the viewport buttons (+,-) to zoom.',
-    arrow: 'bottom',
-    position: 'top-center',
+    arrow: 'top',
+    position: 'bot-center',
   },
   {
     id: 'select',
     title: 'Select & Move',
     body: 'Click any object to select it (white outline). Drag to move it. Arrow keys nudge 1cm at a time.',
-    arrow: 'bottom',
-    position: 'top-center',
+    arrow: 'top',
+    position: 'bot-center',
     center: true,
     action: 'select_object',
     actionHint: 'Try clicking an object →',
@@ -63,8 +63,8 @@ const STEPS = [
 • Accessories — lamps, shelves and more
 
 Note: accessories vary by model — some have more options than others.`,
-    arrow: 'bottom',
-    position: 'center',
+    arrow: 'top',
+    position: 'bot-center',
     center: true,
   },
   {
@@ -171,7 +171,7 @@ function getTooltipPos(el, arrow, center, position) {
   const r = el.getBoundingClientRect();
   if (r.width === 0 && r.height === 0) return posToCoords(position || 'center');
 
-  if (arrow === 'right')  return { position:'fixed', left: r.right + GAP, top: r.top + r.height/2, transform:'translateY(-50%)' };
+  if (arrow === 'right')  return { position:'fixed', left: r.right + GAP + 12, top: r.top + r.height/2, transform:'translateY(-50%)' };
   if (arrow === 'left')   return { position:'fixed', left: Math.max(PAD, r.left - TW - GAP), top: r.top + r.height/2, transform:'translateY(-50%)' };
   if (arrow === 'top')    return { position:'fixed', left: Math.min(vw-TW-PAD, r.left + r.width/2), top: r.bottom + GAP, transform:'translateX(-50%)' };
   if (arrow === 'bottom') return { position:'fixed', left: Math.min(vw-TW-PAD, r.left + r.width/2), top: r.top - GAP, transform:'translate(-50%,-100%)' };
