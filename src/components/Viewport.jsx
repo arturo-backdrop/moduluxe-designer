@@ -1888,6 +1888,23 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         const obj = itemGroup.children.find(x => x.userData.uid === uid);
         return obj ? obj.rotation.y : 0;
       },
+      highlightModel: (modelId) => {
+        // Clear current selection
+        setGroupOutline(selectedUids, false);
+        if (!modelId) {
+          selectedUid = null; selectedUids = [];
+          if (engRef.current) engRef.current.selectedUidRef.current = null;
+          return;
+        }
+        // Select all items of this modelId
+        const uids = itemGroup.children
+          .filter(x => x.userData.modelId === modelId)
+          .map(x => x.userData.uid);
+        selectedUids = uids;
+        selectedUid = uids[0] || null;
+        if (engRef.current) engRef.current.selectedUidRef.current = selectedUid;
+        setGroupOutline(uids, true);
+      },
     };
     if (externalEngRef) externalEngRef.current = engRef.current;
 
