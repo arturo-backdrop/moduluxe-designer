@@ -128,17 +128,19 @@ function applyPaintColor(root, color) {
   });
 }
 
-export default function Viewport({ config, floorSize, sceneItems, onSceneItemsChange, onRadialMenu, radialMenuWrapperRef, engRef: externalEngRef, mode = 'place', activeTool = 'select', onToolChange }) {
+export default function Viewport({ config, floorSize, sceneItems, onSceneItemsChange, onRadialMenu, radialMenuWrapperRef, engRef: externalEngRef, mode = 'place', activeTool = 'select', onToolChange, onSelect }) {
   const canvasRef = useRef(null);
   const engRef    = useRef(null);
   const itemsRef    = useRef(sceneItems);
   const onChangeRef = useRef(onSceneItemsChange);
   const onRadialMenuRef = useRef(onRadialMenu);
+  const onSelectRef     = useRef(onSelect);
   const catalogRef  = useRef(config._catalogFlat || []);
   const modeRef     = useRef(mode);
   const activeToolRef = useRef(activeTool);
   const onToolChangeRef = useRef(onToolChange);
   useEffect(() => { onRadialMenuRef.current = onRadialMenu; }, [onRadialMenu]);
+  useEffect(() => { onSelectRef.current = onSelect; }, [onSelect]);
   useEffect(() => {
     modeRef.current = mode;
     const c = canvasRef.current;
@@ -1084,6 +1086,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           if(engRef.current) engRef.current.selectedUidRef.current = sourceUid;
           setGroupOutline(selectedUids, true);
           onRadialMenuRef.current?.(null);
+          onSelectRef.current?.(sourceUid);
         }
       } else {
         hideSnapLine();
