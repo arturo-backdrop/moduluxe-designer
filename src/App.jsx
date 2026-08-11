@@ -5,6 +5,7 @@ import { loadModel } from './three/glbParser.js';
 import { toDisplay, fromDisplay } from './units.js';
 
 import Onboarding  from './components/Onboarding.jsx';
+import Tour, { useTour } from './components/Tour.jsx';
 import Viewport    from './components/Viewport.jsx';
 import RadialMenu  from './components/RadialMenu.jsx';
 import Sidebar     from './components/Sidebar.jsx';
@@ -41,6 +42,7 @@ export default function App() {
   const [activeTool,     setActiveTool]     = useState(DEFAULT_STATE.activeTool);
   const [units,          setUnits]          = useState('ft');
   const [radialMenu,     setRadialMenu]     = useState(null);
+  const { active: tourActive, start: startTour, done: doneTour } = useTour();
   const radialMenuWrapperRef = useRef(null);
   const viewportEngRef       = useRef(null);
   const [history,        setHistory]        = useState([[]])
@@ -267,6 +269,7 @@ export default function App() {
           onNew={handleNew}
           units={units}
           onUnitsChange={setUnits}
+          onStartTour={startTour}
         />
         <Sidebar
           config={CONFIG}
@@ -281,6 +284,7 @@ export default function App() {
         <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
         <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
         <VideoWidget config={CONFIG} />
+        {tourActive && <Tour onDone={doneTour} />}
         {radialMenu && (() => {
           // Preset group — show Ungroup button instead of radial menu
           if (radialMenu.itemType === 'preset_group') {
