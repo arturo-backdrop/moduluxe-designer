@@ -108,30 +108,59 @@ export default function Onboarding({ config, presets: manifestPresets = [], onCo
             <div className={styles.title}>Start with a preset</div>
             <div className={styles.subtitle}>Pick a layout to get started, or begin from scratch</div>
 
-            {presets.length > 0 ? (
-              <div className={styles.presetGrid}>
-                {presets.map((preset) => (
-                  <div
-                    key={preset.id}
-                    className={`${styles.presetCard} ${selectedPreset === preset.id ? styles.presetCardSelected : ''}`}
-                    onClick={() => setSelectedPreset(preset.id)}
-                  >
-                    <div className={styles.presetThumb}>
-                      {preset.thumbnail
-                        ? <img src={preset.thumbnail} alt={preset.name} style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:8 }} />
-                        : <PresetThumb blocks={preset.blocks || []} selected={selectedPreset === preset.id} />
-                      }
-                      {selectedPreset === preset.id && (
-                        <div className={styles.presetBadge}>Selected</div>
+            {presets.length > 0 ? (() => {
+              // Group presets by sizes
+              const groups = {};
+              const NO_SIZE = '__none__';
+              presets.forEach(p => {
+                const sizes = p.sizes?.length ? p.sizes : [NO_SIZE];
+                sizes.forEach(sz => {
+                  if (!groups[sz]) groups[sz] = [];
+                  if (!groups[sz].find(x => x.id === p.id)) groups[sz].push(p);
+                });
+              });
+              const groupKeys = Object.keys(groups).sort((a,b) => a === NO_SIZE ? 1 : b === NO_SIZE ? -1 : a.localeCompare(b));
+
+              return (
+                <div className={styles.presetGrid}>
+                  {groupKeys.map(sizeKey => (
+                    <div key={sizeKey} className={styles.presetSizeGroup}>
+                      {sizeKey !== NO_SIZE && (
+                        <div className={styles.presetSizeGroupLabel}>{sizeKey}</div>
                       )}
+                      <div className={styles.presetSizeGroupGrid}>
+                        {groups[sizeKey].map(preset => (
+                          <div
+                            key={preset.id}
+                            className={`${styles.presetCard} ${selectedPreset === preset.id ? styles.presetCardSelected : ''}`}
+                            onClick={() => setSelectedPreset(preset.id)}
+                          >
+                            <div className={styles.presetThumb}>
+                              {preset.thumbnail
+                                ? <img src={preset.thumbnail} alt={preset.name} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                                : <PresetThumb blocks={preset.blocks || []} selected={selectedPreset === preset.id} />
+                              }
+                              {selectedPreset === preset.id && (
+                                <div className={styles.presetBadge}>✓</div>
+                              )}
+                            </div>
+                            <div className={styles.presetInfo}>
+                              <div className={styles.presetName}>{preset.name}</div>
+                              {preset.sizes?.length > 0 && (
+                                <div className={styles.presetSizes}>{preset.sizes.join(' · ')}</div>
+                              )}
+                              {preset.description && (
+                                <div className={styles.presetDesc}>{preset.description}</div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className={styles.presetInfo}>
-                      <div className={styles.presetName}>{preset.name}</div>
-                      <div className={styles.presetDesc}>{preset.description}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              );
+            })()
             ) : (
               <div className={styles.noPresets}>No presets available yet.</div>
             )}
