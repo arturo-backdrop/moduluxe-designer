@@ -20,7 +20,7 @@ const STEPS = [
   {
     id: 'camera',
     title: 'Navigate the Scene',
-    body: 'Right-click + drag to orbit · Scroll to zoom · Middle-click to pan.',
+    body: 'Left-click + drag on empty space to orbit · Scroll to zoom · Middle-click to pan.',
     arrow: 'bottom',
     center: true,
   },
@@ -130,8 +130,20 @@ export default function Tour({ onDone, onAction }) {
 
   useEffect(() => {
     setVisible(false);
-    setTimeout(() => { updatePos(); setVisible(true); }, 100);
-  }, [step, updatePos]);
+    // Retry finding the element — it may not be in DOM yet
+    let attempts = 0;
+    function tryUpdate() {
+      const el = current?.id ? document.querySelector(`[data-tour="${current.id}"]`) : null;
+      if (!el && !current?.center && attempts < 10) {
+        attempts++;
+        setTimeout(tryUpdate, 150);
+        return;
+      }
+      updatePos();
+      setVisible(true);
+    }
+    setTimeout(tryUpdate, 120);
+  }, [step, updatePos, current]);
 
   useEffect(() => {
     window.addEventListener('resize', updatePos);
