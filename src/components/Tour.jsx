@@ -82,6 +82,7 @@ Note: accessories vary by model — some have more options than others.`,
     body: 'Click to start a wall, click again to place it. Walls snap to 45° — hold Shift for free angle. Esc to cancel.',
     arrow: 'right',
     position: 'mid-left',
+    offsetX: 360,
     action: 'select_wall',
     actionHint: 'Try selecting the Wall tool →',
   },
@@ -91,6 +92,7 @@ Note: accessories vary by model — some have more options than others.`,
     body: 'Click anywhere on the floor to place a column. Right-click it to adjust size and shape.',
     arrow: 'right',
     position: 'mid-left',
+    offsetX: 360,
   },
   {
     id: 'tool-door',
@@ -98,6 +100,7 @@ Note: accessories vary by model — some have more options than others.`,
     body: 'Click near a wall to place a door — it snaps automatically to the nearest wall.',
     arrow: 'right',
     position: 'mid-left',
+    offsetX: 360,
   },
   {
     id: 'mode-toggle',
@@ -144,7 +147,7 @@ function getArrowStyle(arrow) {
   return {};
 }
 
-function getTooltipPos(el, arrow, center, position) {
+function getTooltipPos(el, arrow, center, position, step) {
   const TW = 290, GAP = 18;
   const vw = window.innerWidth, vh = window.innerHeight;
   const PAD = 20;
@@ -171,7 +174,7 @@ function getTooltipPos(el, arrow, center, position) {
   const r = el.getBoundingClientRect();
   if (r.width === 0 && r.height === 0) return posToCoords(position || 'center');
 
-  if (arrow === 'right')  return { position:'fixed', left: r.right + GAP + 12, top: r.top + r.height/2, transform:'translateY(-50%)' };
+  if (arrow === 'right')  return { position:'fixed', left: (step?.offsetX || (r.right + GAP + 12)), top: r.top + r.height/2, transform:'translateY(-50%)' };
   if (arrow === 'left')   return { position:'fixed', left: Math.max(PAD, r.left - TW - GAP), top: r.top + r.height/2, transform:'translateY(-50%)' };
   if (arrow === 'top')    return { position:'fixed', left: Math.min(vw-TW-PAD, r.left + r.width/2), top: r.bottom + GAP, transform:'translateX(-50%)' };
   if (arrow === 'bottom') return { position:'fixed', left: Math.min(vw-TW-PAD, r.left + r.width/2), top: r.top - GAP, transform:'translate(-50%,-100%)' };
@@ -200,7 +203,7 @@ export default function Tour({ onDone, onAction }) {
   const updatePos = useCallback(() => {
     if (!current) return;
     const el = current.id ? document.querySelector(`[data-tour="${current.id}"]`) : null;
-    setPos(getTooltipPos(el, current.arrow, current.center, current.position));
+    setPos(getTooltipPos(el, current.arrow, current.center, current.position, current));
   }, [current]);
 
   useEffect(() => {
