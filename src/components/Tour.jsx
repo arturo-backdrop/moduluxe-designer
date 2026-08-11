@@ -7,28 +7,39 @@ const STEPS = [
     id: 'sidebar',
     title: 'Browse Models',
     body: 'Browse the catalog on the left. Drag any model onto the floor to place it.',
-    arrow: 'right',
-    action: 'drop_model', // auto-advance when model is dropped
+    arrow: 'left',
+    position: 'mid-left',
+    action: 'drop_model',
     actionHint: 'Try dragging a model to the floor →',
   },
   {
     id: 'presets-tab',
+    title: 'Catalogue',
+    body: 'Here you have your catalogue. Use the ‹ › arrows to scroll through categories.',
+    arrow: 'left',
+    position: 'top-left',
+    actionHint: 'Press the arrows.',
+  },
+  {
+    id: 'presets-tab',
     title: 'Ready-made Presets',
-    body: 'The Presets tab has ready-made booth layouts. Use the ‹ › arrows to scroll through categories.',
+    body: 'The Presets tab has ready-made booth layouts.',
     arrow: 'right',
+    position: 'mid-left',
   },
   {
     id: 'camera',
     title: 'Navigate the Scene',
-    body: 'Left-click + drag on empty space to orbit · Right-click + drag to pan · Scroll or use the viewport buttons to zoom.',
-    arrow: 'bottom',
-    center: true,
+    body: 'Left-click + drag on empty space to orbit · Right-click + drag to pan · Scroll or use the viewport buttons (+,-) to zoom.',
+    arrow: 'top',
+    position: 'center',
   },
   {
     id: 'select',
     title: 'Select & Move',
     body: 'Click any object to select it (white outline). Drag to move it. Arrow keys nudge 1cm at a time.',
     arrow: 'bottom',
+    position: 'center',
     center: true,
     action: 'select_object',
     actionHint: 'Try clicking an object →',
@@ -38,6 +49,7 @@ const STEPS = [
     title: 'Right-click for Options',
     body: 'Right-click any object to open its options menu.',
     arrow: 'bottom',
+    position: 'center',
     center: true,
     action: 'open_radial',
     actionHint: 'Try right-clicking an object →',
@@ -45,8 +57,14 @@ const STEPS = [
   {
     id: 'radial',
     title: 'What You Can Do',
-    body: '• Rotate — spin 90° at a time\n• Color — change the panel color\n• Array — duplicate in a row with spacing\n• Accessories — lamps, shelves and more\n\nNote: accessories vary by model — some have more options than others.',
+    body: '• Rotate — spin 90° at a time
+• Color — change the panel color
+• Array — duplicate in a row with spacing
+• Accessories — lamps, shelves and more
+
+Note: accessories vary by model — some have more options than others.',
     arrow: 'bottom',
+    position: 'center',
     center: true,
   },
   {
@@ -54,22 +72,16 @@ const STEPS = [
     title: 'Draw Layout Mode',
     body: 'Switch to Draw Layout to add walls, columns and doors to your booth.',
     arrow: 'top',
+    position: 'top-center',
     action: 'switch_draw',
     actionHint: 'Try switching to Draw Layout →',
-  },
-  {
-    id: 'mode-toggle',
-    title: 'Back to Place Products',
-    body: 'Switch back to Place Products mode to continue adding models to your design.',
-    arrow: 'top',
-    action: 'switch_place',
-    actionHint: 'Switch back to Place Products →',
   },
   {
     id: 'tool-wall',
     title: 'Wall Tool',
     body: 'Click to start a wall, click again to place it. Walls snap to 45° — hold Shift for free angle. Esc to cancel.',
     arrow: 'right',
+    position: 'mid-left',
     action: 'select_wall',
     actionHint: 'Try selecting the Wall tool →',
   },
@@ -78,24 +90,45 @@ const STEPS = [
     title: 'Column Tool',
     body: 'Click anywhere on the floor to place a column. Right-click it to adjust size and shape.',
     arrow: 'right',
+    position: 'mid-left',
   },
   {
     id: 'tool-door',
     title: 'Door Tool',
     body: 'Click near a wall to place a door — it snaps automatically to the nearest wall.',
     arrow: 'right',
+    position: 'mid-left',
+  },
+  {
+    id: 'mode-toggle',
+    title: 'Back to Place Products',
+    body: 'Switch back to Place Products mode to continue adding models to your design.',
+    arrow: 'top',
+    position: 'top-center',
+    action: 'switch_place',
+    actionHint: 'Switch back to Place Products →',
+  },
+  {
+    id: 'bottom-bar',
+    title: 'Your Build',
+    body: 'The bottom bar shows all the models in your scene, grouped by type with their count. Click any card to highlight those items.',
+    arrow: 'bottom',
+    position: 'bot-center',
   },
   {
     id: 'quote-panel',
     title: 'Your Price List',
     body: 'Your estimated price updates as you build. Click "Get List" for a full breakdown of items and accessories.',
     arrow: 'left',
+    position: 'mid-right',
   },
   {
-    id: 'bottom-bar',
-    title: 'Your Build',
-    body: 'The bottom bar shows all the models in your scene, grouped by type with their count. Click any card to highlight those items.',
-    arrow: 'top',
+    id: '',
+    title: "You're ready to go!",
+    body: "Ready to design. Let's build your booth.",
+    arrow: 'bottom',
+    position: 'center',
+    center: true,
   },
 ];
 
@@ -111,17 +144,38 @@ function getArrowStyle(arrow) {
   return {};
 }
 
-function getTooltipPos(el, arrow, center) {
-  const TW = 290, GAP = 14;
-  if (!el || center) {
-    return { position:'fixed', left:'50%', bottom: 32, transform:'translateX(-50%)' };
+function getTooltipPos(el, arrow, center, position) {
+  const TW = 290, GAP = 18;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const PAD = 20;
+
+  // Position-based fallback (when no element or center=true)
+  function posToCoords(pos) {
+    const map = {
+      'top-left':    { left: PAD,           top: PAD },
+      'top-center':  { left: vw/2,          top: PAD,      transform:'translateX(-50%)' },
+      'top-right':   { left: vw-TW-PAD,     top: PAD },
+      'mid-left':    { left: PAD,           top: vh/2,     transform:'translateY(-50%)' },
+      'center':      { left: vw/2,          top: vh/2,     transform:'translate(-50%,-50%)' },
+      'mid-right':   { left: vw-TW-PAD,     top: vh/2,     transform:'translateY(-50%)' },
+      'bot-left':    { left: PAD,           top: vh-PAD,   transform:'translateY(-100%)' },
+      'bot-center':  { left: vw/2,          top: vh-PAD,   transform:'translate(-50%,-100%)' },
+      'bot-right':   { left: vw-TW-PAD,     top: vh-PAD,   transform:'translateY(-100%)' },
+    };
+    return { position:'fixed', ...(map[pos] || map['center']) };
   }
+
+  if (!el || center) return posToCoords(position || 'center');
+
+  // Try to position near element, fallback to position field
   const r = el.getBoundingClientRect();
+  if (r.width === 0 && r.height === 0) return posToCoords(position || 'center');
+
   if (arrow === 'right')  return { position:'fixed', left: r.right + GAP, top: r.top + r.height/2, transform:'translateY(-50%)' };
-  if (arrow === 'left')   return { position:'fixed', left: r.left - TW - GAP, top: r.top + r.height/2, transform:'translateY(-50%)' };
-  if (arrow === 'top')    return { position:'fixed', left: r.left + r.width/2, top: r.bottom + GAP, transform:'translateX(-50%)' };
-  if (arrow === 'bottom') return { position:'fixed', left: r.left + r.width/2, top: r.top - GAP, transform:'translate(-50%,-100%)' };
-  return { position:'fixed', left:'50%', bottom:32, transform:'translateX(-50%)' };
+  if (arrow === 'left')   return { position:'fixed', left: Math.max(PAD, r.left - TW - GAP), top: r.top + r.height/2, transform:'translateY(-50%)' };
+  if (arrow === 'top')    return { position:'fixed', left: Math.min(vw-TW-PAD, r.left + r.width/2), top: r.bottom + GAP, transform:'translateX(-50%)' };
+  if (arrow === 'bottom') return { position:'fixed', left: Math.min(vw-TW-PAD, r.left + r.width/2), top: r.top - GAP, transform:'translate(-50%,-100%)' };
+  return posToCoords(position || 'center');
 }
 
 export function useTour() {
@@ -146,7 +200,7 @@ export default function Tour({ onDone, onAction }) {
   const updatePos = useCallback(() => {
     if (!current) return;
     const el = current.id ? document.querySelector(`[data-tour="${current.id}"]`) : null;
-    setPos(getTooltipPos(el, current.arrow, current.center));
+    setPos(getTooltipPos(el, current.arrow, current.center, current.position));
   }, [current]);
 
   useEffect(() => {
