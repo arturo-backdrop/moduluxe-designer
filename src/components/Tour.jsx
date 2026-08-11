@@ -34,13 +34,20 @@ const STEPS = [
     actionHint: 'Try clicking an object →',
   },
   {
-    id: 'radial',
-    title: 'Object Options',
-    body: 'Right-click any object to open its options:\n• Rotate — spin 90°\n• Color — change color\n• Array — duplicate in a row\n• Accessories — lamps, shelves and more (varies by model)',
+    id: 'select',
+    title: 'Right-click for Options',
+    body: 'Right-click any object to open its options menu.',
     arrow: 'bottom',
     center: true,
     action: 'open_radial',
     actionHint: 'Try right-clicking an object →',
+  },
+  {
+    id: 'radial',
+    title: 'What You Can Do',
+    body: '• Rotate — spin 90° at a time\n• Color — change the panel color\n• Array — duplicate in a row with spacing\n• Accessories — lamps, shelves and more\n\nNote: accessories vary by model — some have more options than others.',
+    arrow: 'bottom',
+    center: true,
   },
   {
     id: 'mode-toggle',
@@ -83,6 +90,12 @@ const STEPS = [
     title: 'Your Price List',
     body: 'Your estimated price updates as you build. Click "Get List" for a full breakdown of items and accessories.',
     arrow: 'left',
+  },
+  {
+    id: 'bottom-bar',
+    title: 'Your Build',
+    body: 'The bottom bar shows all the models in your scene, grouped by type with their count. Click any card to highlight those items.',
+    arrow: 'top',
   },
 ];
 
