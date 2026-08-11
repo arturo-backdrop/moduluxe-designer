@@ -129,15 +129,12 @@ export default function Onboarding({ config, presets: manifestPresets = [], onCo
 
   // Derive floorSize from preset
   function getPresetFloorSize(preset) {
-    // Prefer explicit floorSize field on preset
     if (preset.floorSize) return preset.floorSize;
-    // Try to match first size string against config.floorSizes labels
+    const normalize = s => s.toLowerCase().replace(/×/g, 'x').replace(/\s+/g, '');
     if (preset.sizes?.length) {
-      const match = floorSizes.find(f => f.label === preset.sizes[0]);
+      const match = floorSizes.find(f => normalize(f.label) === normalize(preset.sizes[0]));
       if (match) return match;
-      // Fallback: use largest floor size
     }
-    // Default to first floor size
     return floorSizes[0] || { w: 3.05, d: 3.05, label: '10×10 ft' };
   }
 
