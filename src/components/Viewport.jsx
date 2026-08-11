@@ -1171,14 +1171,16 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           const sp = project3D(sourceObj);
           panCameraToShowMenu(sp);
           const savedItem2 = itemsRef.current.find(i => i.uid === sourceUid);
+          const isPresetGrp = savedItem2?.isPresetGroup && savedItem2?.groupId;
           onRadialMenuRef.current?.({
             x: sp.x, y: sp.y, uid: sourceUid,
             modelId: sourceObj.userData.modelId,
             initialRotY: sourceObj.rotation.y,
             initialColor: savedItem2?.color || null,
-            initialArrayState: savedItem2?.groupId
+            initialArrayState: savedItem2?.groupId && !isPresetGrp
               ? { count: itemsRef.current.filter(i=>i.groupId===savedItem2.groupId).length, spacing: savedItem2?.arrayGap || 0 }
               : null,
+            itemType: isPresetGrp ? 'preset_group' : null,
           });
         }
         canvas.style.cursor = hoveredUid ? 'grab' : 'default';
