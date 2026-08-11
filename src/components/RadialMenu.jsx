@@ -58,10 +58,25 @@ function buildButtons(sockets=[], itemType=null) {
   if (itemType === 'wall')   return distributeAngles(WALL_BASE);
   if (itemType === 'column') return distributeAngles(COLUMN_BASE);
   if (itemType === 'door')   return distributeAngles(DOOR_BASE);
-  const socketBtns = sockets.slice(0, 4).map(s => ({
-    id:s.name, icon:BEHAVIOR_ICONS[s.behavior]||'ti-adjustments',
-    label:s.label||s.name, size:48, hasProps:s.behavior!=='fixed', socket:s,
-  }));
+
+  // Group sockets with same label into one button
+  const groups = {};
+  sockets.forEach(s => {
+    const label = s.label || s.name;
+    if (!groups[label]) groups[label] = [];
+    groups[label].push(s);
+  });
+
+  const socketBtns = Object.entries(groups).map(([label, members]) => {
+    if (members.length === 1) {
+      const s = members[0];
+      return { id: s.name, icon: BEHAVIOR_ICONS[s.behavior]||'ti-adjustments',
+        label, size: 48, hasProps: s.behavior !== 'fixed', socket: s };
+    }
+    // Multiple sockets with same label — group button, always opens panel
+    return { id: `group_${label}`, icon: BEHAVIOR_ICONS[members[0].behavior]||'ti-bulb',
+      label, size: 48, hasProps: true, socketGroup: members };
+  });
   // Interleave: socket1, array, socket2, color, socket3, rotate, socket4, dup, del
   const order = [];
   const fixed = [...BASE_ACTIONS];
@@ -218,7 +233,34 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
     </div>`;
 
   const btn = buttons.find(b=>b.id===activeBtnId);
-  if (!btn?.socket) return `<div style="font-size:9px;color:#999;">${modelName}</div>`;
+  if (!btn) return `<div style="font-size:9px;color:#999;">${modelName}</div>`;
+
+  // Socket group — grid of individual toggles
+  if (btn.socketGroup) {
+    const members = btn.socketGroup;
+    const label = btn.label;
+    return `
+      <div style="font-size:9px;color:#999;margin-bottom:4px;">${modelName}</div>
+      <div style="font-weight:900;font-size:12px;color:#1a1a1a;margin-bottom:8px;">${label}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:130px;">
+        ${members.map((s, i) => {
+          const on = (socketStates[s.name] || s.state || {}).on;
+          return `<div id="rm_grp_${s.name.replace(/\./g,'_')}"
+            data-socket="${s.name}"
+            style="width:32px;height:32px;border-radius:8px;cursor:pointer;
+              background:${on ? ACCENT : '#e8e8e8'};
+              display:flex;align-items:center;justify-content:center;
+              font-size:10px;font-weight:700;color:${on ? 'white' : '#666'};
+              border:2px solid ${on ? ACCENT : 'transparent'};
+              transition:all 0.15s;">
+            ${i + 1}
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="font-size:9px;color:#aaa;margin-top:6px;">Tap to toggle each</div>`;
+  }
+
+  if (!btn.socket) return `<div style="font-size:9px;color:#999;">${modelName}</div>`;
   const s = btn.socket, state = socketStates[s.name] || s.state || {};
 
   if (s.behavior === 'fixed' || s.behavior === 'toggle_mesh') {
@@ -496,6 +538,34 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
         onAction?.('color', { color: customInput.value });
       };
 
+      // Socket group grid toggles
+      state.buttons.forEach(b => {
+        if (!b.socketGroup) return;
+        b.socketGroup.forEach(s => {
+          const safeId = s.name.replace(/\./g, '_');
+          const el = document.getElementById(`rm_grp_${safeId}`);
+          if (!el) return;
+          el.onclick = () => {
+            const curOn = state.socketStates[s.name]?.on;
+            state.socketStates[s.name] = { ...state.socketStates[s.name], on: !curOn };
+            onAction?.('socket', { name: s.name, state: state.socketStates[s.name] });
+            // Update button color immediately without full refresh
+            const isOn = !curOn;
+            el.style.background = isOn ? ACCENT : '#e8e8e8';
+            el.style.color = isOn ? 'white' : '#666';
+            el.style.borderColor = isOn ? ACCENT : 'transparent';
+            // Also update the radial button color
+            const radialCircle = state.circleEls[b.id];
+            if (radialCircle) {
+              const anyOn = b.socketGroup.some(m => state.socketStates[m.name]?.on);
+              radialCircle.style.background = anyOn ? ACCENT : 'white';
+              const icon = radialCircle.querySelector('i');
+              if (icon) icon.style.color = anyOn ? 'white' : '#1a1a1a';
+            }
+          };
+        });
+      });
+
       // Socket toggles
       state.buttons.forEach(b => {
         if (!b.socket) return;
@@ -652,11 +722,21 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
         const icon = circle.querySelector('i');
         if (icon) icon.style.color = 'white';
       }
+      // If socket group has any on, show active color
+      if (b.socketGroup) {
+        const anyOn = b.socketGroup.some(s => state.socketStates[s.name]?.on);
+        if (anyOn) {
+          circle.style.background = ACCENT;
+          const icon = circle.querySelector('i');
+          if (icon) icon.style.color = 'white';
+        }
+      }
 
       circle.addEventListener('mouseenter', () => { circle.style.background='#f5f5f5'; applyHoverNudge(b.id); });
       circle.addEventListener('mouseleave', () => {
         const isFixedOn = b.socket?.behavior === 'fixed' && state.socketStates[b.socket.name]?.on;
-        circle.style.background = (state.activeBtn===b.id || isFixedOn) ? ACCENT : 'white';
+        const isGroupOn = b.socketGroup?.some(s => state.socketStates[s.name]?.on);
+        circle.style.background = (state.activeBtn===b.id || isFixedOn || isGroupOn) ? ACCENT : 'white';
         applyHoverNudge(null);
       });
 
