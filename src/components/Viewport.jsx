@@ -1837,6 +1837,10 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       deleteContainer, rotateObject, applyColor, duplicateObject, applyArray,
       toggleMeshVisibility, applySocket, applySocketToUids,
       syncWallItem, removeWallItem, rebuildHandles, wallMeshMap,
+      getRotation: (uid) => {
+        const obj = itemGroup.children.find(x => x.userData.uid === uid);
+        return obj ? obj.rotation.y : 0;
+      },
     };
     if (externalEngRef) externalEngRef.current = engRef.current;
 
