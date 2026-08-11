@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styles from './Onboarding.module.css';
 
 // ── Floor size SVG preview ────────────────────────────────────
@@ -14,20 +14,19 @@ function FloorPreview({ w, h }) {
   );
 }
 
-// ── Preset thumbnail ──────────────────────────────────────────
-function PresetThumb({ blocks, selected, thumbnail }) {
+// ── Preset thumb fallback ─────────────────────────────────────
+function PresetThumb({ blocks, selected }) {
   return (
     <div className={`${styles.presetThumbInner} ${selected ? styles.presetThumbSelected : ''}`}>
       {blocks.map((b, i) => (
-        <div key={i} className={styles.presetBlock}
-          style={{ width: b.w, height: b.h }} />
+        <div key={i} className={styles.presetBlock} style={{ width: b.w, height: b.h }} />
       ))}
     </div>
   );
 }
 
 // ── Preset grid grouped by sizes ─────────────────────────────
-function PresetGrid({ presets, selectedPreset, onSelect, styles }) {
+function PresetGrid({ presets, selectedPreset, onSelect }) {
   const NO_SIZE = '__none__';
   const groups = {};
   presets.forEach(p => {
@@ -82,47 +81,150 @@ function PresetGrid({ presets, selectedPreset, onSelect, styles }) {
 }
 
 // ── Step indicator ────────────────────────────────────────────
-function StepIndicator({ step }) {
+function StepIndicator({ step, total = 2 }) {
   return (
     <div className={styles.stepIndicator}>
-      <div className={`${styles.stepDot} ${step === 1 ? styles.stepDotActive : styles.stepDotDone}`} />
-      <div className={`${styles.stepDot} ${step === 2 ? styles.stepDotActive : ''}`} />
+      {Array.from({ length: total }).map((_, i) => (
+        <div key={i} className={`${styles.stepDot} ${
+          i + 1 < step ? styles.stepDotDone :
+          i + 1 === step ? styles.stepDotActive : ''
+        }`} />
+      ))}
     </div>
+  );
+}
+
+// ── Arrow icon ───────────────────────────────────────────────
+function ArrowIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+      <line x1="5" y1="12" x2="19" y2="12" />
+      <polyline points="12 5 19 12 12 19" />
+    </svg>
   );
 }
 
 // ── Main Onboarding component ─────────────────────────────────
 export default function Onboarding({ config, presets: manifestPresets = [], onComplete }) {
-  const [step,           setStep]           = useState(1);
-  const [selectedFloor,  setSelectedFloor]  = useState(null);
+  // step 1 = choose mode, step 2a = preset picker, step 2b = floor picker
+  const [step,           setStep]          = useState(1);
+  const [mode,           setMode]          = useState(null); // 'preset' | 'scratch'
+  const [selectedFloor,  setSelectedFloor] = useState(null);
   const [selectedPreset, setSelectedPreset] = useState(null);
-  const [exiting,        setExiting]        = useState(false);
+  const [exiting,        setExiting]       = useState(false);
 
-  const floorSizes = config.floorSizes;
+  const floorSizes = config.floorSizes || [];
   const presets    = manifestPresets.length > 0 ? manifestPresets : (config.presets || []);
 
-  function goToStep2() {
+  function transition(fn) {
     setExiting(true);
-    setTimeout(() => {
-      setExiting(false);
-      setStep(2);
-    }, 220);
+    setTimeout(() => { setExiting(false); fn(); }, 220);
   }
 
-  function handleComplete(preset) {
-    onComplete({
-      floorSize: floorSizes[selectedFloor],
-      preset:    preset || null,
-    });
+  function chooseMode(m) {
+    setMode(m);
+    transition(() => setStep(2));
+  }
+
+  // Derive floorSize from preset
+  function getPresetFloorSize(preset) {
+    // Prefer explicit floorSize field on preset
+    if (preset.floorSize) return preset.floorSize;
+    // Try to match first size string against config.floorSizes labels
+    if (preset.sizes?.length) {
+      const match = floorSizes.find(f => f.label === preset.sizes[0]);
+      if (match) return match;
+      // Fallback: use largest floor size
+    }
+    // Default to first floor size
+    return floorSizes[0] || { w: 3.05, d: 3.05, label: '10×10 ft' };
+  }
+
+  function handleUsePreset() {
+    const preset = presets.find(p => p.id === selectedPreset);
+    onComplete({ floorSize: getPresetFloorSize(preset), preset });
+  }
+
+  function handleUseScratch() {
+    onComplete({ floorSize: floorSizes[selectedFloor], preset: null });
   }
 
   return (
     <div className={styles.overlay}>
       <div className={`${styles.modal} ${exiting ? styles.modalExit : ''}`}>
 
+        {/* ── Step 1: Choose mode ── */}
         {step === 1 && (
           <>
             <StepIndicator step={1} />
+            <div className={styles.title}>How do you want to start?</div>
+            <div className={styles.subtitle}>Pick a preset layout or design from scratch</div>
+
+            <div className={styles.modeGrid}>
+              <div className={styles.modeCard} onClick={() => chooseMode('preset')}>
+                <div className={styles.modeIcon}>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#b48b31" strokeWidth="1.5" strokeLinecap="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/>
+                    <rect x="14" y="3" width="7" height="7" rx="1"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1"/>
+                    <rect x="14" y="14" width="7" height="7" rx="1"/>
+                  </svg>
+                </div>
+                <div className={styles.modeLabel}>Start with a preset</div>
+                <div className={styles.modeDesc}>Choose a pre-configured layout ready to customize</div>
+              </div>
+
+              <div className={styles.modeCard} onClick={() => chooseMode('scratch')}>
+                <div className={styles.modeIcon}>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#b48b31" strokeWidth="1.5" strokeLinecap="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <line x1="12" y1="8" x2="12" y2="16"/>
+                    <line x1="8" y1="12" x2="16" y2="12"/>
+                  </svg>
+                </div>
+                <div className={styles.modeLabel}>Start from scratch</div>
+                <div className={styles.modeDesc}>Set your floor size and build your own layout</div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ── Step 2a: Preset picker ── */}
+        {step === 2 && mode === 'preset' && (
+          <>
+            <StepIndicator step={2} />
+            <div className={styles.title}>Choose a preset</div>
+            <div className={styles.subtitle}>Pick a layout to get started</div>
+
+            {presets.length > 0 ? (
+              <PresetGrid
+                presets={presets}
+                selectedPreset={selectedPreset}
+                onSelect={setSelectedPreset}
+              />
+            ) : (
+              <div className={styles.noPresets}>No presets available yet.</div>
+            )}
+
+            <button
+              className={styles.btnPrimary}
+              disabled={selectedPreset === null}
+              onClick={handleUsePreset}
+            >
+              Use this preset <ArrowIcon />
+            </button>
+
+            <button className={styles.btnSkip} onClick={() => transition(() => { setMode('scratch'); setStep(2); })}>
+              Start from scratch instead
+            </button>
+          </>
+        )}
+
+        {/* ── Step 2b: Floor size picker ── */}
+        {step === 2 && mode === 'scratch' && (
+          <>
+            <StepIndicator step={2} />
             <div className={styles.title}>Set your floor size</div>
             <div className={styles.subtitle}>Choose the size of your exhibition space</div>
 
@@ -145,58 +247,18 @@ export default function Onboarding({ config, presets: manifestPresets = [], onCo
             <button
               className={styles.btnPrimary}
               disabled={selectedFloor === null}
-              onClick={goToStep2}
+              onClick={handleUseScratch}
             >
-              Start my design
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <line x1="5" y1="12" x2="19" y2="12" />
-                <polyline points="12 5 19 12 12 19" />
-              </svg>
+              Start my design <ArrowIcon />
+            </button>
+
+            <button className={styles.btnSkip} onClick={() => transition(() => { setMode('preset'); setStep(2); })}>
+              Use a preset instead
             </button>
           </>
         )}
 
-        {step === 2 && (
-          <>
-            <StepIndicator step={2} />
-            <div className={styles.title}>Start with a preset</div>
-            <div className={styles.subtitle}>Pick a layout to get started, or begin from scratch</div>
-
-            {presets.length > 0 ? (
-              <PresetGrid
-                presets={presets}
-                selectedPreset={selectedPreset}
-                onSelect={setSelectedPreset}
-                styles={styles}
-              />
-            ) : (
-              <div className={styles.noPresets}>No presets available yet.</div>
-            )}
-
-            <button
-              className={styles.btnPrimary}
-              disabled={selectedPreset === null}
-              onClick={() => handleComplete(presets.find(p => p.id === selectedPreset))}
-            >
-              Use this preset
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <line x1="5" y1="12" x2="19" y2="12" />
-                <polyline points="12 5 19 12 12 19" />
-              </svg>
-            </button>
-
-            <button
-              className={styles.btnSkip}
-              onClick={() => handleComplete(null)}
-            >
-              Skip, start with empty floor
-            </button>
-          </>
-        )}
       </div>
     </div>
   );
 }
-
