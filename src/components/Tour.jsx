@@ -105,7 +105,7 @@ Note: accessories vary by model — some have more options than others.`,
   {
     id: 'mode-toggle',
     title: 'Back to Place Products',
-    body: 'Switch back to Place Products mode to continue adding models to your design. You won't be able to select walls, doors or columns.',
+    body: "Switch back to Place Products mode to continue adding models to your design.",
     arrow: 'top',
     position: 'top-center',
     action: 'switch_place',
