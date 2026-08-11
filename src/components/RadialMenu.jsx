@@ -339,8 +339,10 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
 
 
 // ── React wrapper — pure DOM inside ──────────────────────────
-export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onClose, wrapperRef, initialColor='#3a6ea5', initialRotY=0, units='ft', initialArrayState=null, itemType=null, wallProps=null, initialActiveBtn=null }) {
+export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onClose, wrapperRef, initialColor='#3a6ea5', initialRotY=0, units='ft', initialArrayState=null, itemType=null, wallProps=null, initialActiveBtn=null, paintable=true }) {
   const rootRef     = useRef(null);
+  const paintableRef = useRef(paintable);
+  paintableRef.current = paintable;
   const unitsRef    = useRef(units);
   const stateRef    = useRef({
     open:false, closing:false, activeBtn:null,
@@ -851,6 +853,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       onClick={e=>e.stopPropagation()} />
   );
 }
+
 
 
 
