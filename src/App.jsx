@@ -190,11 +190,8 @@ export default function App() {
   // Sidebar: load only preset items, keep floor size
   const handleLoadPreset = useCallback((preset) => {
     if (!preset?.items?.length) return;
-    if (sceneItems.length > 0) {
-      if (!window.confirm(`Load preset "${preset.name}"? This will replace your current items.`)) return;
-    }
     const groupId = `preset_group_${Date.now()}`;
-    const items = preset.items.map((it, i) => ({
+    const newItems = preset.items.map((it, i) => ({
       uid: `${it.modelId}_preset_${Date.now()}_${i}`,
       modelId: it.modelId,
       x: it.x || 0,
@@ -204,10 +201,13 @@ export default function App() {
       groupId,
       isPresetGroup: true,
     }));
-    setSceneItems(items);
-    pushHistory(items);
+    setSceneItems(prev => {
+      const next = [...prev, ...newItems];
+      pushHistory(next);
+      return next;
+    });
     setRadialMenu(null);
-  }, [sceneItems, pushHistory]);
+  }, [pushHistory]);
 
   const addSceneItem = useCallback((modelId) => {
     const uid = `${modelId}_${Date.now()}`;
@@ -306,7 +306,7 @@ export default function App() {
                   boxShadow:'0 4px 20px rgba(0,0,0,0.15)',
                 }}>
                   {/* Ungroup */}
-                  <button title="Ungroup" style={btnStyle()} onClick={() => {
+                  <button title="Ungroup" style={{...btnStyle(), flexDirection:'column', gap:2, width:52, height:52}} onClick={() => {
                     setSceneItems(prev => prev.map(i =>
                       i.groupId === radialMenu.groupId
                         ? { ...i, groupId: undefined, isPresetGroup: undefined }
@@ -318,13 +318,15 @@ export default function App() {
                       <rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/>
                       <rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="8" height="8" rx="1"/>
                     </svg>
+                    <span style={{fontSize:9,color:'#666',fontWeight:600}}>Ungroup</span>
                   </button>
                   {/* Rotate */}
-                  <button title="Rotate 90°" style={btnStyle()} onClick={() => {
+                  <button title="Rotate 90°" style={{...btnStyle(), flexDirection:'column', gap:2, width:52, height:52}} onClick={() => {
                     const gid = radialMenu.groupId;
                     setSceneItems(prev => prev.map(i => {
                       if (i.groupId !== gid) return i;
-                      const newRotY = ((i.rotY || 0) + Math.PI/2) % (Math.PI*2);
+                      const cur = viewportEngRef.current?.getRotation?.(i.uid) ?? (i.rotY || 0);
+                      const newRotY = cur + Math.PI/2;
                       viewportEngRef.current?.rotateObject(i.uid, newRotY);
                       return { ...i, rotY: newRotY };
                     }));
@@ -333,14 +335,16 @@ export default function App() {
                       <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
                       <path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
                     </svg>
+                    <span style={{fontSize:9,color:'#666',fontWeight:600}}>Rotate</span>
                   </button>
                   {/* Color */}
-                  <label title="Color" style={{ ...btnStyle(), position:'relative', overflow:'hidden', cursor:'pointer' }}>
+                  <label title="Color" style={{ ...btnStyle(), flexDirection:'column', gap:2, width:52, height:52, position:'relative', overflow:'hidden', cursor:'pointer' }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                       <circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/>
                       <circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/>
                       <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
                     </svg>
+                    <span style={{fontSize:9,color:'#666',fontWeight:600,pointerEvents:'none'}}>Color</span>
                     <input type="color" style={{ position:'absolute', opacity:0, width:'100%', height:'100%', top:0, left:0, cursor:'pointer' }}
                       onChange={e => {
                         const color = e.target.value;
@@ -353,7 +357,7 @@ export default function App() {
                       }} />
                   </label>
                   {/* Delete */}
-                  <button title="Delete group" style={btnStyle()} onClick={() => {
+                  <button title="Delete group" style={{...btnStyle(), flexDirection:'column', gap:2, width:52, height:52}} onClick={() => {
                     const gid = radialMenu.groupId;
                     const groupItems = sceneItems.filter(i => i.groupId === gid);
                     groupItems.forEach(i => viewportEngRef.current?.deleteContainer(i.uid));
@@ -365,6 +369,7 @@ export default function App() {
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round">
                       <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
                     </svg>
+                    <span style={{fontSize:9,color:'#f87171',fontWeight:600}}>Delete</span>
                   </button>
                   {/* Close */}
                   <button style={{ ...btnStyle(), color:'#aaa' }} onClick={() => setRadialMenu(null)}>✕</button>
