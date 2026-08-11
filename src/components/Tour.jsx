@@ -168,7 +168,7 @@ function getTooltipPos(el, arrow, center, position, step) {
     return { position:'fixed', ...(map[pos] || map['center']) };
   }
 
-  if (!el || center) return posToCoords(position || 'center');
+  if (!el || center || step?.offsetX != null) return step?.offsetX != null ? { position:'fixed', left: step.offsetX, top: window.innerHeight/2, transform:'translateY(-50%)' } : posToCoords(position || 'center');
 
   // Try to position near element, fallback to position field
   const r = el.getBoundingClientRect();
