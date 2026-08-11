@@ -74,6 +74,54 @@
   margin-bottom: 28px;
 }
 
+/* ── Mode selection ───────────────────────────────────────── */
+.modeGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 28px;
+  width: 100%;
+}
+.modeCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 24px 16px;
+  border-radius: 16px;
+  border: 2px solid #f0f0f0;
+  background: #fafafa;
+  transition: all 0.2s cubic-bezier(0.34,1.2,0.64,1);
+  user-select: none;
+  text-align: center;
+}
+.modeCard:hover {
+  background: #fdf8ef;
+  border-color: #e8d9b8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(180,139,49,0.1);
+}
+.modeIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: #fdf3e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modeLabel {
+  font-weight: 700;
+  font-size: 13px;
+  color: #1a1a1a;
+}
+.modeDesc {
+  font-size: 11px;
+  color: #aaa;
+  line-height: 1.4;
+}
+
 /* ── Floor grid ──────────────────────────────────────────── */
 .floorGrid {
   display: flex;
