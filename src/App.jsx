@@ -31,7 +31,8 @@ export default function App() {
   const [catalogReady,   setCatalogReady]   = useState(false);
   const [loadProgress,   setLoadProgress]   = useState({ loaded: 0, total: 0 });
   const [onboardingDone, setOnboardingDone] = useState(false);
-  const [catalog,        setCatalog]        = useState({}); // modelId -> item
+  const [catalog,        setCatalog]        = useState({});
+  const [presets,        setPresets]        = useState([]); // preset items from manifest
   const [projectName,    setProjectName]    = useState(DEFAULT_STATE.projectName);
   const [floorSize,      setFloorSize]      = useState(DEFAULT_STATE.floorSize);
   const [activePreset,   setActivePreset]   = useState(DEFAULT_STATE.activePreset);
@@ -42,7 +43,7 @@ export default function App() {
   const [radialMenu,     setRadialMenu]     = useState(null);
   const radialMenuWrapperRef = useRef(null);
   const viewportEngRef       = useRef(null);
-  const [history,        setHistory]        = useState([[]]);
+  const [history,        setHistory]        = useState([[]])
   const [historyIdx,     setHistoryIdx]     = useState(0);
 
   // Load catalog + prefetch all GLBs
@@ -53,10 +54,14 @@ export default function App() {
       .then(async data => {
         const items = Array.isArray(data) ? data : (data.models || []);
         const map = {};
-        const accMap = {}; // accessoryFile -> { price, name }
+        const accMap = {};
+        const manifestPresets = [];
         items.forEach(item => {
+          if (item.type === 'preset') {
+            manifestPresets.push(item);
+            return;
+          }
           map[item.id] = item;
-          // Index accessories by their file URL for price lookup
           (item.sockets || []).forEach(s => {
             if (s.accessoryFile && !accMap[s.accessoryFile]) {
               accMap[s.accessoryFile] = { price: s.price || 0, name: s.label || s.name };
@@ -65,9 +70,10 @@ export default function App() {
         });
         map.__accessories = accMap;
         setCatalog(map);
+        setPresets(manifestPresets);
 
-        // Prefetch all GLBs — primes glbParser cache so drag is instant
-        const withFile = items.filter(i => i.file);
+        // Prefetch all GLBs
+        const withFile = items.filter(i => i.file && i.type !== 'preset');
         setLoadProgress({ loaded: 0, total: withFile.length });
         let loaded = 0;
         await Promise.all(withFile.map(item =>
@@ -132,7 +138,7 @@ export default function App() {
     setFloorSize(null);
     setActivePreset(null);
     setSceneItems([]);
-    setHistory([[]]);
+    setHistory([[]]); 
     setHistoryIdx(0);
     setMode('place');
     setActiveTool('select');
@@ -140,14 +146,45 @@ export default function App() {
     setOnboardingDone(false);
   }, [sceneItems]);
 
+  // Onboarding: load floor + preset items
   const handleOnboardingComplete = useCallback(({ floorSize, preset }) => {
     setFloorSize(floorSize);
     setActivePreset(preset);
+    if (preset?.items?.length) {
+      const items = preset.items.map((it, i) => ({
+        uid: `${it.modelId}_preset_${Date.now()}_${i}`,
+        modelId: it.modelId,
+        x: it.x || 0,
+        z: it.z || 0,
+        rotY: it.rotY || 0,
+        color: it.color || null,
+      }));
+      setSceneItems(items);
+      pushHistory(items);
+    }
     setOnboardingDone(true);
-  }, []);
+  }, [pushHistory]);
+
+  // Sidebar: load only preset items, keep floor size
+  const handleLoadPreset = useCallback((preset) => {
+    if (!preset?.items?.length) return;
+    if (sceneItems.length > 0) {
+      if (!window.confirm(`Load preset "${preset.name}"? This will replace your current items.`)) return;
+    }
+    const items = preset.items.map((it, i) => ({
+      uid: `${it.modelId}_preset_${Date.now()}_${i}`,
+      modelId: it.modelId,
+      x: it.x || 0,
+      z: it.z || 0,
+      rotY: it.rotY || 0,
+      color: it.color || null,
+    }));
+    setSceneItems(items);
+    pushHistory(items);
+    setRadialMenu(null);
+  }, [sceneItems, pushHistory]);
 
   const addSceneItem = useCallback((modelId) => {
-    // Used only for non-viewport additions (future use)
     const uid = `${modelId}_${Date.now()}`;
     setSceneItems(prev => {
       const next = [...prev, { uid, modelId, count: 1 }];
@@ -173,13 +210,13 @@ export default function App() {
   }
 
   if (!onboardingDone) {
-    return <Onboarding config={CONFIG} onComplete={handleOnboardingComplete} />;
+    return <Onboarding config={CONFIG} presets={presets} onComplete={handleOnboardingComplete} />;
   }
 
   return (
     <div style={styles.root}>
       <Viewport
-        config={{ ...CONFIG, _catalogFlat: Object.values(catalog) }}
+        config={{ ...CONFIG, _catalogFlat: Object.values(catalog).filter(v => v && typeof v === 'object' && v.id) }}
         floorSize={floorSize}
         activePreset={activePreset}
         sceneItems={sceneItems}
@@ -213,6 +250,8 @@ export default function App() {
           activeTool={activeTool}
           onToolChange={setActiveTool}
           onAddProduct={addSceneItem}
+          presets={presets}
+          onLoadPreset={handleLoadPreset}
         />
         <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
         <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
@@ -220,7 +259,6 @@ export default function App() {
         {radialMenu && (() => {
           const item    = catalog[radialMenu.modelId];
           const sceneItem = sceneItems.find(i => i.uid === radialMenu.uid);
-          // Merge manifest sockets with auto-detected toggle meshes from GLB
           const socketPositions = radialMenu.socketPositions || {};
           const savedSocketStates = sceneItem?.socketStates || {};
           const manifestSockets = (item?.sockets || []).map(s => ({
@@ -258,18 +296,14 @@ export default function App() {
                     const item = sceneItems.find(i => i.uid === uid);
                     const wallTypes = new Set(['wall','column','door']);
                     if (item && wallTypes.has(item.type)) {
-                      // Wall/column/door delete — also delete doors attached to this wall
                       const toRemove = new Set([uid]);
                       if (item.type === 'wall') {
-                        // Remove entire wall chain group
                         if (item.groupId) sceneItems.filter(i => i.groupId === item.groupId).forEach(i => toRemove.add(i.uid));
-                        // Remove doors attached to any wall in group
                         sceneItems.filter(i => i.type === 'door' && toRemove.has(i.wallUid)).forEach(i => toRemove.add(i.uid));
                       }
                       setSceneItems(prev => prev.filter(i => !toRemove.has(i.uid)));
                       setRadialMenu(null);
                     } else {
-                      // Product delete
                       const groupUids = item?.groupId
                         ? sceneItems.filter(i => i.groupId === item.groupId).map(i => i.uid)
                         : [uid];
@@ -281,7 +315,6 @@ export default function App() {
                       setRadialMenu(null);
                     }
                   } else if (action === 'wallProps') {
-                    // Update wall/column/door properties
                     setSceneItems(prev => prev.map(i => {
                       if (i.uid !== radialMenu.uid) return i;
                       return { ...i, ...data };
@@ -309,7 +342,6 @@ export default function App() {
                   } else if (action === 'dup') {
                     const item = sceneItems.find(i => i.uid === radialMenu.uid);
                     if (item?.type === 'column') {
-                      // Duplicate column
                       const newUid = `col_${Date.now()}`;
                       const newCol = { ...item, uid: newUid, x: item.x + 1, z: item.z + 1 };
                       setSceneItems(prev => [...prev, newCol]);
@@ -323,9 +355,7 @@ export default function App() {
                     const sockDef  = sockItem?.sockets?.find(s => s.name === data.name);
                     if (sockDef) {
                       const positions = (radialMenu.socketPositions||{})[data.name] || [];
-                      // Viewport resolves full group from Three.js userData internally
                       viewportEngRef.current?.applySocketToUids([radialMenu.uid], data.name, data.state, { ...sockDef, socketPositions: positions });
-                      // Save state in sceneItems
                       setSceneItems(prev => {
                         const clickedItem = prev.find(i => i.uid === radialMenu.uid);
                         const groupId = clickedItem?.groupId;
@@ -351,13 +381,3 @@ export default function App() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
