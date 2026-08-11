@@ -965,6 +965,13 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         const hw = (b.max.x-b.min.x)/2, hd = (b.max.z-b.min.z)/2;
         minX=-hw; maxX=hw; minZ=-hd; maxZ=hd;
       }
+      // For preset groups, clamp only by anchor object to allow full floor movement
+      const anchorItem = itemsRef.current.find(i => i.uid === draggingUid);
+      if (anchorItem?.isPresetGroup) {
+        const b = new THREE.Box3().setFromObject(anchorObj);
+        const hw = (b.max.x-b.min.x)/2, hd = (b.max.z-b.min.z)/2;
+        minX=-hw; maxX=hw; minZ=-hd; maxZ=hd;
+      }
       const rawX = snap(pt.x + anchorOff.dx), rawZ = snap(pt.z + anchorOff.dz);
       let clampedX = Math.max(-floorW/2 - minX, Math.min(floorW/2 - maxX, rawX));
       let clampedZ = Math.max(-floorD/2 - minZ, Math.min(floorD/2 - maxZ, rawZ));
