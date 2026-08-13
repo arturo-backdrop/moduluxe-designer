@@ -127,7 +127,7 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
       {/* ── Panel — slides out in Draw mode ── */}
       <div className={`${styles.panel} ${isPlace ? styles.panelVisible : styles.panelHidden}`}>
         <div className={styles.logoHeader} ref={logoRef}>
-          <img src="/moduluxe-designer/backdrop-logo-inverse.png" alt="backdrop.com" className={styles.logo} />
+          <img src={`${import.meta.env.BASE_URL}backdrop-logo-inverse.png`} alt="backdrop.com" className={styles.logo} />
         </div>
 
         {tabs.length > 0 && (

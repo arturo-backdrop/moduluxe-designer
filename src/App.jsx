@@ -66,18 +66,16 @@ export default function App() {
   // Load catalog + prefetch all GLBs
   useEffect(() => {
     if (!CONFIG.manifestUrl) { setCatalogReady(true); return; }
-    fetch(CONFIG.manifestUrl)
-      .then(r => r.json())
-      .then(async data => {
-        const items = Array.isArray(data) ? data : (data.models || []);
+
+    Promise.all([
+      fetch(CONFIG.manifestUrl).then(r => r.json()),
+      CONFIG.presetsUrl ? fetch(CONFIG.presetsUrl).then(r => r.json()) : Promise.resolve([]),
+    ])
+      .then(([manifestData, presetsData]) => {
+        const items = Array.isArray(manifestData) ? manifestData : (manifestData.models || []);
         const map = {};
         const accMap = {};
-        const manifestPresets = [];
         items.forEach(item => {
-          if (item.type === 'preset') {
-            manifestPresets.push(item);
-            return;
-          }
           map[item.id] = item;
           (item.sockets || []).forEach(s => {
             if (s.accessoryFile && !accMap[s.accessoryFile]) {
@@ -88,39 +86,40 @@ export default function App() {
         map.__accessories = accMap;
         setCatalog(map);
 
-        // Fetch external preset files if they have a `file` URL
-        const resolvedPresets = await Promise.all(manifestPresets.map(async preset => {
-          if (!preset.file) return preset;
-          try {
-            const r = await fetch(preset.file);
-            const data = await r.json();
-            // Booth Planner project format
-            if (data.items) {
-              return { ...preset, items: data.items.map(it => ({
-                modelId: it.modelId || it.catalogId,
-                x: it.x || 0, z: it.z || 0, rotY: it.rotY || 0, color: it.color || null,
-              }))};
-            }
-            // Already an items array
-            if (Array.isArray(data)) return { ...preset, items: data };
-            return preset;
-          } catch(e) {
-            console.warn('Failed to load preset file:', preset.file, e);
-            return preset;
-          }
-        }));
-        setPresets(resolvedPresets);
+        // Presets come pre-resolved from the backend now — just normalize field names.
+        setPresets(presetsData.map(p => ({
+          ...p,
+          items: (p.items || []).map(it => ({
+            modelId: it.modelId || it.catalogId,
+            x: it.x || 0, z: it.z || 0, rotY: it.rotY || 0, color: it.color || null,
+          })),
+        })));
 
-        // Prefetch all GLBs
-        const withFile = items.filter(i => i.file && i.type !== 'preset');
-        setLoadProgress({ loaded: 0, total: withFile.length });
-        let loaded = 0;
-        await Promise.all(withFile.map(item =>
-          loadModel(item.file)
-            .then(() => { loaded++; setLoadProgress({ loaded, total: withFile.length }); })
-            .catch(() => { loaded++; setLoadProgress({ loaded, total: withFile.length }); })
-        ));
+        // UI can render now — GLBs load in the background from here.
         setCatalogReady(true);
+
+        const withFile = items
+          .filter(i => i.file)
+          .slice()
+          .sort((a, b) => (b.load_priority || 0) - (a.load_priority || 0));
+
+        let loaded = 0;
+        setLoadProgress({ loaded: 0, total: withFile.length });
+
+        const CONCURRENCY = 4;
+        let idx = 0;
+        function next() {
+          if (idx >= withFile.length) return;
+          const item = withFile[idx++];
+          loadModel(item.file)
+            .catch(() => {})
+            .finally(() => {
+              loaded++;
+              setLoadProgress({ loaded, total: withFile.length });
+              next();
+            });
+        }
+        for (let i = 0; i < CONCURRENCY; i++) next();
       })
       .catch(e => { console.warn('Catalog load failed:', e); setCatalogReady(true); });
   }, []);
@@ -241,7 +240,7 @@ export default function App() {
     const pct = total > 0 ? Math.round((loaded / total) * 100) : 0;
     return (
       <div style={{ position:'fixed', inset:0, background:'#ffffff', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16 }}>
-        <img src="/moduluxe-designer/backdrop-logo.png" style={{ height:48 }} alt="backdrop" />
+        <img src={`${import.meta.env.BASE_URL}backdrop-logo.png`} style={{ height:48 }} alt="backdrop" />
         <div style={{ fontFamily:'Figtree,sans-serif', fontSize:14, color:'#aaa', marginTop:8 }}>
           {total > 0 ? `Loading models… ${loaded}/${total}` : 'Loading catalog…'}
         </div>
