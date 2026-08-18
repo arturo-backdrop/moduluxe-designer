@@ -302,16 +302,14 @@ export default function App() {
           presets={presets}
           onLoadPreset={handleLoadPreset}
         />
-        {/* Right column — video + quote */}
+        {/* Right column — video + quote, anchored to bottom bar */}
         <div style={{
-          position:'absolute', top:16, right:16, bottom:16,
-          width:260, display:'flex', flexDirection:'column',
+          position:'absolute', right:16, bottom:16,
+          width:260, display:'flex', flexDirection:'column-reverse',
           gap:12, pointerEvents:'none', zIndex:10,
         }}>
+          <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
           <VideoWidget config={CONFIG} />
-          <div style={{ flex:1, display:'flex', flexDirection:'column', justifyContent:'flex-start' }}>
-            <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
-          </div>
         </div>
         <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog}
           onSelectModel={modelId => viewportEngRef.current?.highlightModel(modelId)} />
