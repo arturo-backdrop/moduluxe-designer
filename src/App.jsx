@@ -340,8 +340,7 @@ export default function App() {
           onSelectModel={modelId => viewportEngRef.current?.highlightModel(modelId)} />
       </div>
 
-      {/* Radial menu overlay */}
-      {radialMenu && (() => {
+      {/* Radial menu overlay — floats over viewport */}
       {radialMenu && (() => {
           // Preset group — show Ungroup button instead of radial menu
           if (radialMenu.itemType === 'preset_group') {
@@ -567,7 +566,6 @@ export default function App() {
             </div>
           );
         })()}
-      </div>
 
       {tourActive && <Tour onDone={doneTour} onAction={handleTourAction} />}
     </div>
