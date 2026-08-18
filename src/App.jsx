@@ -289,11 +289,11 @@ export default function App() {
         position: 'absolute', inset: 0, zIndex: 1,
         pointerEvents: 'none',
         display: 'grid',
-      gridTemplateColumns: 'clamp(320px, 23vw, 400px) 1fr clamp(280px, 19vw, 320px)',
-      gridTemplateRows: 'auto 1fr auto',
-      padding: '1rem',
-      gap: '1rem',
-      boxSizing: 'border-box',
+        gridTemplateColumns: 'clamp(260px, 18vw, 320px) 1fr clamp(220px, 16vw, 280px)',
+        gridTemplateRows: 'auto 1fr auto',
+        padding: '0.75rem',
+        gap: '0.75rem',
+        boxSizing: 'border-box',
     }}>
 
       {/* Sidebar — col 1, all rows */}
@@ -331,8 +331,8 @@ export default function App() {
         </div>
       </div>
 
-      {/* Right column — col 3, rows 1+2 */}
-      <div style={{ gridColumn: '3', gridRow: '1 / 3', display: 'flex', flexDirection: 'column', gap: PAD, minHeight: 0, pointerEvents: 'none' }}>
+      {/* Right column — col 3, rows 1+2, anchored to bottom */}
+      <div style={{ gridColumn: '3', gridRow: '1 / 3', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '0.75rem', minHeight: 0, pointerEvents: 'none' }}>
         <VideoWidget config={CONFIG} />
         <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
       </div>
