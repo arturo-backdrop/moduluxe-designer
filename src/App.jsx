@@ -261,9 +261,34 @@ export default function App() {
   const RIGHT_W = 276;
 
   return (
-    <div style={{
-      width: '100%', height: '100%',
-      display: 'grid',
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+
+      {/* Viewport — full screen background */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+        <Viewport
+          config={{ ...CONFIG, _catalogFlat: Object.values(catalog).filter(v => v && typeof v === 'object' && v.id) }}
+          floorSize={floorSize}
+          activePreset={activePreset}
+          sceneItems={sceneItems}
+          onSceneItemsChange={items => { setSceneItems(items); pushHistory(items); }}
+          mode={mode}
+          activeTool={activeTool}
+          onToolChange={setActiveTool}
+          onRadialMenu={(data) => {
+            setRadialMenu(data ? { ...data, groupId: data.uid ? sceneItems.find(i=>i.uid===data.uid)?.groupId : null } : null);
+            if (data) checkTourAction('open_radial');
+          }}
+          radialMenuWrapperRef={radialMenuWrapperRef}
+          engRef={viewportEngRef}
+          onSelect={() => checkTourAction('select_object')}
+        />
+      </div>
+
+      {/* UI Grid — floats over viewport */}
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 1,
+        pointerEvents: 'none',
+        display: 'grid',
       gridTemplateColumns: 'clamp(280px, 23vw, 380px) 1fr clamp(240px, 19vw, 300px)',
       gridTemplateRows: 'auto 1fr auto',
       padding: '1rem',
@@ -314,26 +339,8 @@ export default function App() {
         <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
       </div>
 
-      {/* Viewport — col 2, row 2 */}
-      <div style={{ gridColumn: '2', gridRow: '2', position: 'relative', minHeight: 0, borderRadius: 20, overflow: 'hidden' }}>
-        <Viewport
-          config={{ ...CONFIG, _catalogFlat: Object.values(catalog).filter(v => v && typeof v === 'object' && v.id) }}
-          floorSize={floorSize}
-          activePreset={activePreset}
-          sceneItems={sceneItems}
-          onSceneItemsChange={items => { setSceneItems(items); pushHistory(items); }}
-          mode={mode}
-          activeTool={activeTool}
-          onToolChange={setActiveTool}
-          onRadialMenu={(data) => {
-            setRadialMenu(data ? { ...data, groupId: data.uid ? sceneItems.find(i=>i.uid===data.uid)?.groupId : null } : null);
-            if (data) checkTourAction('open_radial');
-          }}
-          radialMenuWrapperRef={radialMenuWrapperRef}
-          engRef={viewportEngRef}
-          onSelect={() => checkTourAction('select_object')}
-        />
-      </div>
+      {/* Viewport placeholder — keeps grid row alive */}
+      <div style={{ gridColumn: '2', gridRow: '2', minHeight: 0 }} />
 
       {/* Bottom bar — col 2+3, row 3 */}
       <div style={{ gridColumn: '2 / 4', gridRow: '3', pointerEvents: 'all' }}>
@@ -569,6 +576,7 @@ export default function App() {
         })()}
 
       {tourActive && <Tour onDone={doneTour} onAction={handleTourAction} />}
+      </div>
     </div>
   )
 }
