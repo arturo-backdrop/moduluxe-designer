@@ -342,7 +342,7 @@ export default function App() {
       <div style={{ gridColumn: '2', gridRow: '2', minHeight: 0 }} />
 
       {/* Bottom bar — col 2+3, row 3 */}
-      <div style={{ gridColumn: '1 / 4', gridRow: '3', pointerEvents: 'all', alignSelf: 'end', paddingLeft: 'clamp(330px, 24vw, 420px)' }}>
+      <div style={{ gridColumn: '1 / 4', gridRow: '3', pointerEvents: 'all', alignSelf: 'end', paddingLeft: 'calc(clamp(330px, 24vw, 420px) - 0.75rem)' }}>
         <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog}
           onSelectModel={modelId => viewportEngRef.current?.highlightModel(modelId)} />
       </div>
