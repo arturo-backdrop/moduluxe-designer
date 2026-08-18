@@ -3,28 +3,28 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 0.6250rem;
   pointer-events: all;
   z-index: 20;
-  padding-top: 4px;
+  padding-top: 0.2500rem;
 }
 
 /* ── Project pill ────────────────────────────────────────── */
 .projectPill {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.6250rem;
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.10);
-  padding: 10px 18px;
+  border-radius: 1.0000rem;
+  box-shadow: 0 0.2500rem 1.2500rem rgba(0,0,0,0.10);
+  padding: 0.6250rem 1.1250rem;
 }
 
 .nameWrap {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5000rem;
 }
 
 /* Hidden span — mirrors input for width measurement */
@@ -34,20 +34,20 @@
   white-space: pre;
   font-family: 'Figtree', sans-serif;
   font-weight: 500;
-  font-size: 15px;
+  font-size: 0.9375rem;
   pointer-events: none;
 }
 
 .nameInput {
   font-family: 'Figtree', sans-serif;
   font-weight: 500;
-  font-size: 15px;
+  font-size: 0.9375rem;
   color: #1a1a1a;
   border: none;
   outline: none;
   background: transparent;
-  min-width: 80px;
-  max-width: 280px;
+  min-width: 5.0000rem;
+  max-width: 17.5000rem;
 }
 
 .editBtn {
@@ -62,7 +62,7 @@
 
 .pillDivider {
   width: 1px;
-  height: 20px;
+  height: 1.2500rem;
   background: #e8e8e8;
   flex-shrink: 0;
 }
@@ -74,8 +74,8 @@
 }
 
 .historyBtn {
-  width: 30px;
-  height: 30px;
+  width: 1.8750rem;
+  height: 1.8750rem;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -95,9 +95,9 @@
   display: flex;
   align-items: center;
   background: white;
-  border-radius: 40px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  padding: 4px;
+  border-radius: 2.5000rem;
+  box-shadow: 0 0.2500rem 1.2500rem rgba(0,0,0,0.08);
+  padding: 0.2500rem;
   gap: 0;
   position: relative;
   cursor: pointer;
@@ -105,12 +105,12 @@
 
 .modeSlider {
   position: absolute;
-  top: 4px;
-  left: 4px;
-  height: calc(100% - 8px);
+  top: 0.2500rem;
+  left: 0.2500rem;
+  height: calc(100% - 0.5000rem);
   background: #3a3a3a;
-  border-radius: 40px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  border-radius: 2.5000rem;
+  box-shadow: 0 2px 0.6250rem rgba(0,0,0,0.15);
   pointer-events: none;
   z-index: 0;
   transition:
@@ -121,9 +121,9 @@
 .modeBtn {
   font-family: 'Figtree', sans-serif;
   font-weight: 500;
-  font-size: 13px;
-  padding: 7px 18px;
-  border-radius: 40px;
+  font-size: 0.8125rem;
+  padding: 0.4375rem 1.1250rem;
+  border-radius: 2.5000rem;
   border: none;
   cursor: pointer;
   color: #888;
@@ -140,9 +140,9 @@
 /* ── Version ─────────────────────────────────────────────── */
 .version {
   position: fixed;
-  bottom: 10px;
-  right: 14px;
-  font-size: 10px;
+  bottom: 0.6250rem;
+  right: 0.8750rem;
+  font-size: 0.6250rem;
   font-weight: 400;
   color: rgba(0,0,0,0.25);
   pointer-events: none;
@@ -153,13 +153,13 @@
 .newBtn {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 0.3125rem;
   color: #aaa;
   font-family: 'Figtree', sans-serif;
   font-weight: 500;
-  font-size: 13px;
-  padding: 4px 6px;
-  border-radius: 8px;
+  font-size: 0.8125rem;
+  padding: 0.2500rem 0.3750rem;
+  border-radius: 0.5000rem;
   transition: all 0.15s;
   white-space: nowrap;
 }
@@ -176,13 +176,13 @@
 }
 .unitBtn {
   font-family: 'Figtree', sans-serif;
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 500;
   color: #999;
   background: transparent;
   border: none;
-  padding: 4px 6px;
-  border-radius: 6px;
+  padding: 0.2500rem 0.3750rem;
+  border-radius: 0.3750rem;
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -190,13 +190,13 @@
 .unitBtnActive { color: #b48b31 !important; font-weight: 700; background: #fdf8ef !important; }
 
 .tourBtn {
-  width: 28px;
-  height: 28px;
+  width: 1.7500rem;
+  height: 1.7500rem;
   border-radius: 50%;
   border: 2px solid #e8e8e8;
   background: white;
   color: #aaa;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 700;
   cursor: pointer;
   display: flex;
