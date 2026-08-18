@@ -360,7 +360,8 @@
 
 .navBtn {
   width: 56px;
-  height: 56px;
+  min-height: 56px;
+  height: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -397,10 +398,9 @@
   text-align: center;
   line-height: 1.2;
   transition: color 0.15s;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 56px;
+  white-space: normal;
+  word-break: break-word;
+  max-width: 52px;
 }
 .navBtn:hover .navLabel { color: #555; }
 .navBtnActive .navLabel { color: white !important; }
