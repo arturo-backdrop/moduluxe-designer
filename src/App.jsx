@@ -302,10 +302,19 @@ export default function App() {
           presets={presets}
           onLoadPreset={handleLoadPreset}
         />
-        <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
+        {/* Right column — video + quote */}
+        <div style={{
+          position:'absolute', top:16, right:16, bottom:16,
+          width:260, display:'flex', flexDirection:'column',
+          gap:12, pointerEvents:'none', zIndex:10,
+        }}>
+          <VideoWidget config={CONFIG} />
+          <div style={{ flex:1, display:'flex', flexDirection:'column', justifyContent:'flex-start' }}>
+            <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
+          </div>
+        </div>
         <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog}
           onSelectModel={modelId => viewportEngRef.current?.highlightModel(modelId)} />
-        <VideoWidget config={CONFIG} />
         {tourActive && <Tour onDone={doneTour} onAction={handleTourAction} />}
         {radialMenu && (() => {
           // Preset group — show Ungroup button instead of radial menu
