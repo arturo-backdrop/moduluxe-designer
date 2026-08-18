@@ -135,7 +135,7 @@
   box-shadow: 0 2px 12px rgba(180,139,49,0.10);
 }
 .thumbPlaceholder {
-  width: 46px; height: 60px;
+  width: 70px; height: 90px;
   flex-shrink: 0;
   background: #f0f0f0;
   border-radius: 6px;
@@ -145,7 +145,7 @@
   transition: background 0.2s;
 }
 .productItemHovered .thumbPlaceholder { background: #ede9df; }
-.thumbImg { width: 46px; height: 60px; object-fit: contain; border-radius: 6px; flex-shrink: 0; }
+.thumbImg { width: 70px; height: 90px; object-fit: contain; border-radius: 8px; flex-shrink: 0; }
 .productInfo { flex: 1; min-width: 0; }
 .productName {
   font-weight: 500; font-size: 13px; color: #1a1a1a;
@@ -266,13 +266,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 11px 14px;
+  padding: 8px 10px;
   background: none;
   border: none;
   cursor: pointer;
-  transition: background 0.15s;
 }
-.sectionHeader:hover { background: #fafafa; }
 
 .sectionLeft {
   display: flex;
@@ -280,10 +278,19 @@
   gap: 8px;
 }
 .sectionTitle {
-  font-size: 12px;
-  font-weight: 600;
-  color: #555;
-  letter-spacing: -0.01em;
+  font-size: 11px;
+  font-weight: 700;
+  color: #888;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: #f0f0f0;
+  border-radius: 20px;
+  padding: 4px 12px;
+  transition: background 0.15s, color 0.15s;
+}
+.sectionHeader:hover .sectionTitle {
+  background: #ede9df;
+  color: #b48b31;
 }
 .sectionBadge {
   background: #b48b31;
