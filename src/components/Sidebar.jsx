@@ -2,6 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import styles from './Sidebar.module.css';
 import { toDisplay } from '../units.js';
 
+const CATEGORY_ICONS = {
+  'Panels': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/></svg>,
+  'Counters': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-4 0v2M8 7V5a2 2 0 0 0-4 0v2"/></svg>,
+  'Special modules': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 22 20 2 20"/></svg>,
+  'Presets': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+  'Props': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>,
+  'default': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/></svg>,
+};
+
 const Icons = {
   select: <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-7 1-4 7z"/></svg>,
   wall: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20V7l7-4v17M11 7l9 4v9"/></svg>,
@@ -9,7 +18,6 @@ const Icons = {
   door: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="15" cy="12" r="1" fill="currentColor" stroke="none"/></svg>,
   zoomIn: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
   zoomOut: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>,
-  chevDown: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>,
 };
 
 function ToolBtn({ id, label, icon, active, onClick }) {
@@ -30,28 +38,6 @@ function ThumbPlaceholder() {
         <line x1="4" y1="8" x2="14" y2="8" stroke="#bbb" strokeWidth="1"/>
         <line x1="4" y1="13" x2="14" y2="13" stroke="#bbb" strokeWidth="1"/>
       </svg>
-    </div>
-  );
-}
-
-function PresetItem({ preset, onLoad }) {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <div className={`${styles.productItem} ${hovered ? styles.productItemHovered : ''}`}
-      data-tour="presets-tab"
-      style={{ cursor:'pointer' }}
-      onClick={() => onLoad?.(preset)}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}>
-      {preset.thumbnail
-        ? <img src={preset.thumbnail} alt={preset.name} className={styles.thumbImg} />
-        : <ThumbPlaceholder />}
-      <div className={styles.productInfo}>
-        <div className={styles.productName}>{preset.name}</div>
-        <div className={styles.productDims}>{preset.description || `${(preset.items||[]).length} items`}</div>
-      </div>
-      <div className={`${styles.dragLabel} ${hovered ? styles.dragLabelVisible : ''}`}
-        style={{ fontSize:10, padding:'4px 8px' }}>Load</div>
     </div>
   );
 }
@@ -92,37 +78,31 @@ function ProductItem({ item, units='ft' }) {
   );
 }
 
-const CATEGORY_ICONS = {
-  'Panels': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/></svg>,
-  'Counters': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-4 0v2M8 7V5a2 2 0 0 0-4 0v2"/></svg>,
-  'Special modules': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 22 20 2 20"/></svg>,
-  'Presets': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
-  'Props': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>,
-  'default': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/></svg>,
-};
-
-function Section({ title, badge, defaultOpen = true, children }) {
-  const [open, setOpen] = useState(defaultOpen);
-  const icon = CATEGORY_ICONS[title] || CATEGORY_ICONS['default'];
+function PresetItem({ preset, onLoad }) {
+  const [hovered, setHovered] = useState(false);
   return (
-    <div className={styles.section}>
-      <button className={styles.sectionHeader} onClick={() => setOpen(v => !v)}>
-        <div className={styles.sectionPill}>
-          <span className={styles.sectionIcon}>{icon}</span>
-          <span className={styles.sectionTitle}>{title}</span>
-          {badge != null && <span className={styles.sectionBadge}>{badge}</span>}
-          <div className={styles.sectionChevron} style={{ transform: open ? 'rotate(0deg)' : 'rotate(-90deg)', marginLeft:'auto' }}>
-            {Icons.chevDown}
-          </div>
-        </div>
-      </button>
-      {open && <div className={styles.sectionBody}>{children}</div>}
+    <div className={`${styles.productItem} ${hovered ? styles.productItemHovered : ''}`}
+      data-tour="presets-tab"
+      style={{ cursor:'pointer' }}
+      onClick={() => onLoad?.(preset)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}>
+      {preset.thumbnail
+        ? <img src={preset.thumbnail} alt={preset.name} className={styles.thumbImg} />
+        : <ThumbPlaceholder />}
+      <div className={styles.productInfo}>
+        <div className={styles.productName}>{preset.name}</div>
+        <div className={styles.productDims}>{preset.description || `${(preset.items||[]).length} items`}</div>
+      </div>
+      <div className={`${styles.dragLabel} ${hovered ? styles.dragLabelVisible : ''}`}
+        style={{ fontSize:10, padding:'4px 8px' }}>Load</div>
     </div>
   );
 }
 
 export default function Sidebar({ config, mode, activeTool, onToolChange, onAddProduct, units='ft', presets=[], onLoadPreset }) {
   const [catalog,    setCatalog]    = useState({});
+  const [activeCategory, setActiveCategory] = useState(null);
   const [loading,    setLoading]    = useState(true);
   const [logoHeight, setLogoHeight] = useState(76);
   const logoRef = useRef(null);
@@ -155,35 +135,59 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
       .catch(() => setLoading(false));
   }, [config.manifestUrl]);
 
-  const tabs = Object.keys(catalog);
+  // Build nav items: presets first, then categories
+  const navItems = [
+    ...(presets.length > 0 ? [{ id: '__presets__', label: 'Presets', icon: CATEGORY_ICONS['Presets'] }] : []),
+    ...Object.keys(catalog).map(cat => ({ id: cat, label: cat, icon: CATEGORY_ICONS[cat] || CATEGORY_ICONS['default'] })),
+  ];
+
+  const activeItems = activeCategory === '__presets__'
+    ? presets
+    : (catalog[activeCategory] || []);
 
   return (
     <div className={styles.sidebarWrap} style={{ pointerEvents: 'all' }}>
 
       {/* ── Panel ── */}
       <div className={`${styles.panel} ${isPlace ? styles.panelVisible : styles.panelHidden}`}>
+        {/* Logo */}
         <div className={styles.logoHeader} ref={logoRef}>
           <img src="/moduluxe-designer/backdrop-logo-inverse.png" alt="backdrop.com" className={styles.logo} />
         </div>
 
-        <div className={styles.productList}>
-          {loading && <div className={styles.emptyState}>Loading catalog...</div>}
+        {/* Two-column layout */}
+        <div className={styles.twoCol}>
+          {/* Left nav */}
+          <div className={styles.navCol}>
+            {navItems.map(nav => (
+              <button
+                key={nav.id}
+                data-tour={nav.id === '__presets__' ? 'presets-tab' : undefined}
+                className={`${styles.navBtn} ${activeCategory === nav.id ? styles.navBtnActive : ''}`}
+                onClick={() => setActiveCategory(activeCategory === nav.id ? null : nav.id)}
+                title={nav.label}>
+                <div className={styles.navIcon}>{nav.icon}</div>
+                <span className={styles.navLabel}>{nav.label}</span>
+              </button>
+            ))}
+          </div>
 
-          {!loading && presets.length > 0 && (
-            <Section title="Presets" defaultOpen={false}>
-              {presets.map(preset => (
-                <PresetItem key={preset.id} preset={preset} onLoad={onLoadPreset} />
-              ))}
-            </Section>
-          )}
+          {/* Divider */}
+          <div className={styles.navDivider} />
 
-          {!loading && tabs.map((cat, idx) => (
-            <Section key={cat} title={cat} defaultOpen={false}>
-              {(catalog[cat] || []).map(item => (
-                <ProductItem key={item.id} item={item} units={units} />
-              ))}
-            </Section>
-          ))}
+          {/* Right product list */}
+          <div className={styles.productList}>
+            {loading && <div className={styles.emptyState}>Loading...</div>}
+            {!loading && !activeCategory && (
+              <div className={styles.emptyState}>Select a category</div>
+            )}
+            {!loading && activeCategory === '__presets__' && presets.map(preset => (
+              <PresetItem key={preset.id} preset={preset} onLoad={onLoadPreset} />
+            ))}
+            {!loading && activeCategory && activeCategory !== '__presets__' && (catalog[activeCategory] || []).map(item => (
+              <ProductItem key={item.id} item={item} units={units} />
+            ))}
+          </div>
         </div>
       </div>
 
