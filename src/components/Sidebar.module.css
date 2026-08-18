@@ -1,13 +1,10 @@
 /* ── Wrapper ─────────────────────────────────────────────── */
 .sidebarWrap {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  bottom: 16px;
   display: flex;
   flex-direction: row;
   align-items: flex-start;
   gap: 10px;
+  height: 100%;
 }
 
 /* ── Panel ───────────────────────────────────────────────── */
