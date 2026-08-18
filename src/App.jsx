@@ -270,6 +270,7 @@ export default function App() {
       gap: '1rem',
       background: '#e8e8e8',
       boxSizing: 'border-box',
+      position: 'relative',
     }}>
 
       {/* Sidebar — col 1, all rows */}
