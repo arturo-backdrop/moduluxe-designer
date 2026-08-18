@@ -293,9 +293,7 @@ export default function App() {
       gridTemplateRows: 'auto 1fr auto',
       padding: '1rem',
       gap: '1rem',
-      background: '#e8e8e8',
       boxSizing: 'border-box',
-      position: 'relative',
     }}>
 
       {/* Sidebar — col 1, all rows */}
