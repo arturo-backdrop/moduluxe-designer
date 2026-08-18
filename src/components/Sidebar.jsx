@@ -70,17 +70,28 @@ function ProductItem({ item, units='ft' }) {
   );
 }
 
+const CATEGORY_ICONS = {
+  'Panels': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/></svg>,
+  'Counters': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-4 0v2M8 7V5a2 2 0 0 0-4 0v2"/></svg>,
+  'Special modules': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 22 20 2 20"/></svg>,
+  'Presets': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+  'Props': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>,
+  'default': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/></svg>,
+};
+
 function Section({ title, badge, defaultOpen = true, children }) {
   const [open, setOpen] = useState(defaultOpen);
+  const icon = CATEGORY_ICONS[title] || CATEGORY_ICONS['default'];
   return (
     <div className={styles.section}>
       <button className={styles.sectionHeader} onClick={() => setOpen(v => !v)}>
-        <div className={styles.sectionLeft}>
+        <div className={styles.sectionPill}>
+          <span className={styles.sectionIcon}>{icon}</span>
           <span className={styles.sectionTitle}>{title}</span>
           {badge != null && <span className={styles.sectionBadge}>{badge}</span>}
-        </div>
-        <div className={styles.sectionChevron} style={{ transform: open ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
-          {Icons.chevDown}
+          <div className={styles.sectionChevron} style={{ transform: open ? 'rotate(0deg)' : 'rotate(-90deg)', marginLeft:'auto' }}>
+            {Icons.chevDown}
+          </div>
         </div>
       </button>
       {open && <div className={styles.sectionBody}>{children}</div>}
