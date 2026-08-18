@@ -1,9 +1,6 @@
 /* ── Widget — bottom right ───────────────────────────────── */
 .widget {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  z-index: 20;
+  pointer-events: all;
 }
 
 /* ── Full card ───────────────────────────────────────────── */
@@ -12,7 +9,7 @@
   border-radius: 18px;
   box-shadow: 0 8px 40px rgba(0,0,0,0.14);
   overflow: hidden;
-  width: 250px;
+  width: 100%;
   animation: slideUp 0.35s cubic-bezier(0.34,1.2,0.64,1);
 }
 @keyframes slideUp {
