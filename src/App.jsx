@@ -264,10 +264,10 @@ export default function App() {
     <div style={{
       width: '100%', height: '100%',
       display: 'grid',
-      gridTemplateColumns: `$352px 1fr $292px`,
+      gridTemplateColumns: 'clamp(280px, 23vw, 380px) 1fr clamp(240px, 19vw, 300px)',
       gridTemplateRows: 'auto 1fr auto',
-      padding: PAD,
-      gap: PAD,
+      padding: '1rem',
+      gap: '1rem',
       background: '#e8e8e8',
       boxSizing: 'border-box',
     }}>
