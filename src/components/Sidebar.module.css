@@ -265,12 +265,37 @@
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 8px 10px;
+  padding: 6px 8px;
   background: none;
   border: none;
   cursor: pointer;
 }
+
+.sectionPill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: #f0f0f0;
+  border-radius: 20px;
+  padding: 7px 14px;
+  transition: background 0.15s, color 0.15s;
+}
+.sectionHeader:hover .sectionPill {
+  background: #ede9df;
+}
+.sectionIcon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+}
+.sectionIcon svg { width: 15px; height: 15px; }
+.sectionHeader:hover .sectionIcon { color: #b48b31; }
 
 .sectionLeft {
   display: flex;
@@ -283,13 +308,9 @@
   color: #888;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  background: #f0f0f0;
-  border-radius: 20px;
-  padding: 4px 12px;
-  transition: background 0.15s, color 0.15s;
+  transition: color 0.15s;
 }
 .sectionHeader:hover .sectionTitle {
-  background: #ede9df;
   color: #b48b31;
 }
 .sectionBadge {
