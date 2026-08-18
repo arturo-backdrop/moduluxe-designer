@@ -34,6 +34,28 @@ function ThumbPlaceholder() {
   );
 }
 
+function PresetItem({ preset, onLoad }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div className={`${styles.productItem} ${hovered ? styles.productItemHovered : ''}`}
+      data-tour="presets-tab"
+      style={{ cursor:'pointer' }}
+      onClick={() => onLoad?.(preset)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}>
+      {preset.thumbnail
+        ? <img src={preset.thumbnail} alt={preset.name} className={styles.thumbImg} />
+        : <ThumbPlaceholder />}
+      <div className={styles.productInfo}>
+        <div className={styles.productName}>{preset.name}</div>
+        <div className={styles.productDims}>{preset.description || `${(preset.items||[]).length} items`}</div>
+      </div>
+      <div className={`${styles.dragLabel} ${hovered ? styles.dragLabelVisible : ''}`}
+        style={{ fontSize:10, padding:'4px 8px' }}>Load</div>
+    </div>
+  );
+}
+
 function ProductItem({ item, units='ft' }) {
   const [hovered, setHovered] = useState(false);
   return (
@@ -150,18 +172,7 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
           {!loading && presets.length > 0 && (
             <Section title="Presets" defaultOpen={false}>
               {presets.map(preset => (
-                <div key={preset.id} className={styles.productItem} style={{ cursor:'pointer' }}
-                  data-tour="presets-tab"
-                  onClick={() => onLoadPreset?.(preset)}>
-                  {preset.thumbnail
-                    ? <img src={preset.thumbnail} alt={preset.name} className={styles.thumbImg} />
-                    : <ThumbPlaceholder />}
-                  <div className={styles.productInfo}>
-                    <div className={styles.productName}>{preset.name}</div>
-                    <div className={styles.productDims}>{preset.description || `${(preset.items||[]).length} items`}</div>
-                  </div>
-                  <div className={styles.dragLabel} style={{ opacity:1, fontSize:10, padding:'4px 8px' }}>Load</div>
-                </div>
+                <PresetItem key={preset.id} preset={preset} onLoad={onLoadPreset} />
               ))}
             </Section>
           )}
