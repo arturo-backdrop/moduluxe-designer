@@ -571,3 +571,6 @@ export default function App() {
       {tourActive && <Tour onDone={doneTour} onAction={handleTourAction} />}
     </div>
   )
+}
+
+export default App;
