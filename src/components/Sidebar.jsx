@@ -148,7 +148,7 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
           {loading && <div className={styles.emptyState}>Loading catalog...</div>}
 
           {!loading && presets.length > 0 && (
-            <Section title="Presets" defaultOpen={true}>
+            <Section title="Presets" defaultOpen={false}>
               {presets.map(preset => (
                 <div key={preset.id} className={styles.productItem} style={{ cursor:'pointer' }}
                   data-tour="presets-tab"
@@ -167,7 +167,7 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
           )}
 
           {!loading && tabs.map((cat, idx) => (
-            <Section key={cat} title={cat} defaultOpen={idx === 0}>
+            <Section key={cat} title={cat} defaultOpen={false}>
               {(catalog[cat] || []).map(item => (
                 <ProductItem key={item.id} item={item} units={units} />
               ))}
