@@ -102,7 +102,7 @@ function PresetItem({ preset, onLoad }) {
 
 export default function Sidebar({ config, mode, activeTool, onToolChange, onAddProduct, units='ft', presets=[], onLoadPreset }) {
   const [catalog,    setCatalog]    = useState({});
-  const [activeCategory, setActiveCategory] = useState(null);
+  const [activeCategory, setActiveCategory] = useState(presets.length > 0 ? '__presets__' : null);
   const [loading,    setLoading]    = useState(true);
   const [logoHeight, setLogoHeight] = useState(76);
   const logoRef  = useRef(null);
