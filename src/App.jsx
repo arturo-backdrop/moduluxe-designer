@@ -256,65 +256,93 @@ export default function App() {
     return <Onboarding config={CONFIG} presets={presets} onComplete={handleOnboardingComplete} />;
   }
 
+  const PAD = 16;
+  const SIDEBAR_W = 336;
+  const RIGHT_W = 276;
+
   return (
-    <div style={styles.root}>
-      <Viewport
-        config={{ ...CONFIG, _catalogFlat: Object.values(catalog).filter(v => v && typeof v === 'object' && v.id) }}
-        floorSize={floorSize}
-        activePreset={activePreset}
-        sceneItems={sceneItems}
-        onSceneItemsChange={items => { setSceneItems(items); pushHistory(items); }}
-        mode={mode}
-        activeTool={activeTool}
-        onToolChange={(t) => { setActiveTool(t); if (t === 'wall') checkTourAction('select_wall'); }}
-        onSelect={() => checkTourAction('select_object')}
-        onRadialMenu={(data) => {
-          setRadialMenu(data ? { ...data, groupId: data.uid ? sceneItems.find(i=>i.uid===data.uid)?.groupId : null } : null);
-          if (data) checkTourAction('open_radial');
-        }}
-        radialMenuWrapperRef={radialMenuWrapperRef}
-        engRef={viewportEngRef}
-      />
-      <div style={styles.ui}>
-        <Header
-          config={CONFIG}
-          projectName={projectName}
-          onProjectNameChange={setProjectName}
-          mode={mode}
-          onModeChange={(m) => { setMode(m); if (m === 'draw') checkTourAction('switch_draw'); if (m === 'place') checkTourAction('switch_place'); }}
-          canUndo={canUndo}
-          canRedo={canRedo}
-          onUndo={undo}
-          onRedo={redo}
-          onNew={handleNew}
-          units={units}
-          onUnitsChange={setUnits}
-          onStartTour={startTour}
-        />
+    <div style={{
+      width: '100%', height: '100%',
+      display: 'grid',
+      gridTemplateColumns: `$352px 1fr $292px`,
+      gridTemplateRows: 'auto 1fr auto',
+      padding: PAD,
+      gap: PAD,
+      background: '#e8e8e8',
+      boxSizing: 'border-box',
+    }}>
+
+      {/* Sidebar — col 1, all rows */}
+      <div style={{ gridColumn: '1', gridRow: '1 / 4', position: 'relative', minHeight: 0 }}>
         <Sidebar
           config={CONFIG}
           units={units}
           mode={mode}
           activeTool={activeTool}
           onToolChange={(t) => { setActiveTool(t); if (t === 'wall') checkTourAction('select_wall'); }}
-        onSelect={() => checkTourAction('select_object')}
           onAddProduct={addSceneItem}
           presets={presets}
           onLoadPreset={handleLoadPreset}
         />
-        {/* Right column — video + quote, anchored above bottom bar */}
-        <div style={{
-          position:'absolute', right:16, bottom:148,
-          width:260, display:'flex', flexDirection:'column-reverse',
-          gap:12, pointerEvents:'none', zIndex:10,
-        }}>
-          <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
-          <VideoWidget config={CONFIG} />
+      </div>
+
+      {/* Header — col 2, row 1 */}
+      <div style={{ gridColumn: '2', gridRow: '1', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', pointerEvents: 'none' }}>
+        <div style={{ pointerEvents: 'all' }}>
+          <Header
+            config={CONFIG}
+            projectName={projectName}
+            onProjectNameChange={setProjectName}
+            mode={mode}
+            onModeChange={(m) => { setMode(m); if (m === 'draw') checkTourAction('switch_draw'); if (m === 'place') checkTourAction('switch_place'); }}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            onUndo={undo}
+            onRedo={redo}
+            onNew={handleNew}
+            units={units}
+            onUnitsChange={setUnits}
+            onStartTour={startTour}
+          />
         </div>
+      </div>
+
+      {/* Right column — col 3, rows 1+2 */}
+      <div style={{ gridColumn: '3', gridRow: '1 / 3', display: 'flex', flexDirection: 'column', gap: PAD, minHeight: 0, pointerEvents: 'none' }}>
+        <VideoWidget config={CONFIG} />
+        <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
+      </div>
+
+      {/* Viewport — col 2, row 2 */}
+      <div style={{ gridColumn: '2', gridRow: '2', position: 'relative', minHeight: 0, borderRadius: 20, overflow: 'hidden' }}>
+        <Viewport
+          config={{ ...CONFIG, _catalogFlat: Object.values(catalog).filter(v => v && typeof v === 'object' && v.id) }}
+          floorSize={floorSize}
+          activePreset={activePreset}
+          sceneItems={sceneItems}
+          onSceneItemsChange={items => { setSceneItems(items); pushHistory(items); }}
+          mode={mode}
+          activeTool={activeTool}
+          onToolChange={setActiveTool}
+          onRadialMenu={(data) => {
+            setRadialMenu(data ? { ...data, groupId: data.uid ? sceneItems.find(i=>i.uid===data.uid)?.groupId : null } : null);
+            if (data) checkTourAction('open_radial');
+          }}
+          radialMenuWrapperRef={radialMenuWrapperRef}
+          engRef={viewportEngRef}
+          onSelect={() => checkTourAction('select_object')}
+        />
+      </div>
+
+      {/* Bottom bar — col 2+3, row 3 */}
+      <div style={{ gridColumn: '2 / 4', gridRow: '3', pointerEvents: 'all' }}>
         <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog}
           onSelectModel={modelId => viewportEngRef.current?.highlightModel(modelId)} />
-        {tourActive && <Tour onDone={doneTour} onAction={handleTourAction} />}
-        {radialMenu && (() => {
+      </div>
+
+      {/* Radial menu overlay */}
+      {radialMenu && (() => {
+      {radialMenu && (() => {
           // Preset group — show Ungroup button instead of radial menu
           if (radialMenu.itemType === 'preset_group') {
             const btnStyle = (accent=false) => ({
@@ -540,6 +568,7 @@ export default function App() {
           );
         })()}
       </div>
+
+      {tourActive && <Tour onDone={doneTour} onAction={handleTourAction} />}
     </div>
-  );
-}
+  )
