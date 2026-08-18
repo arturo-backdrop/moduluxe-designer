@@ -4,14 +4,12 @@ import { toDisplay } from '../units.js';
 
 const Icons = {
   select: <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-7 1-4 7z"/></svg>,
-  measure: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12h16M4 12l3-3M4 12l3 3M20 12l-3-3M20 12l-3 3"/></svg>,
   wall: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20V7l7-4v17M11 7l9 4v9"/></svg>,
   column: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="8" y="3" width="8" height="18" rx="2"/></svg>,
   door: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="15" cy="12" r="1" fill="currentColor" stroke="none"/></svg>,
   zoomIn: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
   zoomOut: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>,
-  chevLeft: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>,
-  chevRight: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
+  chevDown: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>,
 };
 
 function ToolBtn({ id, label, icon, active, onClick }) {
@@ -36,7 +34,7 @@ function ThumbPlaceholder() {
   );
 }
 
-function ProductItem({ item, onDragStart, units='ft' }) {
+function ProductItem({ item, units='ft' }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div className={`${styles.productItem} ${hovered ? styles.productItemHovered : ''}`}
@@ -44,14 +42,13 @@ function ProductItem({ item, onDragStart, units='ft' }) {
       onDragStart={e => {
         e.dataTransfer.setData('modelId', item.id);
         window.__dragModelId = item.id;
-        // Hide the default drag card image
         const img = new Image();
         img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
         e.dataTransfer.setDragImage(img, 0, 0);
-        onDragStart(item);
       }}
       onDragEnd={() => { window.__dragModelId = null; }}
-      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}>
       {item.thumbnail
         ? <img src={item.thumbnail} alt={item.name} className={styles.thumbImg} />
         : <ThumbPlaceholder />}
@@ -73,22 +70,34 @@ function ProductItem({ item, onDragStart, units='ft' }) {
   );
 }
 
-export default function Sidebar({ config, mode, activeTool, onToolChange, onAddProduct, units='ft', presets=[], onLoadPreset }) {
-  const [catalog,      setCatalog]      = useState({});
-  const [activeTab,    setActiveTab]    = useState(null);
-  const [showPresets,  setShowPresets]  = useState(false);
-  const [loading,      setLoading]      = useState(true);
-  const [logoHeight,   setLogoHeight]   = useState(76);
-  const tabsRef   = useRef(null);
-  const logoRef   = useRef(null);
-  const isPlace   = mode === 'place';
+function Section({ title, badge, defaultOpen = true, children }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className={styles.section}>
+      <button className={styles.sectionHeader} onClick={() => setOpen(v => !v)}>
+        <div className={styles.sectionLeft}>
+          <span className={styles.sectionTitle}>{title}</span>
+          {badge != null && <span className={styles.sectionBadge}>{badge}</span>}
+        </div>
+        <div className={styles.sectionChevron} style={{ transform: open ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
+          {Icons.chevDown}
+        </div>
+      </button>
+      {open && <div className={styles.sectionBody}>{children}</div>}
+    </div>
+  );
+}
 
-  // Measure logo header height for responsive alignment
+export default function Sidebar({ config, mode, activeTool, onToolChange, onAddProduct, units='ft', presets=[], onLoadPreset }) {
+  const [catalog,    setCatalog]    = useState({});
+  const [loading,    setLoading]    = useState(true);
+  const [logoHeight, setLogoHeight] = useState(76);
+  const logoRef = useRef(null);
+  const isPlace = mode === 'place';
+
   useEffect(() => {
     if (!logoRef.current) return;
-    const ro = new ResizeObserver(entries => {
-      setLogoHeight(entries[0].contentRect.height);
-    });
+    const ro = new ResizeObserver(entries => setLogoHeight(entries[0].contentRect.height));
     ro.observe(logoRef.current);
     return () => ro.disconnect();
   }, []);
@@ -101,7 +110,6 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
         const items = Array.isArray(data) ? data : (data.models || []);
         const grouped = {};
         items.forEach(item => {
-          // Hide accessories (socket-only) and presets from catalog
           if (item.type === 'preset') return;
           if (item.category === 'Accessory' || item.category === 'accessory') return;
           const cat = item.category || 'Other';
@@ -109,7 +117,6 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
           grouped[cat].push(item);
         });
         setCatalog(grouped);
-        setActiveTab(Object.keys(grouped)[0] || null);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -117,78 +124,49 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
 
   const tabs = Object.keys(catalog);
 
-  function scrollTabs(dir) {
-    tabsRef.current?.scrollBy({ left: dir * 80, behavior: 'smooth' });
-  }
-
   return (
-    <div className={styles.sidebarWrap} style={{ pointerEvents: "all" }}>
+    <div className={styles.sidebarWrap} style={{ pointerEvents: 'all' }}>
 
-      {/* ── Panel — slides out in Draw mode ── */}
+      {/* ── Panel ── */}
       <div className={`${styles.panel} ${isPlace ? styles.panelVisible : styles.panelHidden}`}>
         <div className={styles.logoHeader} ref={logoRef}>
           <img src="/moduluxe-designer/backdrop-logo-inverse.png" alt="backdrop.com" className={styles.logo} />
         </div>
 
-        {tabs.length > 0 && (
-          <div className={styles.tabsRow}>
-            <button className={styles.tabArrow} onClick={() => scrollTabs(-1)}>{Icons.chevLeft}</button>
-            <div className={styles.tabs} ref={tabsRef}>
-              {tabs.map(tab => (
-                <button key={tab}
-                  className={`${styles.tab} ${!showPresets && activeTab === tab ? styles.tabActive : ''}`}
-                  onClick={() => { setActiveTab(tab); setShowPresets(false); }}>{tab}</button>
-              ))}
-              {presets.length > 0 && (
-                <button
-                  data-tour="presets-tab"
-                  className={`${styles.tab} ${showPresets ? styles.tabActive : ''}`}
-                  onClick={() => setShowPresets(true)}>Presets</button>
-              )}
-            </div>
-            <button className={styles.tabArrow} onClick={() => scrollTabs(1)}>{Icons.chevRight}</button>
-          </div>
-        )}
-
         <div className={styles.productList}>
-          {showPresets ? (
-            presets.map(preset => (
-              <div key={preset.id} className={styles.productItem} style={{ cursor:'pointer' }}
-                onClick={() => onLoadPreset?.(preset)}>
-                {preset.thumbnail
-                  ? <img src={preset.thumbnail} alt={preset.name} className={styles.thumbImg} />
-                  : <div className={styles.thumbPlaceholder}>
-                      <svg width="18" height="26" viewBox="0 0 18 26" fill="none">
-                        <rect x="1" y="1" width="16" height="24" rx="3" stroke="#bbb" strokeWidth="1.2"/>
-                        <line x1="4" y1="8" x2="14" y2="8" stroke="#bbb" strokeWidth="1"/>
-                        <line x1="4" y1="13" x2="14" y2="13" stroke="#bbb" strokeWidth="1"/>
-                      </svg>
-                    </div>
-                }
-                <div className={styles.productInfo}>
-                  <div className={styles.productName}>{preset.name}</div>
-                  <div className={styles.productDims}>{preset.description || `${(preset.items||[]).length} items`}</div>
+          {loading && <div className={styles.emptyState}>Loading catalog...</div>}
+
+          {!loading && presets.length > 0 && (
+            <Section title="Presets" defaultOpen={true}>
+              {presets.map(preset => (
+                <div key={preset.id} className={styles.productItem} style={{ cursor:'pointer' }}
+                  data-tour="presets-tab"
+                  onClick={() => onLoadPreset?.(preset)}>
+                  {preset.thumbnail
+                    ? <img src={preset.thumbnail} alt={preset.name} className={styles.thumbImg} />
+                    : <ThumbPlaceholder />}
+                  <div className={styles.productInfo}>
+                    <div className={styles.productName}>{preset.name}</div>
+                    <div className={styles.productDims}>{preset.description || `${(preset.items||[]).length} items`}</div>
+                  </div>
+                  <div className={styles.dragLabel} style={{ opacity:1, fontSize:10, padding:'4px 8px' }}>Load</div>
                 </div>
-                <div className={styles.dragLabel} style={{ opacity:1, fontSize:10, padding:'4px 8px' }}>Load</div>
-              </div>
-            ))
-          ) : (
-            <>
-              {loading && <div className={styles.emptyState}>Loading catalog...</div>}
-              {!loading && tabs.length === 0 && <div className={styles.emptyState}>No products available.</div>}
-              {!loading && activeTab && (catalog[activeTab] || []).map(item => (
-                <ProductItem key={item.id} item={item} onDragStart={i => {}} units={units} />
               ))}
-            </>
+            </Section>
           )}
+
+          {!loading && tabs.map((cat, idx) => (
+            <Section key={cat} title={cat} defaultOpen={idx === 0}>
+              {(catalog[cat] || []).map(item => (
+                <ProductItem key={item.id} item={item} units={units} />
+              ))}
+            </Section>
+          ))}
         </div>
       </div>
 
-      {/* ── Toolbar — always visible, right of panel ── */}
+      {/* ── Toolbar ── */}
       <div className={styles.rightCol} style={{ paddingTop: logoHeight + 38 }}>
-        {/* Spacer that matches logo header height */}
-
-        {/* Zoom */}
         <div className={styles.zoomWrap}>
           <button className={styles.zoomBtn} title="Zoom in"
             onClick={() => window.dispatchEvent(new CustomEvent('viewport:zoom', { detail: 1 }))}>
@@ -201,10 +179,8 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
           </button>
         </div>
 
-        {/* Tools */}
         <div className={styles.toolsContainer}>
-          <ToolBtn id="select"  label="Select"  icon={Icons.select}  active={activeTool==='select'}  onClick={onToolChange} data-tour="select" />
-
+          <ToolBtn id="select" label="Select" icon={Icons.select} active={activeTool==='select'} onClick={onToolChange} />
           <div className={`${styles.drawTools} ${!isPlace ? styles.drawToolsVisible : styles.drawToolsHidden}`}>
             <div className={styles.toolDivider} />
             <ToolBtn id="wall"   label="Wall"   icon={Icons.wall}   active={activeTool==='wall'}   onClick={onToolChange} data-tour="tool-wall" />
@@ -217,11 +193,3 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
     </div>
   );
 }
-
-
-
-
-
-
-
-
