@@ -354,7 +354,7 @@
   gap: 4px;
   overflow-y: auto;
   scrollbar-width: none;
-  background: #f2f2f2;
+  background: #e0e0e0;
 }
 .navCol::-webkit-scrollbar { display: none; }
 
@@ -372,13 +372,13 @@
   transition: background 0.15s;
   flex-shrink: 0;
 }
-.navBtn:hover { background: #e8e8e8; }
-.navBtnActive { background: #ede9df !important; }
+.navBtn:hover { background: #d4d4d4; }
+.navBtnActive { background: #d9cdb5 !important; }
 
 .navIcon {
   width: 16px;
   height: 16px;
-  color: #bbb;
+  color: #888;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -391,7 +391,7 @@
 .navLabel {
   font-size: 9px;
   font-weight: 400;
-  color: #bbb;
+  color: #777;
   text-align: center;
   line-height: 1.2;
   transition: color 0.15s;
