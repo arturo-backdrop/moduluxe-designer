@@ -302,9 +302,9 @@ export default function App() {
           presets={presets}
           onLoadPreset={handleLoadPreset}
         />
-        {/* Right column — video + quote, anchored to bottom bar */}
+        {/* Right column — video + quote, anchored above bottom bar */}
         <div style={{
-          position:'absolute', right:16, bottom:16,
+          position:'absolute', right:16, bottom:148,
           width:260, display:'flex', flexDirection:'column-reverse',
           gap:12, pointerEvents:'none', zIndex:10,
         }}>
