@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styles from './Sidebar.module.css';
 import { toDisplay } from '../units.js';
 
@@ -105,8 +105,50 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
   const [activeCategory, setActiveCategory] = useState(null);
   const [loading,    setLoading]    = useState(true);
   const [logoHeight, setLogoHeight] = useState(76);
-  const logoRef = useRef(null);
+  const logoRef  = useRef(null);
+  const navColRef = useRef(null);
+  const sliderRef = useRef(null);
+  const btnRefs   = useRef({});
+  const animRef   = useRef(null);
+  const fromRef   = useRef({ y: null, h: null });
   const isPlace = mode === 'place';
+
+  // Liquid slider animation
+  const getMetrics = useCallback((id) => {
+    const btn = btnRefs.current[id];
+    const col = navColRef.current;
+    if (!btn || !col) return null;
+    const cTop = col.getBoundingClientRect().top;
+    const r    = btn.getBoundingClientRect();
+    return { y: r.top - cTop, h: r.height };
+  }, []);
+
+  useEffect(() => {
+    if (!activeCategory || !sliderRef.current) return;
+    const m = getMetrics(activeCategory);
+    if (!m) return;
+    if (fromRef.current.y === null) {
+      sliderRef.current.style.transition = 'none';
+      sliderRef.current.style.height     = m.h + 'px';
+      sliderRef.current.style.transform  = `translateY(${m.y}px)`;
+      fromRef.current = m;
+      return;
+    }
+    const { y: fy, h: fh } = fromRef.current;
+    const stretch  = fh + Math.abs(m.y - fy) * 0.6;
+    const stretchY = Math.min(fy, m.y);
+    sliderRef.current.style.transition = 'transform 0.2s cubic-bezier(0.4,0,0.6,1), height 0.2s cubic-bezier(0.4,0,0.6,1)';
+    sliderRef.current.style.height     = stretch + 'px';
+    sliderRef.current.style.transform  = `translateY(${stretchY}px)`;
+    clearTimeout(animRef.current);
+    animRef.current = setTimeout(() => {
+      if (!sliderRef.current) return;
+      sliderRef.current.style.transition = 'transform 0.28s cubic-bezier(0.34,1.15,0.64,1), height 0.28s cubic-bezier(0.34,1.15,0.64,1)';
+      sliderRef.current.style.height     = m.h + 'px';
+      sliderRef.current.style.transform  = `translateY(${m.y}px)`;
+      fromRef.current = m;
+    }, 180);
+  }, [activeCategory, getMetrics]);
 
   useEffect(() => {
     if (!logoRef.current) return;
@@ -158,13 +200,25 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
         {/* Two-column layout */}
         <div className={styles.twoCol}>
           {/* Left nav */}
-          <div className={styles.navCol}>
+          <div className={styles.navCol} ref={navColRef} style={{ position:'relative' }}>
+            {/* Liquid slider */}
+            {activeCategory && (
+              <div ref={sliderRef} className={styles.navSlider} />
+            )}
             {navItems.map(nav => (
               <button
                 key={nav.id}
+                ref={el => { btnRefs.current[nav.id] = el; }}
                 data-tour={nav.id === '__presets__' ? 'presets-tab' : undefined}
                 className={`${styles.navBtn} ${activeCategory === nav.id ? styles.navBtnActive : ''}`}
-                onClick={() => setActiveCategory(activeCategory === nav.id ? null : nav.id)}
+                onClick={() => {
+                  if (activeCategory === nav.id) {
+                    setActiveCategory(null);
+                    fromRef.current = { y: null, h: null };
+                  } else {
+                    setActiveCategory(nav.id);
+                  }
+                }}
                 title={nav.label}>
                 <div className={styles.navIcon}>{nav.icon}</div>
                 <span className={styles.navLabel}>{nav.label}</span>
