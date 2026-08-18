@@ -292,6 +292,7 @@ export default function App() {
         gridTemplateColumns: 'clamp(440px, 32vw, 560px) 1fr clamp(220px, 16vw, 280px)',
         gridTemplateRows: 'auto 1fr clamp(124px, 9vw, 158px)',
         padding: '0.75rem',
+        paddingBottom: '0.75rem',
         gap: '0.75rem',
         boxSizing: 'border-box',
     }}>
