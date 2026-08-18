@@ -290,7 +290,7 @@ export default function App() {
         pointerEvents: 'none',
         display: 'grid',
         gridTemplateColumns: 'clamp(440px, 32vw, 560px) 1fr clamp(220px, 16vw, 280px)',
-        gridTemplateRows: 'auto 1fr clamp(124px, 9vw, 158px)',
+        gridTemplateRows: 'auto 1fr clamp(90px, 7vw, 120px)',
         padding: '0.75rem',
         paddingBottom: '0.75rem',
         gap: '0.75rem',
@@ -332,8 +332,8 @@ export default function App() {
         </div>
       </div>
 
-      {/* Right column — col 3, rows 1+2, anchored to bottom */}
-      <div style={{ gridColumn: '3', gridRow: '1 / 3', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '0.75rem', minHeight: 0, pointerEvents: 'none' }}>
+      {/* Right column — col 3, all rows, anchored to bottom */}
+      <div style={{ gridColumn: '3', gridRow: '1 / 4', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '0.75rem', minHeight: 0, pointerEvents: 'none', paddingBottom: '0.75rem' }}>
         <VideoWidget config={CONFIG} />
         <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
       </div>
