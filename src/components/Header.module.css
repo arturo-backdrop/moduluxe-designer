@@ -1,15 +1,12 @@
 /* ── Wrapper — centered at top ───────────────────────────── */
 .headerWrap {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
   pointer-events: all;
   z-index: 20;
+  padding-top: 4px;
 }
 
 /* ── Project pill ────────────────────────────────────────── */
