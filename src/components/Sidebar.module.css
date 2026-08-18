@@ -12,7 +12,7 @@
 
 /* ── Panel ───────────────────────────────────────────────── */
 .panel {
-  width: 260px;
+  width: 320px;
   background: white;
   border-radius: 20px;
   box-shadow: 0 4px 32px rgba(0,0,0,0.10);
@@ -333,4 +333,79 @@
 
 .sectionBody {
   padding: 4px 8px 10px;
+}
+
+/* ── Two column layout ───────────────────────────────────── */
+.twoCol {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ── Nav column (left) ───────────────────────────────────── */
+.navCol {
+  width: 72px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 6px;
+  gap: 4px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.navCol::-webkit-scrollbar { display: none; }
+
+.navBtn {
+  width: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 4px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.navBtn:hover { background: #f5f5f5; }
+.navBtnActive { background: #fdf8ef !important; }
+
+.navIcon {
+  width: 22px;
+  height: 22px;
+  color: #bbb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+}
+.navIcon svg { width: 22px; height: 22px; }
+.navBtn:hover .navIcon { color: #888; }
+.navBtnActive .navIcon { color: #b48b31 !important; }
+
+.navLabel {
+  font-size: 9px;
+  font-weight: 600;
+  color: #bbb;
+  text-align: center;
+  line-height: 1.2;
+  transition: color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 56px;
+}
+.navBtn:hover .navLabel { color: #888; }
+.navBtnActive .navLabel { color: #b48b31 !important; }
+
+/* ── Divider between nav and products ────────────────────── */
+.navDivider {
+  width: 1px;
+  background: #f0f0f0;
+  flex-shrink: 0;
+  margin: 10px 0;
 }
