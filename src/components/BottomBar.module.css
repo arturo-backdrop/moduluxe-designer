@@ -71,7 +71,7 @@
 /* ── Product card ────────────────────────────────────────── */
 .productCard {
   flex-shrink: 0;
-  width: 155px;
+  width: 175px;
   background: #fafafa;
   border-radius: 14px;
   border: 1.5px solid transparent;
@@ -95,10 +95,10 @@
 
 /* Thumbnail */
 .cardThumb {
-  width: 36px;
-  height: 46px;
+  width: 56px;
+  height: 72px;
   background: #f0f0f0;
-  border-radius: 6px;
+  border-radius: 8px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -109,10 +109,10 @@
 .productCard:hover .cardThumb { background: #ede9df; }
 
 .cardThumbImg {
-  width: 36px;
-  height: 46px;
+  width: 56px;
+  height: 72px;
   object-fit: contain;
-  border-radius: 6px;
+  border-radius: 8px;
   flex-shrink: 0;
 }
 
@@ -141,3 +141,4 @@
   flex-shrink: 0;
 }
 .bottomBar { z-index: 10; }
+
