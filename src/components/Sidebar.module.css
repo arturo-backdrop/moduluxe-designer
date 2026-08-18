@@ -253,3 +253,56 @@
 .toolBtnActive .toolLabel { color: white; }
 .toolDivider      { width: 36px; height: 1px; background: #f0f0f0; margin: 4px auto; }
 .sidebarWrap { z-index: 10; }
+
+
+/* ── Collapsible Section ─────────────────────────────────── */
+.section {
+  border-bottom: 1px solid #f0f0f0;
+}
+.section:last-child { border-bottom: none; }
+
+.sectionHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.sectionHeader:hover { background: #fafafa; }
+
+.sectionLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sectionTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  letter-spacing: -0.01em;
+}
+.sectionBadge {
+  background: #b48b31;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 1px 7px;
+  min-width: 18px;
+  text-align: center;
+}
+.sectionChevron {
+  color: #ccc;
+  transition: transform 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+.sectionChevron svg { width: 14px; height: 14px; }
+
+.sectionBody {
+  padding: 4px 8px 10px;
+}
