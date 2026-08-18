@@ -289,7 +289,7 @@ export default function App() {
         position: 'absolute', inset: 0, zIndex: 1,
         pointerEvents: 'none',
         display: 'grid',
-      gridTemplateColumns: 'clamp(280px, 23vw, 380px) 1fr clamp(240px, 19vw, 300px)',
+      gridTemplateColumns: 'clamp(320px, 23vw, 400px) 1fr clamp(280px, 19vw, 320px)',
       gridTemplateRows: 'auto 1fr auto',
       padding: '1rem',
       gap: '1rem',
