@@ -44,6 +44,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  border-bottom: 2px solid #b48b31;
 }
 .logo { height: 40px; width: auto; display: block; }
 
@@ -407,10 +408,9 @@
 
 /* ── Divider between nav and products ────────────────────── */
 .navDivider {
-  width: 1px;
-  background: #f0f0f0;
+  width: 1.5px;
+  background: #e0e0e0;
   flex-shrink: 0;
-  margin: 10px 0;
 }
 
 /* ── Nav slider ──────────────────────────────────────────── */
