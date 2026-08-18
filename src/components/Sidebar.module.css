@@ -3,13 +3,13 @@
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  gap: 0.6250rem;
+  gap: 0.5000rem;
   height: 100%;
 }
 
 /* ── Panel ───────────────────────────────────────────────── */
 .panel {
-  width: 20.0000rem;
+  width: 15.0000rem;
   background: white;
   border-radius: 1.2500rem;
   box-shadow: 0 0.2500rem 2.0000rem rgba(0,0,0,0.10);
@@ -37,14 +37,14 @@
 /* ── Logo ────────────────────────────────────────────────── */
 .logoHeader {
   background: #111;
-  padding: 1.1250rem 1.5000rem;
+  padding: 0.8750rem 1.1250rem;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   border-bottom: 2px solid #b48b31;
 }
-.logo { height: 2.5000rem; width: auto; display: block; }
+.logo { height: 1.8750rem; width: auto; display: block; }
 
 /* ── Tabs row ────────────────────────────────────────────── */
 .tabsRow {
@@ -56,8 +56,8 @@
 }
 .tabArrow {
   flex-shrink: 0;
-  width: 1.3750rem;
-  height: 2.2500rem;
+  width: 1.0000rem;
+  height: 1.7500rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -66,7 +66,7 @@
   transition: color 0.15s;
 }
 .tabArrow:hover { color: #888; }
-.tabArrow svg   { width: 0.8750rem; height: 0.8750rem; }
+.tabArrow svg   { width: 0.6875rem; height: 0.6875rem; }
 .tabs {
   flex: 1;
   display: flex;
@@ -78,9 +78,9 @@
 .tab {
   font-family: 'Figtree', sans-serif;
   font-weight: 500;
-  font-size: 0.7500rem;
+  font-size: 0.6875rem;
   color: #999;
-  padding: 0.7500rem 0.5000rem 0.6250rem;
+  padding: 0.5625rem 0.3750rem 0.5000rem;
   cursor: pointer;
   white-space: nowrap;
   border-bottom: 2px solid transparent;
@@ -97,14 +97,14 @@
 .productList {
   flex: 1;
   overflow-y: auto;
-  padding: 0.5000rem 0.6250rem 0.8750rem;
+  padding: 0.3750rem 0.5000rem 0.6875rem;
   scrollbar-width: thin;
   scrollbar-color: #e0e0e0 transparent;
 }
 .productList::-webkit-scrollbar       { width: 0.2500rem; }
 .productList::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 0.2500rem; }
 .emptyState {
-  padding: 2.0000rem 1.0000rem;
+  padding: 1.5000rem 0.7500rem;
   text-align: center;
   font-size: 0.7500rem;
   color: #ccc;
@@ -115,12 +115,12 @@
 .productItem {
   display: flex;
   align-items: center;
-  gap: 0.7500rem;
-  padding: 0.5625rem 0.6250rem;
-  border-radius: 0.7500rem;
+  gap: 0.5625rem;
+  padding: 0.4375rem 0.5000rem;
+  border-radius: 0.6250rem;
   border: 1.5px solid transparent;
   background: #fafafa;
-  margin-bottom: 0.3125rem;
+  margin-bottom: 0.2500rem;
   cursor: grab;
   position: relative;
   overflow: hidden;
@@ -134,43 +134,43 @@
   box-shadow: 0 2px 0.7500rem rgba(180,139,49,0.10);
 }
 .thumbPlaceholder {
-  width: 4.3750rem; height: 5.6250rem;
+  width: 3.2813rem; height: 4.2188rem;
   flex-shrink: 0;
   background: #f0f0f0;
-  border-radius: 0.3750rem;
+  border-radius: 0.3125rem;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.2s;
 }
 .productItemHovered .thumbPlaceholder { background: #ede9df; }
-.thumbImg { width: 4.3750rem; height: 5.6250rem; object-fit: contain; border-radius: 0.5000rem; flex-shrink: 0; }
+.thumbImg { width: 3.2813rem; height: 4.2188rem; object-fit: contain; border-radius: 0.3750rem; flex-shrink: 0; }
 .productInfo { flex: 1; min-width: 0; }
 .productName {
-  font-weight: 500; font-size: 0.8125rem; color: #1a1a1a;
+  font-weight: 500; font-size: 0.7500rem; color: #1a1a1a;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   margin-bottom: 2px; line-height: 1.3;
 }
 .productDims {
-  font-weight: 400; font-size: 0.6875rem; color: #aaa;
+  font-weight: 400; font-size: 0.6250rem; color: #aaa;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .dragLabel {
-  position: absolute; right: 0.7500rem; bottom: 0.5000rem;
-  font-weight: 900; font-size: 0.8125rem; letter-spacing: 0.05em;
+  position: absolute; right: 0.5625rem; bottom: 0.3750rem;
+  font-weight: 900; font-size: 0.7500rem; letter-spacing: 0.05em;
   text-transform: uppercase; color: #b48b31;
   opacity: 0; transform: translateY(0.3125rem);
   transition: opacity 0.22s ease 0.04s, transform 0.26s cubic-bezier(0.34,1.4,0.64,1) 0.03s;
-  pointer-events: none; display: flex; align-items: center; gap: 0.3125rem;
+  pointer-events: none; display: flex; align-items: center; gap: 0.2500rem;
 }
-.dragLabel svg    { width: 0.8125rem; height: 0.8125rem; flex-shrink: 0; }
+.dragLabel svg    { width: 0.6875rem; height: 0.6875rem; flex-shrink: 0; }
 .dragLabelVisible { opacity: 1; transform: translateY(0); }
 
 /* ── Right col — toolbar, always right of panel ──────────── */
 .rightCol {
   display: flex;
   flex-direction: column;
-  gap: 0.6250rem;
+  gap: 0.5000rem;
   align-items: center;
   flex-shrink: 0;
 }
@@ -181,29 +181,29 @@
   flex-direction: column;
   align-items: center;
   background: white;
-  border-radius: 0.8750rem;
-  padding: 0.3750rem;
+  border-radius: 0.6875rem;
+  padding: 0.2813rem;
   box-shadow: 0 0.2500rem 1.5000rem rgba(0,0,0,0.09);
 }
 .zoomBtn {
-  width: 2.7500rem; height: 2.7500rem;
-  border-radius: 0.6250rem;
+  width: 2.0625rem; height: 2.0625rem;
+  border-radius: 0.5000rem;
   display: flex; align-items: center; justify-content: center;
   color: #888; background: transparent; transition: all 0.15s;
 }
-.zoomBtn svg    { width: 1.0625rem; height: 1.0625rem; }
+.zoomBtn svg    { width: 0.8125rem; height: 0.8125rem; }
 .zoomBtn:hover  { background: #f5f5f5; color: #333; }
 .zoomBtn:active { background: #ede9df; color: #b48b31; }
-.zoomDivider    { width: 1.7500rem; height: 1px; background: #f0f0f0; margin: 2px 0; }
+.zoomDivider    { width: 1.3125rem; height: 1px; background: #f0f0f0; margin: 2px 0; }
 
 /* ── Tools container ─────────────────────────────────────── */
 .toolsContainer {
   display: flex;
   flex-direction: column;
-  gap: 0.2500rem;
+  gap: 0.1875rem;
   background: white;
-  border-radius: 1.0000rem;
-  padding: 0.5000rem 0.3750rem;
+  border-radius: 0.7500rem;
+  padding: 0.3750rem 0.3125rem;
   box-shadow: 0 0.2500rem 1.5000rem rgba(0,0,0,0.09);
   overflow: hidden;
 }
@@ -212,7 +212,7 @@
 .drawTools {
   display: flex;
   flex-direction: column;
-  gap: 0.2500rem;
+  gap: 0.1875rem;
   overflow: hidden;
   transition: max-height 0.4s cubic-bezier(0.34,1.1,0.64,1),
               opacity    0.3s ease,
@@ -236,21 +236,21 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.1875rem;
-  width: 3.3750rem; height: 3.3750rem;
-  border-radius: 0.7500rem;
+  gap: 0.1563rem;
+  width: 2.5313rem; height: 2.5313rem;
+  border-radius: 0.5625rem;
   background: transparent;
   transition: background 0.15s, box-shadow 0.15s;
 }
 .toolBtn:hover    { background: #f5f5f5; }
 .toolBtnActive    { background: #b48b31 !important; box-shadow: 0 2px 0.7500rem rgba(180,139,49,0.30); }
-.toolIcon         { width: 1.3750rem; height: 1.3750rem; color: #888; transition: color 0.15s; }
+.toolIcon         { width: 1.0313rem; height: 1.0313rem; color: #888; transition: color 0.15s; }
 .toolBtn:hover .toolIcon  { color: #444; }
 .toolBtnActive .toolIcon  { color: white; }
-.toolLabel        { font-size: 0.5625rem; font-weight: 500; color: #aaa; line-height: 1; transition: color 0.15s; }
+.toolLabel        { font-size: 0.4375rem; font-weight: 500; color: #aaa; line-height: 1; transition: color 0.15s; }
 .toolBtn:hover .toolLabel { color: #444; }
 .toolBtnActive .toolLabel { color: white; }
-.toolDivider      { width: 2.2500rem; height: 1px; background: #f0f0f0; margin: 0.2500rem auto; }
+.toolDivider      { width: 1.6875rem; height: 1px; background: #f0f0f0; margin: 0.1875rem auto; }
 .sidebarWrap { z-index: 10; }
 
 
@@ -264,7 +264,7 @@
   width: 100%;
   display: flex;
   align-items: center;
-  padding: 0.3750rem 0.5000rem;
+  padding: 0.2813rem 0.3750rem;
   background: none;
   border: none;
   cursor: pointer;
@@ -273,19 +273,19 @@
 .sectionPill {
   display: flex;
   align-items: center;
-  gap: 0.5000rem;
+  gap: 0.3750rem;
   width: 100%;
   background: #f0f0f0;
   border-radius: 1.2500rem;
-  padding: 0.4375rem 0.8750rem;
+  padding: 0.3438rem 0.6875rem;
   transition: background 0.15s, color 0.15s;
 }
 .sectionHeader:hover .sectionPill {
   background: #ede9df;
 }
 .sectionIcon {
-  width: 0.9375rem;
-  height: 0.9375rem;
+  width: 0.7500rem;
+  height: 0.7500rem;
   flex-shrink: 0;
   color: #999;
   display: flex;
@@ -293,16 +293,16 @@
   justify-content: center;
   transition: color 0.15s;
 }
-.sectionIcon svg { width: 0.9375rem; height: 0.9375rem; }
+.sectionIcon svg { width: 0.7500rem; height: 0.7500rem; }
 .sectionHeader:hover .sectionIcon { color: #b48b31; }
 
 .sectionLeft {
   display: flex;
   align-items: center;
-  gap: 0.5000rem;
+  gap: 0.3750rem;
 }
 .sectionTitle {
-  font-size: 0.6875rem;
+  font-size: 0.6250rem;
   font-weight: 700;
   color: #888;
   letter-spacing: 0.04em;
@@ -315,11 +315,11 @@
 .sectionBadge {
   background: #b48b31;
   color: white;
-  font-size: 0.6250rem;
+  font-size: 0.5625rem;
   font-weight: 700;
   border-radius: 0.6250rem;
-  padding: 1px 0.4375rem;
-  min-width: 1.1250rem;
+  padding: 1px 0.3438rem;
+  min-width: 0.8750rem;
   text-align: center;
 }
 .sectionChevron {
@@ -328,10 +328,10 @@
   display: flex;
   align-items: center;
 }
-.sectionChevron svg { width: 0.8750rem; height: 0.8750rem; }
+.sectionChevron svg { width: 0.6875rem; height: 0.6875rem; }
 
 .sectionBody {
-  padding: 0.2500rem 0.5000rem 0.6250rem;
+  padding: 0.1875rem 0.3750rem 0.5000rem;
 }
 
 /* ── Two column layout ───────────────────────────────────── */
@@ -344,13 +344,13 @@
 
 /* ── Nav column (left) ───────────────────────────────────── */
 .navCol {
-  width: 4.5000rem;
+  width: 3.3750rem;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0.6250rem 0.3750rem;
-  gap: 0.2500rem;
+  padding: 0.5000rem 0.3125rem;
+  gap: 0.1875rem;
   overflow-y: auto;
   scrollbar-width: none;
   background: #e0e0e0;
@@ -358,16 +358,16 @@
 .navCol::-webkit-scrollbar { display: none; }
 
 .navBtn {
-  width: 3.5000rem;
-  min-height: 3.5000rem;
+  width: 2.6250rem;
+  min-height: 2.6250rem;
   height: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.2500rem;
-  padding: 0.3750rem 0.2500rem;
-  border-radius: 0.5000rem;
+  gap: 0.1875rem;
+  padding: 0.2813rem 0.1875rem;
+  border-radius: 0.3750rem;
   border: none;
   background: transparent;
   cursor: pointer;
@@ -378,20 +378,20 @@
 .navBtnActive { background: transparent !important; }
 
 .navIcon {
-  width: 1.0000rem;
-  height: 1.0000rem;
+  width: 0.7500rem;
+  height: 0.7500rem;
   color: #888;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: color 0.15s;
 }
-.navIcon svg { width: 1.0000rem; height: 1.0000rem; }
+.navIcon svg { width: 0.7500rem; height: 0.7500rem; }
 .navBtn:hover .navIcon { color: #555; }
 .navBtnActive .navIcon { color: white !important; }
 
 .navLabel {
-  font-size: 0.5625rem;
+  font-size: 0.4375rem;
   font-weight: 400;
   color: #777;
   text-align: center;
@@ -399,7 +399,7 @@
   transition: color 0.15s;
   white-space: normal;
   word-break: break-word;
-  max-width: 3.2500rem;
+  max-width: 2.4375rem;
 }
 .navBtn:hover .navLabel { color: #555; }
 .navBtnActive .navLabel { color: white !important; }
@@ -414,10 +414,10 @@
 /* ── Nav slider ──────────────────────────────────────────── */
 .navSlider {
   position: absolute;
-  left: 0.3750rem;
-  width: calc(100% - 0.7500rem);
+  left: 0.3125rem;
+  width: calc(100% - 0.6250rem);
   background: #b48b31;
-  border-radius: 0.5000rem;
+  border-radius: 0.3750rem;
   pointer-events: none;
   z-index: 0;
   top: 0;
