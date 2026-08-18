@@ -360,12 +360,14 @@
 
 .navBtn {
   width: 56px;
+  height: 56px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  padding: 8px 4px;
-  border-radius: 10px;
+  padding: 6px 4px;
+  border-radius: 8px;
   border: none;
   background: transparent;
   cursor: pointer;
@@ -373,7 +375,7 @@
   flex-shrink: 0;
 }
 .navBtn:hover { background: #d4d4d4; }
-.navBtnActive { background: #d9cdb5 !important; }
+.navBtnActive { background: #b48b31 !important; }
 
 .navIcon {
   width: 16px;
@@ -385,8 +387,8 @@
   transition: color 0.15s;
 }
 .navIcon svg { width: 16px; height: 16px; }
-.navBtn:hover .navIcon { color: #888; }
-.navBtnActive .navIcon { color: #b48b31 !important; }
+.navBtn:hover .navIcon { color: #555; }
+.navBtnActive .navIcon { color: white !important; }
 
 .navLabel {
   font-size: 9px;
@@ -400,8 +402,8 @@
   text-overflow: ellipsis;
   max-width: 56px;
 }
-.navBtn:hover .navLabel { color: #888; }
-.navBtnActive .navLabel { color: #b48b31 !important; }
+.navBtn:hover .navLabel { color: #555; }
+.navBtnActive .navLabel { color: white !important; }
 
 /* ── Divider between nav and products ────────────────────── */
 .navDivider {
