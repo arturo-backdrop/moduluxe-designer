@@ -1,9 +1,9 @@
 /* ── Bar ─────────────────────────────────────────────────── */
 .bottomBar {
   position: absolute;
-  bottom: 20px;
-  left: 356px;
-  right: 356px;
+  bottom: 16px;
+  left: 346px;
+  right: 292px;
   background: white;
   border-radius: 20px;
   box-shadow: 0 4px 32px rgba(0,0,0,0.10);
