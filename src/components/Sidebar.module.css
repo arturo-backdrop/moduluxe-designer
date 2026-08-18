@@ -376,7 +376,7 @@
   flex-shrink: 0;
 }
 .navBtn:hover { background: #d4d4d4; }
-.navBtnActive { background: #b48b31 !important; }
+.navBtnActive { background: transparent !important; }
 
 .navIcon {
   width: 16px;
@@ -412,3 +412,16 @@
   flex-shrink: 0;
   margin: 10px 0;
 }
+
+/* ── Nav slider ──────────────────────────────────────────── */
+.navSlider {
+  position: absolute;
+  left: 6px;
+  width: calc(100% - 12px);
+  background: #b48b31;
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 0;
+  top: 0;
+}
+.navBtn { position: relative; z-index: 1; }
