@@ -1913,8 +1913,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           if (item.socketStates) {
             Object.entries(item.socketStates).forEach(([socketName, state]) => {
               // Find socket def from catalog
-              const catalogItem = Object.values(config?._catalogFlat || {}).find?.(c => c?.id === item.modelId)
-                ?? Object.values(config || {}).find?.(c => c?.id === item.modelId);
+              const catalogItem = catalogRef.current.find(c => c?.id === item.modelId);
               const socketDef = catalogItem?.sockets?.find?.(s => s.name === socketName || s.name?.startsWith(socketName));
               cancelSocketToken(item.uid, socketName);
               const sc = getSocketContainer(item.uid);
