@@ -333,7 +333,7 @@ export default function App() {
       </div>
 
       {/* Right column — col 3, all rows, anchored to bottom */}
-      <div style={{ gridColumn: '3', gridRow: '1 / 3', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '0.75rem', minHeight: 0, pointerEvents: 'none' }}>
+      <div style={{ gridColumn: '3', gridRow: '1 / 4', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '0.75rem', minHeight: 0, pointerEvents: 'none', paddingBottom: 'calc(clamp(150px, 12vw, 190px) + 0.75rem)' }}>
         <VideoWidget config={CONFIG} />
         <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
       </div>
