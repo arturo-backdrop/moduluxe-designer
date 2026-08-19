@@ -291,6 +291,19 @@ export default function App() {
         boxSizing: 'border-box',
       }}>
 
+        {/* BottomBar — absolute anchored to bottom, left aligned to sidebar right edge */}
+        <div style={{
+          position: 'absolute',
+          bottom: '0.75rem',
+          left: 'clamp(380px, 30vw, 500px)',
+          right: '0.75rem',
+          pointerEvents: 'all',
+          zIndex: 10,
+        }}>
+          <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog}
+            onSelectModel={modelId => viewportEngRef.current?.highlightModel(modelId)} />
+        </div>
+
         {/* Header — absolute centered over full viewport */}
         <div style={{ position: 'absolute', top: '0.75rem', left: 0, right: 0, display: 'flex', justifyContent: 'center', pointerEvents: 'none', zIndex: 10 }}>
           <div style={{ pointerEvents: 'all' }}>
@@ -327,7 +340,7 @@ export default function App() {
         </div>
 
         {/* Center + Right — flex column, takes remaining width */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: 0, minHeight: 0 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: 0, minHeight: 0, paddingBottom: '0' }}>
 
           {/* Top row: spacer to keep layout, header is absolute */}
           <div style={{ flexShrink: 0, height: 0 }} />
@@ -346,11 +359,7 @@ export default function App() {
 
           </div>
 
-          {/* Bottom bar — full width of center+right, anchored to bottom */}
-          <div style={{ flexShrink: 0, pointerEvents: 'all' }}>
-            <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog}
-              onSelectModel={modelId => viewportEngRef.current?.highlightModel(modelId)} />
-          </div>
+
 
         </div>
 
