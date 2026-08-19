@@ -147,7 +147,6 @@ export default function App() {
   const canRedo = historyIdx < history.length - 1;
 
   const pushHistory = useCallback((items) => {
-    console.log('[PUSH] items socketStates:', items?.map(i => ({uid: i?.uid?.slice(-6), s: i?.socketStates})));
     const idx = historyIdxRef.current;
     setHistory(prev => {
       const next = [...prev.slice(0, idx + 1), items].slice(-50);
@@ -173,7 +172,6 @@ export default function App() {
   const undo = useCallback(() => {
     const idx = historyIdxRef.current;
     const hist = historyRef.current;
-    console.log('[UNDO] idx:', idx, 'hist.length:', hist.length, 'snapshots:', hist.map(h => JSON.stringify(h?.map(i => ({uid: i?.uid?.slice(-6), sockets: i?.socketStates})))));
     if (idx <= 0 || !hist[idx - 1]) return;
     const newIdx = idx - 1;
     const snapshot = hist[newIdx];
@@ -605,10 +603,12 @@ export default function App() {
                         const targetUids = groupId
                           ? prev.filter(i => i.groupId === groupId).map(i => i.uid)
                           : [radialMenu.uid];
-                        return prev.map(i => {
+                        const next = prev.map(i => {
                           if (!targetUids.includes(i.uid)) return i;
                           return { ...i, socketStates: { ...(i.socketStates||{}), [data.name]: data.state } };
                         });
+                        pushHistory(next);
+                        return next;
                       });
                     }
                   } else if (action === 'units') {
