@@ -366,32 +366,27 @@ export default function App() {
           />
         </div>
 
-        {/* Center + Right — flex column, takes remaining width */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: 0, minHeight: 0 }}>
+        {/* Center — viewport shows through */}
+        <div style={{ flex: 1, minWidth: 0, minHeight: 0 }} />
 
-          {/* Top row: spacer to keep layout, header is absolute */}
-          <div style={{ flexShrink: 0, height: 0 }} />
-
-          {/* Middle row: empty (viewport shows through) + Right col panels */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'row', gap: '0.75rem', minHeight: 0 }}>
-
-            {/* Center — viewport shows through */}
-            <div style={{ flex: 1 }} />
-
-            {/* Right col — Video + Quote anchored to bottom */}
-            <div style={{ flexShrink: 0, width: 'clamp(220px, 16vw, 280px)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '0.75rem', pointerEvents: 'none' }}>
-              <VideoWidget config={CONFIG} />
-              <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
-            </div>
-
-          </div>
-
-          {/* Bottom bar — full width of center+right, anchored to bottom */}
-          <div style={{ flexShrink: 0, pointerEvents: 'all' }}>
-            <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog}
-              onSelectModel={modelId => viewportEngRef.current?.highlightModel(modelId)} />
-          </div>
-
+        {/* Right panel — BottomBar + QuotePanel + VideoWidget, scrolleable */}
+        <div style={{
+          flexShrink: 0,
+          width: 'clamp(240px, 18vw, 300px)',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.75rem',
+          pointerEvents: 'all',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#e0e0e0 transparent',
+        }}>
+          <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog}
+            onSelectModel={modelId => viewportEngRef.current?.highlightModel(modelId)} />
+          <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
+          <VideoWidget config={CONFIG} />
         </div>
 
         {/* Radial menu overlay — floats over viewport */}
