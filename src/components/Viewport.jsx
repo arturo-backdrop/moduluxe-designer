@@ -1711,6 +1711,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         return { ...i, socketStates };
       });
       onChangeRef.current?.(next);
+      onCommitRef.current?.(next);
     }
     function duplicateObject(uid) {
 
