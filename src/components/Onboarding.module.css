@@ -179,7 +179,7 @@
   left: 0;
   right: 0;
   height: 80px;
-  background: linear-gradient(to bottom, transparent, white);
+  background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.18));
   pointer-events: none;
 }
 .presetGrid {
