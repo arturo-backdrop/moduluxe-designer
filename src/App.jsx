@@ -592,7 +592,11 @@ export default function App() {
                       viewportEngRef.current?.duplicateObject(radialMenu.uid);
                     }
                   } else if (action === 'toggle_mesh') {
-                    viewportEngRef.current?.toggleMeshVisibility(radialMenu.uid, data.meshName, data.visible);
+                    const srcItem = sceneItems.find(i => i.uid === radialMenu.uid);
+                    const groupUids = srcItem?.groupId
+                      ? sceneItems.filter(i => i.groupId === srcItem.groupId).map(i => i.uid)
+                      : [radialMenu.uid];
+                    groupUids.forEach(uid => viewportEngRef.current?.toggleMeshVisibility(uid, data.meshName, data.visible));
                   } else if (action === 'socket') {
                     const sockItem = catalog[radialMenu.modelId];
                     const sockDef  = sockItem?.sockets?.find(s => s.name === data.name);
