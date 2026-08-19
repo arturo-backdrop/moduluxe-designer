@@ -147,6 +147,7 @@ export default function App() {
   const canRedo = historyIdx < history.length - 1;
 
   const pushHistory = useCallback((items) => {
+    console.log('[PUSH] items socketStates:', items?.map(i => ({uid: i?.uid?.slice(-6), s: i?.socketStates})));
     const idx = historyIdxRef.current;
     setHistory(prev => {
       const next = [...prev.slice(0, idx + 1), items].slice(-50);
