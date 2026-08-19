@@ -164,6 +164,15 @@ export default function App() {
     }, 300);
   }, []);
 
+  // Helper: set scene items and push to history
+  const setAndPush = useCallback((updater) => {
+    setSceneItems(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      pushHistory(next);
+      return next;
+    });
+  }, [pushHistory]);
+
   const undo = useCallback(() => {
     const idx = historyIdxRef.current;
     const hist = historyRef.current;
