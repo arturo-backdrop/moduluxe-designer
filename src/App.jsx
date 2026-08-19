@@ -178,6 +178,7 @@ export default function App() {
     historyIdxRef.current = newIdx;
     setHistoryIdx(newIdx);
     setSceneItems(snapshot);
+    setRadialMenu(null);
     viewportEngRef.current?.restoreSnapshot?.(snapshot);
   }, []);
 
@@ -190,6 +191,7 @@ export default function App() {
     historyIdxRef.current = newIdx;
     setHistoryIdx(newIdx);
     setSceneItems(snapshot);
+    setRadialMenu(null);
     viewportEngRef.current?.restoreSnapshot?.(snapshot);
   }, []);
 
