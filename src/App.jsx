@@ -313,7 +313,7 @@ export default function App() {
         </div>
 
         {/* Sidebar — fixed width, full height */}
-        <div style={{ flexShrink: 0, width: 'clamp(380px, 30vw, 500px)', height: '100%', position: 'relative', pointerEvents: 'all' }}>
+        <div style={{ flexShrink: 0, width: 'clamp(380px, 40vw, 500px)', height: '100%', position: 'relative', pointerEvents: 'all' }}>
           <Sidebar
             config={CONFIG}
             units={units}
@@ -327,7 +327,7 @@ export default function App() {
         </div>
 
         {/* Center + Right — flex column, takes remaining width */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: 0, minHeight: 0, paddingBottom: '0' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: 0, minHeight: 0 }}>
 
           {/* Top row: spacer to keep layout, header is absolute */}
           <div style={{ flexShrink: 0, height: 0 }} />
@@ -346,7 +346,7 @@ export default function App() {
 
           </div>
 
-          {/* Bottom bar — full width, anchored to bottom */}
+          {/* Bottom bar — full width of center+right, anchored to bottom */}
           <div style={{ flexShrink: 0, pointerEvents: 'all' }}>
             <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog}
               onSelectModel={modelId => viewportEngRef.current?.highlightModel(modelId)} />
