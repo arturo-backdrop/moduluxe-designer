@@ -12,7 +12,7 @@
 
 .barTitle {
   font-weight: 500;
-  font-size: 0.7500rem;
+  font-size: 0.75rem;
   color: #999;
 }
 
@@ -56,7 +56,7 @@
 }
 
 .emptyMsg {
-  font-size: 0.7500rem;
+  font-size: 0.75rem;
   color: #ccc;
   font-style: italic;
   padding: 0.5000rem 0.2500rem;
@@ -116,7 +116,7 @@
 .cardInfo { flex: 1; min-width: 0; }
 .cardName {
   font-weight: 500;
-  font-size: 0.7500rem;
+  font-size: 0.75rem;
   color: #1a1a1a;
   white-space: nowrap;
   overflow: hidden;
@@ -125,7 +125,7 @@
 }
 .cardDims {
   font-weight: 400;
-  font-size: 0.6250rem;
+  font-size: 0.625rem;
   color: #bbb;
   white-space: nowrap;
   overflow: hidden;
@@ -133,7 +133,7 @@
 }
 .cardCount {
   font-weight: 900;
-  font-size: 0.8750rem;
+  font-size: 0.875rem;
   color: #b48b31;
   flex-shrink: 0;
 }
