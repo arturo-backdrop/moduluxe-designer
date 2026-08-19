@@ -1913,9 +1913,9 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           // Restore socket states
           if (item.socketStates) {
             Object.entries(item.socketStates).forEach(([socketName, state]) => {
-              // Find socket def from catalog
               const catalogItem = catalogRef.current.find(c => c?.id === item.modelId);
               const socketDef = catalogItem?.sockets?.find?.(s => s.name === socketName || s.name?.startsWith(socketName));
+              console.log('[RESTORE SOCKET]', socketName, state, 'catalogItem:', catalogItem?.id, 'socketDef:', socketDef?.name);
               cancelSocketToken(item.uid, socketName);
               const sc = getSocketContainer(item.uid);
               if (sc[socketName]) { obj.remove(sc[socketName]); delete sc[socketName]; }
