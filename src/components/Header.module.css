@@ -3,28 +3,28 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.6250rem;
+  gap: 0.5000rem;
   pointer-events: all;
   z-index: 20;
-  padding-top: 0.2500rem;
+  padding-top: 0.2000rem;
 }
 
 /* ── Project pill ────────────────────────────────────────── */
 .projectPill {
   display: flex;
   align-items: center;
-  gap: 0.6250rem;
+  gap: 0.5000rem;
   background: white;
-  border-radius: 1.0000rem;
-  box-shadow: 0 0.2500rem 1.2500rem rgba(0,0,0,0.10);
-  padding: 0.6250rem 1.1250rem;
+  border-radius: 0.8000rem;
+  box-shadow: 0 0.2000rem 1.0000rem rgba(0,0,0,0.10);
+  padding: 0.5000rem 0.9000rem;
 }
 
 .nameWrap {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 0.5000rem;
+  gap: 0.4000rem;
 }
 
 /* Hidden span — mirrors input for width measurement */
@@ -34,20 +34,20 @@
   white-space: pre;
   font-family: 'Figtree', sans-serif;
   font-weight: 500;
-  font-size: 1.125rem;
+  font-size: 0.9000rem;
   pointer-events: none;
 }
 
 .nameInput {
   font-family: 'Figtree', sans-serif;
   font-weight: 500;
-  font-size: 1.125rem;
+  font-size: 0.9000rem;
   color: #1a1a1a;
   border: none;
   outline: none;
   background: transparent;
-  min-width: 5.0000rem;
-  max-width: 17.5000rem;
+  min-width: 4.0000rem;
+  max-width: 14.0000rem;
 }
 
 .editBtn {
@@ -62,7 +62,7 @@
 
 .pillDivider {
   width: 1px;
-  height: 1.2500rem;
+  height: 1.0000rem;
   background: #e8e8e8;
   flex-shrink: 0;
 }
@@ -74,8 +74,8 @@
 }
 
 .historyBtn {
-  width: 1.8750rem;
-  height: 1.8750rem;
+  width: 1.5000rem;
+  height: 1.5000rem;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -95,9 +95,9 @@
   display: flex;
   align-items: center;
   background: white;
-  border-radius: 2.5000rem;
-  box-shadow: 0 0.2500rem 1.2500rem rgba(0,0,0,0.08);
-  padding: 0.2500rem;
+  border-radius: 2.0000rem;
+  box-shadow: 0 0.2000rem 1.0000rem rgba(0,0,0,0.08);
+  padding: 0.2000rem;
   gap: 0;
   position: relative;
   cursor: pointer;
@@ -105,12 +105,12 @@
 
 .modeSlider {
   position: absolute;
-  top: 0.2500rem;
-  left: 0.2500rem;
-  height: calc(100% - 0.5000rem);
+  top: 0.2000rem;
+  left: 0.2000rem;
+  height: calc(100% - 0.4000rem);
   background: #3a3a3a;
-  border-radius: 2.5000rem;
-  box-shadow: 0 2px 0.6250rem rgba(0,0,0,0.15);
+  border-radius: 2.0000rem;
+  box-shadow: 0 2px 0.5000rem rgba(0,0,0,0.15);
   pointer-events: none;
   z-index: 0;
   transition:
@@ -121,9 +121,9 @@
 .modeBtn {
   font-family: 'Figtree', sans-serif;
   font-weight: 500;
-  font-size: 0.875rem;
-  padding: 0.4375rem 1.1250rem;
-  border-radius: 2.5000rem;
+  font-size: 0.7000rem;
+  padding: 0.3500rem 0.9000rem;
+  border-radius: 2.0000rem;
   border: none;
   cursor: pointer;
   color: #888;
@@ -140,9 +140,9 @@
 /* ── Version ─────────────────────────────────────────────── */
 .version {
   position: fixed;
-  bottom: 0.6250rem;
-  right: 0.8750rem;
-  font-size: 0.625rem;
+  bottom: 0.5000rem;
+  right: 0.7000rem;
+  font-size: 0.5000rem;
   font-weight: 400;
   color: rgba(0,0,0,0.25);
   pointer-events: none;
@@ -153,13 +153,13 @@
 .newBtn {
   display: flex;
   align-items: center;
-  gap: 0.3125rem;
+  gap: 0.2500rem;
   color: #aaa;
   font-family: 'Figtree', sans-serif;
   font-weight: 500;
-  font-size: 0.875rem;
-  padding: 0.2500rem 0.3750rem;
-  border-radius: 0.5000rem;
+  font-size: 0.7000rem;
+  padding: 0.2000rem 0.3000rem;
+  border-radius: 0.4000rem;
   transition: all 0.15s;
   white-space: nowrap;
 }
@@ -176,13 +176,13 @@
 }
 .unitBtn {
   font-family: 'Figtree', sans-serif;
-  font-size: 0.75rem;
+  font-size: 0.6000rem;
   font-weight: 500;
   color: #999;
   background: transparent;
   border: none;
-  padding: 0.2500rem 0.3750rem;
-  border-radius: 0.3750rem;
+  padding: 0.2000rem 0.3000rem;
+  border-radius: 0.3000rem;
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -190,13 +190,13 @@
 .unitBtnActive { color: #b48b31 !important; font-weight: 700; background: #fdf8ef !important; }
 
 .tourBtn {
-  width: 1.7500rem;
-  height: 1.7500rem;
+  width: 1.4000rem;
+  height: 1.4000rem;
   border-radius: 50%;
   border: 2px solid #e8e8e8;
   background: white;
   color: #aaa;
-  font-size: 0.875rem;
+  font-size: 0.7000rem;
   font-weight: 700;
   cursor: pointer;
   display: flex;
