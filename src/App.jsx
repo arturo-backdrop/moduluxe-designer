@@ -148,20 +148,17 @@ export default function App() {
   const canRedo = historyIdx < history.length - 1;
 
   const pushHistory = useCallback((items) => {
-    if (pushTimerRef.current) clearTimeout(pushTimerRef.current);
-    pushTimerRef.current = setTimeout(() => {
-      const idx = historyIdxRef.current;
-      setHistory(prev => {
-        const next = [...prev.slice(0, idx + 1), items].slice(-50);
-        historyRef.current = next;
-        return next;
-      });
-      setHistoryIdx(prev => {
-        const next = Math.min(prev + 1, 49);
-        historyIdxRef.current = next;
-        return next;
-      });
-    }, 300);
+    const idx = historyIdxRef.current;
+    setHistory(prev => {
+      const next = [...prev.slice(0, idx + 1), items].slice(-50);
+      historyRef.current = next;
+      return next;
+    });
+    setHistoryIdx(prev => {
+      const next = Math.min(prev + 1, 49);
+      historyIdxRef.current = next;
+      return next;
+    });
   }, []);
 
   // Helper: set scene items and push to history
@@ -300,7 +297,8 @@ export default function App() {
           floorSize={floorSize}
           activePreset={activePreset}
           sceneItems={sceneItems}
-          onSceneItemsChange={items => { setSceneItems(items); pushHistory(items); }}
+          onSceneItemsChange={items => { setSceneItems(items); }}
+          onCommit={items => { pushHistory(items); }}
           mode={mode}
           activeTool={activeTool}
           onToolChange={setActiveTool}
