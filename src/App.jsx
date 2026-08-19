@@ -62,6 +62,10 @@ export default function App() {
   const viewportEngRef       = useRef(null);
   const [history,        setHistory]        = useState([[]])
   const [historyIdx,     setHistoryIdx]     = useState(0);
+  const historyRef    = useRef([[]]);
+  const historyIdxRef = useRef(0);
+  useEffect(() => { historyRef.current    = history;    }, [history]);
+  useEffect(() => { historyIdxRef.current = historyIdx; }, [historyIdx]);
 
   // Load catalog + prefetch all GLBs
   useEffect(() => {
@@ -143,21 +147,26 @@ export default function App() {
   const canRedo = historyIdx < history.length - 1;
 
   const pushHistory = useCallback((items) => {
-    setHistory(prev => [...prev.slice(0, historyIdx + 1), items].slice(-50));
+    const idx = historyIdxRef.current;
+    setHistory(prev => [...prev.slice(0, idx + 1), items].slice(-50));
     setHistoryIdx(prev => Math.min(prev + 1, 49));
-  }, [historyIdx]);
+  }, []);
 
   const undo = useCallback(() => {
-    if (!canUndo) return;
-    setHistoryIdx(prev => prev - 1);
-    setSceneItems(history[historyIdx - 1]);
-  }, [canUndo, history, historyIdx]);
+    const idx = historyIdxRef.current;
+    const hist = historyRef.current;
+    if (idx <= 0) return;
+    setHistoryIdx(idx - 1);
+    setSceneItems(hist[idx - 1]);
+  }, []);
 
   const redo = useCallback(() => {
-    if (!canRedo) return;
-    setHistoryIdx(prev => prev + 1);
-    setSceneItems(history[historyIdx + 1]);
-  }, [canRedo, history, historyIdx]);
+    const idx = historyIdxRef.current;
+    const hist = historyRef.current;
+    if (idx >= hist.length - 1) return;
+    setHistoryIdx(idx + 1);
+    setSceneItems(hist[idx + 1]);
+  }, []);
 
   useEffect(() => {
     const handler = (e) => {
