@@ -349,7 +349,7 @@ export default function App() {
           </div>
 
           {/* Bottom bar — full width of center+right, anchored to bottom */}
-          <div style={{ flexShrink: 0, pointerEvents: 'all', marginLeft: 'calc(-1 * (clamp(340px, 26vw, 440px) + 0.75rem))', width: 'calc(100% + clamp(340px, 26vw, 440px) + 0.75rem)' }}>
+          <div style={{ flexShrink: 0, pointerEvents: 'all' }}>
             <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog}
               onSelectModel={modelId => viewportEngRef.current?.highlightModel(modelId)} />
           </div>
