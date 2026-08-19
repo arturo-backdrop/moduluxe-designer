@@ -169,12 +169,25 @@
 }
 
 /* ── Preset grid ─────────────────────────────────────────── */
+.presetGridWrap {
+  position: relative;
+}
+.presetGridWrap::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: linear-gradient(to bottom, transparent, white);
+  pointer-events: none;
+}
 .presetGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   margin-bottom: 24px;
-  max-height: 50vh;
+  max-height: 42vh;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #e0e0e0 transparent;
