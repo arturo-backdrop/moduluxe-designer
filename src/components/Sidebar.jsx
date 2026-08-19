@@ -33,7 +33,7 @@ function ToolBtn({ id, label, icon, active, onClick }) {
 function ThumbPlaceholder() {
   return (
     <div className={styles.thumbPlaceholder}>
-      <svg width="18" height="26" viewBox="0 0 18 26" fill="none">
+      <svg width="28" height="36" viewBox="0 0 18 26" fill="none">
         <rect x="1" y="1" width="16" height="24" rx="3" stroke="#bbb" strokeWidth="1.2"/>
         <line x1="4" y1="8" x2="14" y2="8" stroke="#bbb" strokeWidth="1"/>
         <line x1="4" y1="13" x2="14" y2="13" stroke="#bbb" strokeWidth="1"/>
@@ -57,22 +57,24 @@ function ProductItem({ item, units='ft' }) {
       onDragEnd={() => { window.__dragModelId = null; }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}>
-      {item.thumbnail
-        ? <img src={item.thumbnail} alt={item.name} className={styles.thumbImg} />
-        : <ThumbPlaceholder />}
-      <div className={styles.productInfo}>
+      <div className={styles.cardThumb}>
+        {item.thumbnail
+          ? <img src={item.thumbnail} alt={item.name} className={styles.cardThumbImg} />
+          : <ThumbPlaceholder />}
+        <div className={`${styles.dragOverlay} ${hovered ? styles.dragOverlayVisible : ''}`}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" width="20" height="20">
+            <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>
+          </svg>
+          <span>drag</span>
+        </div>
+      </div>
+      <div className={styles.cardFooter}>
         <div className={styles.productName}>{item.name}</div>
         <div className={styles.productDims}>
           {item.w && item.d && item.h
-            ? `${toDisplay(item.w, units, true)} × ${toDisplay(item.d, units, true)} × ${toDisplay(item.h, units, true)}`
+            ? `${toDisplay(item.w, units, true)} × ${toDisplay(item.h, units, true)}`
             : item.dims || item.category || ''}
         </div>
-      </div>
-      <div className={`${styles.dragLabel} ${hovered ? styles.dragLabelVisible : ''}`}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-          <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>
-        </svg>
-        drag
       </div>
     </div>
   );
@@ -87,15 +89,18 @@ function PresetItem({ preset, onLoad }) {
       onClick={() => onLoad?.(preset)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}>
-      {preset.thumbnail
-        ? <img src={preset.thumbnail} alt={preset.name} className={styles.thumbImg} />
-        : <ThumbPlaceholder />}
-      <div className={styles.productInfo}>
+      <div className={styles.cardThumb}>
+        {preset.thumbnail
+          ? <img src={preset.thumbnail} alt={preset.name} className={styles.cardThumbImg} />
+          : <ThumbPlaceholder />}
+        <div className={`${styles.dragOverlay} ${hovered ? styles.dragOverlayVisible : ''}`}>
+          <span>Load</span>
+        </div>
+      </div>
+      <div className={styles.cardFooter}>
         <div className={styles.productName}>{preset.name}</div>
         <div className={styles.productDims}>{preset.description || `${(preset.items||[]).length} items`}</div>
       </div>
-      <div className={`${styles.dragLabel} ${hovered ? styles.dragLabelVisible : ''}`}
-        style={{ fontSize:10, padding:'4px 8px' }}>Load</div>
     </div>
   );
 }
