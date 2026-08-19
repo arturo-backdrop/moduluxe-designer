@@ -9,7 +9,7 @@
 
 /* ── Panel ───────────────────────────────────────────────── */
 .panel {
-  width: 15.0000rem;
+  width: 100%;
   background: white;
   border-radius: 1.2500rem;
   box-shadow: 0 0.2500rem 2.0000rem rgba(0,0,0,0.10);
