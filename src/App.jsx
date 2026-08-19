@@ -369,31 +369,33 @@ export default function App() {
         {/* Center — viewport shows through */}
         <div style={{ flex: 1, minWidth: 0, minHeight: 0 }} />
 
-        {/* Right panel — full height, scrolleable */}
+        {/* Right panel — full height, BottomBar scrolls, Quote+Video fixed at bottom */}
         <div style={{
           flexShrink: 0,
           width: 'clamp(240px, 18vw, 300px)',
-          height: 'calc(100% + 1.5rem)',
-          marginTop: '-0.75rem',
-          marginBottom: '-0.75rem',
-          marginRight: '-0.75rem',
-          paddingTop: '0.75rem',
-          paddingBottom: '0.75rem',
-          paddingRight: '0.75rem',
+          height: '100%',
           display: 'flex',
           flexDirection: 'column',
           gap: '0.75rem',
           pointerEvents: 'all',
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          scrollbarWidth: 'thin',
-          scrollbarColor: '#e0e0e0 transparent',
-          boxSizing: 'border-box',
         }}>
-          <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog}
-            onSelectModel={modelId => viewportEngRef.current?.highlightModel(modelId)} />
-          <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
-          <VideoWidget config={CONFIG} />
+          {/* BottomBar — scrolleable, takes remaining space */}
+          <div style={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            scrollbarWidth: 'thin',
+            scrollbarColor: '#e0e0e0 transparent',
+          }}>
+            <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog}
+              onSelectModel={modelId => viewportEngRef.current?.highlightModel(modelId)} />
+          </div>
+          {/* QuotePanel + VideoWidget — fixed at bottom */}
+          <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
+            <VideoWidget config={CONFIG} />
+          </div>
         </div>
 
         {/* Radial menu overlay — floats over viewport */}
