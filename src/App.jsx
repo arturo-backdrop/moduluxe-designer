@@ -355,9 +355,8 @@ export default function App() {
           </div>
 
         </div>
-      </div>
 
-      {/* Radial menu overlay — floats over viewport */}
+        {/* Radial menu overlay — floats over viewport */}
       {radialMenu && (() => {
           // Preset group — show Ungroup button instead of radial menu
           if (radialMenu.itemType === 'preset_group') {
