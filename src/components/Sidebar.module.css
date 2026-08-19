@@ -187,7 +187,7 @@
   padding: 0.4375rem 0.5625rem 0.5000rem;
 }
 .productName {
-  font-weight: 600; font-size: 0.75rem; color: #1a1a1a;
+  font-weight: 400; font-size: 0.75rem; color: #1a1a1a;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   line-height: 1.3;
 }
