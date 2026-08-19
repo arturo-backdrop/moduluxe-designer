@@ -666,8 +666,8 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
         if (hInc) hInc.onclick = () => { wp.height = parseFloat((wp.height+STEP_H).toFixed(2)); emit(); refreshCard(); };
         if (tDec) tDec.onclick = () => { wp.thickness = Math.max(0.05, parseFloat((wp.thickness-STEP_T).toFixed(3))); emit(); refreshCard(); };
         if (tInc) tInc.onclick = () => { wp.thickness = parseFloat((wp.thickness+STEP_T).toFixed(3)); emit(); refreshCard(); };
-        if (glass) glass.oninput = () => { wp.glassRatio = parseFloat(glass.value); emit(); };
-        if (open)  open.oninput  = () => { wp.openAngle  = parseFloat(open.value);  emit(); };
+        if (glass) glass.oninput = () => { wp.glassRatio = parseFloat(glass.value); emit(); refreshCard(); };
+        if (open)  open.oninput  = () => { wp.openAngle  = parseFloat(open.value);  emit(); refreshCard(); };
         const wDec = document.getElementById('rm_w_dec');
         const wInc = document.getElementById('rm_w_inc');
         const STEP_W = 0.05;
