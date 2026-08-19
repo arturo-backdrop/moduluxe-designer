@@ -115,7 +115,7 @@
 
 .cardInfo { flex: 1; min-width: 0; }
 .cardName {
-  font-weight: 500;
+  font-weight: 400;
   font-size: 0.75rem;
   color: #1a1a1a;
   white-space: nowrap;
@@ -126,13 +126,13 @@
 .cardDims {
   font-weight: 400;
   font-size: 0.625rem;
-  color: #bbb;
+  color: #aaa;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .cardCount {
-  font-weight: 900;
+  font-weight: 400;
   font-size: 0.875rem;
   color: #b48b31;
   flex-shrink: 0;
