@@ -11,25 +11,25 @@
 }
 
 .itemCount {
-  font-size: 0.7500rem;
+  font-size: 0.75rem;
   font-weight: 500;
   color: #aaa;
 }
 
 .totalBlock { display: flex; flex-direction: column; gap: 2px; }
 .totalLabel {
-  font-size: 0.7500rem;
+  font-size: 0.75rem;
   font-weight: 500;
   color: #888;
 }
 .totalValue {
-  font-size: 1.3750rem;
+  font-size: 1.125rem;
   font-weight: 900;
   color: #1a1a1a;
   line-height: 1.1;
 }
 .rentText {
-  font-size: 0.7500rem;
+  font-size: 0.75rem;
   font-weight: 500;
   color: #b48b31;
   margin-top: 0.1875rem;
@@ -45,7 +45,7 @@
   color: white;
   font-family: 'Figtree', sans-serif;
   font-weight: 700;
-  font-size: 0.9375rem;
+  font-size: 1.125rem;
   padding: 0.8125rem 1.1250rem;
   border-radius: 0.8750rem;
   border: none;
@@ -59,13 +59,13 @@
 
 /* ── Phone ───────────────────────────────────────────────── */
 .phoneRow {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   color: #bbb;
   text-align: center;
   line-height: 1.8;
 }
 .phoneLink {
-  font-size: 0.8750rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: #b48b31;
   text-decoration: none;
@@ -103,7 +103,7 @@
   justify-content: space-between;
   margin-bottom: 1.3750rem;
 }
-.modalTitle { font-weight: 900; font-size: 1.2500rem; color: #1a1a1a; }
+.modalTitle { font-weight: 900; font-size: 1.125rem; color: #1a1a1a; }
 .closeBtn {
   width: 2.0000rem; height: 2.0000rem;
   border-radius: 50%;
@@ -118,11 +118,11 @@
 /* ── Form ────────────────────────────────────────────────── */
 .fieldGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7500rem; }
 .field { display: flex; flex-direction: column; gap: 0.3125rem; }
-.fieldLabel { font-size: 0.7500rem; font-weight: 500; color: #888; }
+.fieldLabel { font-size: 0.75rem; font-weight: 500; color: #888; }
 .req { color: #b48b31; }
 .fieldInput, .fieldTextarea {
   font-family: 'Figtree', sans-serif;
-  font-size: 0.8750rem;
+  font-size: 0.875rem;
   color: #1a1a1a;
   background: #fafafa;
   border: 1.5px solid #f0f0f0;
@@ -150,7 +150,7 @@
   justify-content: space-between;
   padding: 0.5000rem 0;
   border-bottom: 1px solid #f0f0f0;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 .quoteItem:last-child { border-bottom: none; }
 .quoteItemName { color: #1a1a1a; font-weight: 500; }
@@ -161,18 +161,18 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.7500rem 0;
-  font-size: 0.8750rem;
+  font-size: 0.875rem;
   color: #888;
   border-top: 1px solid #f0f0f0;
   margin-bottom: 0.8750rem;
 }
-.totalAmt { font-weight: 700; color: #1a1a1a; font-size: 0.9375rem; }
+.totalAmt { font-weight: 700; color: #1a1a1a; font-size: 1.125rem; }
 
 .privacyRow {
   display: flex;
   align-items: center;
   gap: 0.5000rem;
-  font-size: 0.7500rem;
+  font-size: 0.75rem;
   color: #888;
   cursor: pointer;
   margin-bottom: 1.1250rem;
@@ -192,7 +192,7 @@
   border-radius: 0.7500rem;
   font-family: 'Figtree', sans-serif;
   font-weight: 700;
-  font-size: 0.8750rem;
+  font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -207,7 +207,7 @@
   border-radius: 0.7500rem;
   font-family: 'Figtree', sans-serif;
   font-weight: 500;
-  font-size: 0.8750rem;
+  font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -230,6 +230,6 @@
   margin-bottom: 0.2500rem;
 }
 .successIcon svg { width: 1.7500rem; height: 1.7500rem; }
-.successTitle { font-weight: 900; font-size: 1.2500rem; color: #1a1a1a; }
-.successSub   { font-size: 0.8125rem; color: #aaa; margin-bottom: 0.5000rem; }
+.successTitle { font-weight: 900; font-size: 1.125rem; color: #1a1a1a; }
+.successSub   { font-size: 0.875rem; color: #aaa; margin-bottom: 0.5000rem; }
 .quotePill { z-index: 10; }
