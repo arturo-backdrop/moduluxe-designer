@@ -64,6 +64,7 @@ export default function App() {
   const [historyIdx,     setHistoryIdx]     = useState(0);
   const historyRef    = useRef([[]]);
   const historyIdxRef = useRef(0);
+  const pushTimerRef  = useRef(null);
   useEffect(() => { historyRef.current    = history;    }, [history]);
   useEffect(() => { historyIdxRef.current = historyIdx; }, [historyIdx]);
 
@@ -147,17 +148,20 @@ export default function App() {
   const canRedo = historyIdx < history.length - 1;
 
   const pushHistory = useCallback((items) => {
-    const idx = historyIdxRef.current;
-    setHistory(prev => {
-      const next = [...prev.slice(0, idx + 1), items].slice(-50);
-      historyRef.current = next;
-      return next;
-    });
-    setHistoryIdx(prev => {
-      const next = Math.min(prev + 1, 49);
-      historyIdxRef.current = next;
-      return next;
-    });
+    if (pushTimerRef.current) clearTimeout(pushTimerRef.current);
+    pushTimerRef.current = setTimeout(() => {
+      const idx = historyIdxRef.current;
+      setHistory(prev => {
+        const next = [...prev.slice(0, idx + 1), items].slice(-50);
+        historyRef.current = next;
+        return next;
+      });
+      setHistoryIdx(prev => {
+        const next = Math.min(prev + 1, 49);
+        historyIdxRef.current = next;
+        return next;
+      });
+    }, 300);
   }, []);
 
   const undo = useCallback(() => {
