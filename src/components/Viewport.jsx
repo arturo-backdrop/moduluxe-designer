@@ -1893,19 +1893,37 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         return obj ? obj.rotation.y : 0;
       },
       restoreSnapshot: (items) => {
-        // Move existing 3D objects to match snapshot positions/rotations
-        items.forEach(item => {
-          const obj = itemGroup.children.find(x => x.userData.uid === item.uid);
-          if (obj) {
-            obj.position.x = item.x ?? obj.position.x;
-            obj.position.z = item.z ?? obj.position.z;
-            obj.rotation.y = item.rotY ?? obj.rotation.y;
-          }
-        });
-        // Remove objects not in snapshot
         const snapshotUids = new Set(items.map(i => i.uid));
+
+        // Remove objects not in snapshot
         const toRemove = itemGroup.children.filter(x => x.userData.uid && !snapshotUids.has(x.userData.uid));
         toRemove.forEach(obj => { itemGroup.remove(obj); });
+
+        // Move existing objects and restore sockets
+        items.forEach(item => {
+          const obj = itemGroup.children.find(x => x.userData.uid === item.uid);
+          if (!obj) return;
+
+          // Restore position and rotation
+          obj.position.x = item.x ?? obj.position.x;
+          obj.position.z = item.z ?? obj.position.z;
+          obj.rotation.y = item.rotY ?? obj.rotation.y;
+
+          // Restore socket states
+          if (item.socketStates) {
+            Object.entries(item.socketStates).forEach(([socketName, state]) => {
+              // Find socket def from catalog
+              const catalogItem = Object.values(config?._catalogFlat || {}).find?.(c => c?.id === item.modelId)
+                ?? Object.values(config || {}).find?.(c => c?.id === item.modelId);
+              const socketDef = catalogItem?.sockets?.find?.(s => s.name === socketName || s.name?.startsWith(socketName));
+              cancelSocketToken(item.uid, socketName);
+              const sc = getSocketContainer(item.uid);
+              if (sc[socketName]) { obj.remove(sc[socketName]); delete sc[socketName]; }
+              if (socketDef) applySocketVisual(item.uid, obj, sc, socketName, state, socketDef);
+            });
+          }
+        });
+
         itemsRef.current = items;
         rebuildHandles?.();
       },
