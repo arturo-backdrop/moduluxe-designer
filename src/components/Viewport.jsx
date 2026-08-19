@@ -1299,11 +1299,13 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       e.preventDefault();
       // In draw mode, still allow right-click on existing walls/columns/doors
 
-      // Check walls/columns/doors first
+      // Check walls/columns/doors first (only in draw mode)
       const raw = groundPt(e.clientX, e.clientY);
       raycaster.setFromCamera(pointer, camera);
-      const wallHit = raycaster.intersectObjects(wallGroup.children, true)
-        .filter(h => !h.object.userData.isMeta && !h.object.userData.isWallOutline);
+      const wallHit = modeRef.current === 'draw'
+        ? raycaster.intersectObjects(wallGroup.children, true)
+            .filter(h => !h.object.userData.isMeta && !h.object.userData.isWallOutline)
+        : [];
       if (wallHit.length > 0) {
         let cur = wallHit[0].object;
         while (cur && !cur.userData?.uid) cur = cur.parent;
