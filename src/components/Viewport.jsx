@@ -1310,7 +1310,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
     const onContextMenu = e => {
       e.preventDefault();
-      if (modeRef.current === 'draw') return;
+      // In draw mode, still allow right-click on existing walls/columns/doors
 
       // Check walls/columns/doors first
       const raw = groundPt(e.clientX, e.clientY);
