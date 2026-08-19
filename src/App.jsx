@@ -313,7 +313,7 @@ export default function App() {
         </div>
 
         {/* Sidebar — fixed width, full height */}
-        <div style={{ flexShrink: 0, width: 'clamp(380px, 30vw, 600px)', height: '100%', position: 'relative', pointerEvents: 'all' }}>
+        <div style={{ flexShrink: 0, width: 'clamp(380px, 40vw, 500px)', height: '100%', position: 'relative', pointerEvents: 'all' }}>
           <Sidebar
             config={CONFIG}
             units={units}
