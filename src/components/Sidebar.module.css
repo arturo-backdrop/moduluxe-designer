@@ -390,20 +390,20 @@
 
 .navBtn {
   width: 2.6250rem;
-  min-height: 2.6250rem;
-  height: auto;
+  height: 3.2500rem;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.1875rem;
-  padding: 0.2813rem 0.1875rem;
+  padding: 0.2500rem 0.1875rem;
   border-radius: 0.3750rem;
   border: none;
   background: transparent;
   cursor: pointer;
   transition: background 0.15s;
-  flex-shrink: 0;
+  overflow: hidden;
 }
 .navBtn:hover { background: #d4d4d4; }
 .navBtnActive { background: transparent !important; }
