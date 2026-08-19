@@ -128,11 +128,12 @@ function applyPaintColor(root, color) {
   });
 }
 
-export default function Viewport({ config, floorSize, sceneItems, onSceneItemsChange, onRadialMenu, radialMenuWrapperRef, engRef: externalEngRef, mode = 'place', activeTool = 'select', onToolChange, onSelect }) {
+export default function Viewport({ config, floorSize, sceneItems, onSceneItemsChange, onCommit, onRadialMenu, radialMenuWrapperRef, engRef: externalEngRef, mode = 'place', activeTool = 'select', onToolChange, onSelect }) {
   const canvasRef = useRef(null);
   const engRef    = useRef(null);
   const itemsRef    = useRef(sceneItems);
   const onChangeRef = useRef(onSceneItemsChange);
+  const onCommitRef  = useRef(onCommit);
   const onRadialMenuRef = useRef(onRadialMenu);
   const onSelectRef     = useRef(onSelect);
   const catalogRef  = useRef(config._catalogFlat || []);
@@ -153,6 +154,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
   useEffect(() => { itemsRef.current    = sceneItems; }, [sceneItems]);
   useEffect(() => { onChangeRef.current = onSceneItemsChange; }, [onSceneItemsChange]);
+  useEffect(() => { onCommitRef.current  = onCommit; },              [onCommit]);
   useEffect(() => { catalogRef.current  = config._catalogFlat || []; }, [config._catalogFlat]);
 
   // ── Init Three.js once ────────────────────────────────────
@@ -1155,6 +1157,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           return i;
         });
         onChangeRef.current?.(next);
+        onCommitRef.current?.(next);
 
         // After drag — just keep selection, radial opens on right click
         canvas.style.cursor = hoveredUid ? 'grab' : 'default';
@@ -1302,6 +1305,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       pendingPositions.set(uid, { x, z });
       const next = [...itemsRef.current, { uid, modelId, count: 1, x, z, rotY: 0 }];
       onChangeRef.current?.(next);
+      onCommitRef.current?.(next);
     };
 
     const onContextMenu = e => {
