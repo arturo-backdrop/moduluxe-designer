@@ -40,6 +40,7 @@ function PresetGrid({ presets, selectedPreset, onSelect }) {
     a === NO_SIZE ? 1 : b === NO_SIZE ? -1 : a.localeCompare(b)
   );
   return (
+    <div className={styles.presetGridWrap}>
     <div className={styles.presetGrid}>
       {groupKeys.map(sizeKey => (
         <div key={sizeKey} className={styles.presetSizeGroup}>
