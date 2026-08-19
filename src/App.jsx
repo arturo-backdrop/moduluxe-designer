@@ -387,6 +387,7 @@ export default function App() {
             overflowX: 'hidden',
             scrollbarWidth: 'thin',
             scrollbarColor: '#e0e0e0 transparent',
+            paddingBottom: '1.25rem',
           }}>
             <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog}
               onSelectModel={modelId => viewportEngRef.current?.highlightModel(modelId)} />
