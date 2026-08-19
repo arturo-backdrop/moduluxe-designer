@@ -291,6 +291,27 @@ export default function App() {
         boxSizing: 'border-box',
       }}>
 
+        {/* Header — absolute centered over full viewport */}
+        <div style={{ position: 'absolute', top: '0.75rem', left: 0, right: 0, display: 'flex', justifyContent: 'center', pointerEvents: 'none', zIndex: 10 }}>
+          <div style={{ pointerEvents: 'all' }}>
+            <Header
+              config={CONFIG}
+              projectName={projectName}
+              onProjectNameChange={setProjectName}
+              mode={mode}
+              onModeChange={(m) => { setMode(m); if (m === 'draw') checkTourAction('switch_draw'); if (m === 'place') checkTourAction('switch_place'); }}
+              canUndo={canUndo}
+              canRedo={canRedo}
+              onUndo={undo}
+              onRedo={redo}
+              onNew={handleNew}
+              units={units}
+              onUnitsChange={setUnits}
+              onStartTour={startTour}
+            />
+          </div>
+        </div>
+
         {/* Sidebar — fixed width, full height */}
         <div style={{ flexShrink: 0, width: 'clamp(380px, 30vw, 500px)', height: '100%', position: 'relative', pointerEvents: 'all' }}>
           <Sidebar
@@ -308,31 +329,8 @@ export default function App() {
         {/* Center + Right — flex column, takes remaining width */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: 0, minHeight: 0 }}>
 
-          {/* Top row: Header (center) + Right col */}
-          <div style={{ display: 'flex', flexDirection: 'row', gap: '0.75rem', flexShrink: 0, alignItems: 'flex-start' }}>
-
-            {/* Header — centered */}
-            <div style={{ flex: 1, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
-              <div style={{ pointerEvents: 'all' }}>
-                <Header
-                  config={CONFIG}
-                  projectName={projectName}
-                  onProjectNameChange={setProjectName}
-                  mode={mode}
-                  onModeChange={(m) => { setMode(m); if (m === 'draw') checkTourAction('switch_draw'); if (m === 'place') checkTourAction('switch_place'); }}
-                  canUndo={canUndo}
-                  canRedo={canRedo}
-                  onUndo={undo}
-                  onRedo={redo}
-                  onNew={handleNew}
-                  units={units}
-                  onUnitsChange={setUnits}
-                  onStartTour={startTour}
-                />
-              </div>
-            </div>
-
-          </div>
+          {/* Top row: spacer to keep layout, header is absolute */}
+          <div style={{ flexShrink: 0, height: 0 }} />
 
           {/* Middle row: empty (viewport shows through) + Right col panels */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'row', gap: '0.75rem', minHeight: 0 }}>
