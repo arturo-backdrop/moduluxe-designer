@@ -256,10 +256,6 @@ export default function App() {
     return <Onboarding config={CONFIG} presets={presets} onComplete={handleOnboardingComplete} />;
   }
 
-  const PAD = 16;
-  const SIDEBAR_W = 336;
-  const RIGHT_W = 276;
-
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
 
@@ -284,67 +280,81 @@ export default function App() {
         />
       </div>
 
-      {/* UI Grid — floats over viewport */}
+      {/* UI — floats over viewport */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 1,
         pointerEvents: 'none',
-        display: 'grid',
-        gridTemplateColumns: 'clamp(330px, 24vw, 420px) 1fr clamp(220px, 16vw, 280px)',
-        gridTemplateRows: 'auto 1fr clamp(150px, 12vw, 190px)',
+        display: 'flex',
+        flexDirection: 'row',
         padding: '0.75rem',
-        paddingBottom: '0.75rem',
         gap: '0.75rem',
         boxSizing: 'border-box',
-    }}>
+      }}>
 
-      {/* Sidebar — col 1, all rows */}
-      <div style={{ gridColumn: '1', gridRow: '1 / 4', position: 'relative', minHeight: 0 }}>
-        <Sidebar
-          config={CONFIG}
-          units={units}
-          mode={mode}
-          activeTool={activeTool}
-          onToolChange={(t) => { setActiveTool(t); if (t === 'wall') checkTourAction('select_wall'); }}
-          onAddProduct={addSceneItem}
-          presets={presets}
-          onLoadPreset={handleLoadPreset}
-        />
-      </div>
-
-      {/* Header — col 2, row 1 */}
-      <div style={{ gridColumn: '2', gridRow: '1', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', pointerEvents: 'none' }}>
-        <div style={{ pointerEvents: 'all' }}>
-          <Header
+        {/* Sidebar — fixed width, full height */}
+        <div style={{ flexShrink: 0, width: 'clamp(260px, 19vw, 330px)', height: '100%', position: 'relative', pointerEvents: 'all' }}>
+          <Sidebar
             config={CONFIG}
-            projectName={projectName}
-            onProjectNameChange={setProjectName}
-            mode={mode}
-            onModeChange={(m) => { setMode(m); if (m === 'draw') checkTourAction('switch_draw'); if (m === 'place') checkTourAction('switch_place'); }}
-            canUndo={canUndo}
-            canRedo={canRedo}
-            onUndo={undo}
-            onRedo={redo}
-            onNew={handleNew}
             units={units}
-            onUnitsChange={setUnits}
-            onStartTour={startTour}
+            mode={mode}
+            activeTool={activeTool}
+            onToolChange={(t) => { setActiveTool(t); if (t === 'wall') checkTourAction('select_wall'); }}
+            onAddProduct={addSceneItem}
+            presets={presets}
+            onLoadPreset={handleLoadPreset}
           />
         </div>
-      </div>
 
-      {/* Right column — col 3, all rows, anchored to bottom */}
-      <div style={{ gridColumn: '3', gridRow: '1 / 4', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '0.75rem', minHeight: 0, pointerEvents: 'none', paddingBottom: 'calc(clamp(150px, 12vw, 190px) + 0.75rem)' }}>
-        <VideoWidget config={CONFIG} />
-        <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
-      </div>
+        {/* Center + Right — flex column, takes remaining width */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: 0, minHeight: 0 }}>
 
-      {/* Viewport placeholder — keeps grid row alive */}
-      <div style={{ gridColumn: '2', gridRow: '2', minHeight: 0 }} />
+          {/* Top row: Header (center) + Right col */}
+          <div style={{ display: 'flex', flexDirection: 'row', gap: '0.75rem', flexShrink: 0, alignItems: 'flex-start' }}>
 
-      {/* Bottom bar — col 2+3, row 3 */}
-      <div style={{ gridColumn: '1 / 4', gridRow: '3', pointerEvents: 'all', alignSelf: 'end', paddingLeft: 'calc(clamp(330px, 24vw, 420px) - 3rem)' }}>
-        <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog}
-          onSelectModel={modelId => viewportEngRef.current?.highlightModel(modelId)} />
+            {/* Header — centered */}
+            <div style={{ flex: 1, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
+              <div style={{ pointerEvents: 'all' }}>
+                <Header
+                  config={CONFIG}
+                  projectName={projectName}
+                  onProjectNameChange={setProjectName}
+                  mode={mode}
+                  onModeChange={(m) => { setMode(m); if (m === 'draw') checkTourAction('switch_draw'); if (m === 'place') checkTourAction('switch_place'); }}
+                  canUndo={canUndo}
+                  canRedo={canRedo}
+                  onUndo={undo}
+                  onRedo={redo}
+                  onNew={handleNew}
+                  units={units}
+                  onUnitsChange={setUnits}
+                  onStartTour={startTour}
+                />
+              </div>
+            </div>
+
+          </div>
+
+          {/* Middle row: empty (viewport shows through) + Right col panels */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'row', gap: '0.75rem', minHeight: 0 }}>
+
+            {/* Center — viewport shows through */}
+            <div style={{ flex: 1 }} />
+
+            {/* Right col — Video + Quote anchored to bottom */}
+            <div style={{ flexShrink: 0, width: 'clamp(220px, 16vw, 280px)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '0.75rem', pointerEvents: 'none' }}>
+              <VideoWidget config={CONFIG} />
+              <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
+            </div>
+
+          </div>
+
+          {/* Bottom bar — full width of center+right, anchored to bottom */}
+          <div style={{ flexShrink: 0, pointerEvents: 'all' }}>
+            <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog}
+              onSelectModel={modelId => viewportEngRef.current?.highlightModel(modelId)} />
+          </div>
+
+        </div>
       </div>
 
       {/* Radial menu overlay — floats over viewport */}
@@ -574,7 +584,7 @@ export default function App() {
           );
         })()}
 
-      {tourActive && <Tour onDone={doneTour} onAction={handleTourAction} />}
+        {tourActive && <Tour onDone={doneTour} onAction={handleTourAction} />}
       </div>
     </div>
   )
