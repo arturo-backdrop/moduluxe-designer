@@ -288,7 +288,7 @@ export default function App() {
         flexDirection: 'row',
         paddingTop: '0.75rem',
         paddingBottom: '0.75rem',
-        paddingLeft: '0.75rem',
+        paddingLeft: '0rem',
         paddingRight: '0.75rem',
         gap: '0rem',
         boxSizing: 'border-box',
