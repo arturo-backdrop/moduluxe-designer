@@ -1892,6 +1892,23 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         const obj = itemGroup.children.find(x => x.userData.uid === uid);
         return obj ? obj.rotation.y : 0;
       },
+      restoreSnapshot: (items) => {
+        // Move existing 3D objects to match snapshot positions/rotations
+        items.forEach(item => {
+          const obj = itemGroup.children.find(x => x.userData.uid === item.uid);
+          if (obj) {
+            obj.position.x = item.x ?? obj.position.x;
+            obj.position.z = item.z ?? obj.position.z;
+            obj.rotation.y = item.rotY ?? obj.rotation.y;
+          }
+        });
+        // Remove objects not in snapshot
+        const snapshotUids = new Set(items.map(i => i.uid));
+        const toRemove = itemGroup.children.filter(x => x.userData.uid && !snapshotUids.has(x.userData.uid));
+        toRemove.forEach(obj => { itemGroup.remove(obj); });
+        itemsRef.current = items;
+        rebuildHandles?.();
+      },
       highlightModel: (modelId) => {
         // Clear current selection
         setGroupOutline(selectedUids, false);
