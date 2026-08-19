@@ -65,8 +65,7 @@ export default function App() {
   const historyRef    = useRef([[]]);
   const historyIdxRef = useRef(0);
   const pushTimerRef  = useRef(null);
-  useEffect(() => { historyRef.current    = history;    }, [history]);
-  useEffect(() => { historyIdxRef.current = historyIdx; }, [historyIdx]);
+  // refs updated synchronously in pushHistory/undo/redo
 
   // Load catalog + prefetch all GLBs
   useEffect(() => {
