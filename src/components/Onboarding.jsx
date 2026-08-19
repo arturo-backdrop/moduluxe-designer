@@ -78,6 +78,7 @@ function PresetGrid({ presets, selectedPreset, onSelect }) {
         </div>
       ))}
     </div>
+    </div>
   );
 }
 
