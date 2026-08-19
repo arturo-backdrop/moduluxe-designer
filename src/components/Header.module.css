@@ -34,14 +34,14 @@
   white-space: pre;
   font-family: 'Figtree', sans-serif;
   font-weight: 500;
-  font-size: 0.9375rem;
+  font-size: 1.125rem;
   pointer-events: none;
 }
 
 .nameInput {
   font-family: 'Figtree', sans-serif;
   font-weight: 500;
-  font-size: 0.9375rem;
+  font-size: 1.125rem;
   color: #1a1a1a;
   border: none;
   outline: none;
@@ -121,7 +121,7 @@
 .modeBtn {
   font-family: 'Figtree', sans-serif;
   font-weight: 500;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   padding: 0.4375rem 1.1250rem;
   border-radius: 2.5000rem;
   border: none;
@@ -142,7 +142,7 @@
   position: fixed;
   bottom: 0.6250rem;
   right: 0.8750rem;
-  font-size: 0.6250rem;
+  font-size: 0.625rem;
   font-weight: 400;
   color: rgba(0,0,0,0.25);
   pointer-events: none;
@@ -157,7 +157,7 @@
   color: #aaa;
   font-family: 'Figtree', sans-serif;
   font-weight: 500;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   padding: 0.2500rem 0.3750rem;
   border-radius: 0.5000rem;
   transition: all 0.15s;
@@ -176,7 +176,7 @@
 }
 .unitBtn {
   font-family: 'Figtree', sans-serif;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   color: #999;
   background: transparent;
@@ -196,7 +196,7 @@
   border: 2px solid #e8e8e8;
   background: white;
   color: #aaa;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 700;
   cursor: pointer;
   display: flex;
