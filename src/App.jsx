@@ -315,30 +315,46 @@ export default function App() {
           </div>
         </div>
 
-        {/* Left col — Sidebar + BottomBar */}
-        <div style={{ flexShrink: 0, width: 'clamp(380px, 35vw, 500px)', display: 'flex', flexDirection: 'column', gap: '0.75rem', pointerEvents: 'all' }}>
-          <div style={{ flex: 1, minHeight: 0 }}>
-            <Sidebar
-              config={CONFIG}
-              units={units}
-              mode={mode}
-              activeTool={activeTool}
-              onToolChange={(t) => { setActiveTool(t); if (t === 'wall') checkTourAction('select_wall'); }}
-              onAddProduct={addSceneItem}
-              presets={presets}
-              onLoadPreset={handleLoadPreset}
-            />
+        {/* Sidebar — fixed width, full height */}
+        <div style={{ flexShrink: 0, width: 'clamp(380px, 35vw, 500px)', height: '100%', position: 'relative', pointerEvents: 'all' }}>
+          <Sidebar
+            config={CONFIG}
+            units={units}
+            mode={mode}
+            activeTool={activeTool}
+            onToolChange={(t) => { setActiveTool(t); if (t === 'wall') checkTourAction('select_wall'); }}
+            onAddProduct={addSceneItem}
+            presets={presets}
+            onLoadPreset={handleLoadPreset}
+          />
+        </div>
+
+        {/* Center + Right — flex column, takes remaining width */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: 0, minHeight: 0 }}>
+
+          {/* Top row: spacer to keep layout, header is absolute */}
+          <div style={{ flexShrink: 0, height: 0 }} />
+
+          {/* Middle row: empty (viewport shows through) + Right col panels */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'row', gap: '0.75rem', minHeight: 0 }}>
+
+            {/* Center — viewport shows through */}
+            <div style={{ flex: 1 }} />
+
+            {/* Right col — Video + Quote anchored to bottom */}
+            <div style={{ flexShrink: 0, width: 'clamp(220px, 16vw, 280px)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '0.75rem', pointerEvents: 'none' }}>
+              <VideoWidget config={CONFIG} />
+              <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
+            </div>
+
           </div>
-          <div style={{ flexShrink: 0 }}>
+
+          {/* Bottom bar — full width of center+right, anchored to bottom */}
+          <div style={{ flexShrink: 0, pointerEvents: 'all' }}>
             <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog}
               onSelectModel={modelId => viewportEngRef.current?.highlightModel(modelId)} />
           </div>
-        </div>
 
-        {/* Right col — flex column, Video + Quote anchored to bottom */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '0.75rem', minWidth: 0, pointerEvents: 'none', paddingBottom: '0' }}>
-          <VideoWidget config={CONFIG} />
-          <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
         </div>
 
         {/* Radial menu overlay — floats over viewport */}
