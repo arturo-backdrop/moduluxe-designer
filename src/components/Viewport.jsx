@@ -1356,6 +1356,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       });
       sourceObj.traverse(c => { if (c.userData?.socketPositions) Object.assign(socketPositions, c.userData.socketPositions); });
       const isPresetGrp = savedItem?.isPresetGroup && savedItem?.groupId;
+      onRadialMenuRef.current?.(null); // close previous before opening new
       onRadialMenuRef.current?.({
         x: sp.x, y: sp.y, uid: sourceUid,
         modelId: sourceObj.userData.modelId,
