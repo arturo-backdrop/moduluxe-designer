@@ -187,8 +187,8 @@
 }
 .presetGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
   margin-bottom: 24px;
   max-height: 42vh;
   overflow-y: auto;
@@ -281,7 +281,7 @@
 }
 .presetSizeGroupGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
 .noPresets {
