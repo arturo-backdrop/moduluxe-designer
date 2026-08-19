@@ -148,24 +148,36 @@ export default function App() {
 
   const pushHistory = useCallback((items) => {
     const idx = historyIdxRef.current;
-    setHistory(prev => [...prev.slice(0, idx + 1), items].slice(-50));
-    setHistoryIdx(prev => Math.min(prev + 1, 49));
+    setHistory(prev => {
+      const next = [...prev.slice(0, idx + 1), items].slice(-50);
+      historyRef.current = next;
+      return next;
+    });
+    setHistoryIdx(prev => {
+      const next = Math.min(prev + 1, 49);
+      historyIdxRef.current = next;
+      return next;
+    });
   }, []);
 
   const undo = useCallback(() => {
     const idx = historyIdxRef.current;
     const hist = historyRef.current;
-    if (idx <= 0) return;
-    setHistoryIdx(idx - 1);
-    setSceneItems(hist[idx - 1]);
+    if (idx <= 0 || !hist[idx - 1]) return;
+    const newIdx = idx - 1;
+    historyIdxRef.current = newIdx;
+    setHistoryIdx(newIdx);
+    setSceneItems(hist[newIdx]);
   }, []);
 
   const redo = useCallback(() => {
     const idx = historyIdxRef.current;
     const hist = historyRef.current;
-    if (idx >= hist.length - 1) return;
-    setHistoryIdx(idx + 1);
-    setSceneItems(hist[idx + 1]);
+    if (idx >= hist.length - 1 || !hist[idx + 1]) return;
+    const newIdx = idx + 1;
+    historyIdxRef.current = newIdx;
+    setHistoryIdx(newIdx);
+    setSceneItems(hist[newIdx]);
   }, []);
 
   useEffect(() => {
