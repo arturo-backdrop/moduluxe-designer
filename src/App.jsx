@@ -172,7 +172,8 @@ export default function App() {
   const undo = useCallback(() => {
     const idx = historyIdxRef.current;
     const hist = historyRef.current;
-    console.log('[UNDO] idx:', idx, 'hist.length:', hist.length, 'hist:', hist.map(h => h?.length));
+    console.log('[UNDO] idx:', idx, 'hist.length:', hist.length);
+    hist.forEach((snap, i) => console.log(`  snap[${i}]:`, JSON.stringify(snap?.map(item => ({uid: item?.uid, x: item?.x?.toFixed(2), z: item?.z?.toFixed(2)})))));
     if (idx <= 0 || !hist[idx - 1]) return;
     const newIdx = idx - 1;
     historyIdxRef.current = newIdx;
