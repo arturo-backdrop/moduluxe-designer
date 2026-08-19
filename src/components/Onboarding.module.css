@@ -15,6 +15,7 @@
   background: white;
   border-radius: 20px;
   width: min(1200px, 94vw);
+  min-height: 70vh;
   max-height: 90vh;
   overflow-y: auto;
   padding: 48px;
@@ -171,6 +172,8 @@
 /* ── Preset grid ─────────────────────────────────────────── */
 .presetGridWrap {
   position: relative;
+  overflow: hidden;
+  border-radius: 0 0 8px 8px;
 }
 .presetGridWrap::after {
   content: '';
@@ -178,13 +181,13 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 80px;
-  background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.18));
+  height: 60px;
+  background: linear-gradient(to bottom, transparent, rgba(240,240,240,0.95));
   pointer-events: none;
 }
 .presetGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 10px;
   margin-bottom: 24px;
   max-height: 42vh;
@@ -278,7 +281,7 @@
 }
 .presetSizeGroupGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 10px;
 }
 .noPresets {
