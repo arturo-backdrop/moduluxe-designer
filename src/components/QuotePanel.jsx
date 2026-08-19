@@ -5,16 +5,19 @@ const WALL_TYPES = new Set(['wall','column','door']);
 
 function buildLineItems(sceneItems, catalog) {
   const items = sceneItems.filter(i => {
-    if (WALL_TYPES.has(i.type) || i.isArrayClone) return false;
+    if (WALL_TYPES.has(i.type)) return false;
+    if (i.isArrayClone) return false; // clones counted via arrayParent
     if (catalog?.[i.modelId]?.category === 'Props') return false;
     return true;
   });
   const modelGroups = {};
   items.forEach(item => {
-    // isPresetGroup items are individual — don't multiply by group size
-    const groupSize = (item.groupId && !item.isPresetGroup)
-      ? sceneItems.filter(i => i.groupId === item.groupId && !i.isArrayClone).length
+    // Array group: count original + all its clones
+    const arrayCount = item.groupId
+      ? sceneItems.filter(i => i.groupId === item.groupId).length
       : 1;
+    // isPresetGroup items are individual — don't multiply by group size
+    const groupSize = item.isPresetGroup ? 1 : arrayCount;
     if (!modelGroups[item.modelId]) {
       modelGroups[item.modelId] = { item, count: 0 };
     }
