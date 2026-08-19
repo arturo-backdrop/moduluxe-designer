@@ -1,81 +1,44 @@
 /* ── Bar ─────────────────────────────────────────────────── */
 .bottomBar {
   background: white;
-  border-radius: 1.2500rem;
-  box-shadow: 0 0.2500rem 2.0000rem rgba(0,0,0,0.10);
-  padding: 0.6250rem 1.0000rem 0.7500rem;
+  border-radius: 1.25rem;
+  box-shadow: 0 0.25rem 2rem rgba(0,0,0,0.10);
+  padding: 0.75rem 0.75rem 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.4375rem;
-  width: 100%;
+  gap: 0.375rem;
 }
 
 .barTitle {
   font-weight: 500;
   font-size: 0.75rem;
   color: #999;
+  margin-bottom: 0.25rem;
 }
 
-/* ── Scroll row ──────────────────────────────────────────── */
-.scrollRow {
+/* ── Vertical list ───────────────────────────────────────── */
+.list {
   display: flex;
-  align-items: center;
-  gap: 0.3750rem;
-}
-
-.arrowBtn {
-  width: 1.6250rem;
-  height: 1.6250rem;
-  border-radius: 50%;
-  background: #f5f5f5;
-  color: #999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: all 0.15s;
-  border: none;
-  cursor: pointer;
-}
-.arrowBtn svg { width: 0.7500rem; height: 0.7500rem; }
-.arrowBtn:hover:not(:disabled) { background: #ede9df; color: #b48b31; }
-.arrowDisabled { opacity: 0.25; cursor: default; pointer-events: none; }
-
-/* ── Cards viewport ──────────────────────────────────────── */
-.cardsViewport {
-  flex: 1;
-  overflow: hidden;
-  position: relative;
-}
-
-.cardsTrack {
-  display: flex;
-  gap: 0.5000rem;
-  transition: transform 0.35s cubic-bezier(0.34,1.2,0.64,1);
-  will-change: transform;
+  flex-direction: column;
+  gap: 0.375rem;
 }
 
 .emptyMsg {
-  font-size: 0.75rem;
+  font-size: 0.625rem;
   color: #ccc;
   font-style: italic;
-  padding: 0.5000rem 0.2500rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  padding: 0.25rem;
 }
 
 /* ── Product card ────────────────────────────────────────── */
 .productCard {
-  flex-shrink: 0;
-  width: 10.9375rem;
-  background: #fafafa;
-  border-radius: 0.6875rem;
-  border: 1.5px solid transparent;
-  padding: 0.4375rem 0.5625rem;
   display: flex;
   align-items: center;
-  gap: 0.5000rem;
+  gap: 0.5rem;
+  padding: 0.4375rem 0.5rem;
+  border-radius: 0.625rem;
+  border: 1.5px solid transparent;
+  background: #fafafa;
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
   user-select: none;
@@ -87,29 +50,28 @@
 .productCardSelected {
   background: #fdf8ef !important;
   border-color: #b48b31 !important;
-  box-shadow: 0 2px 0.7500rem rgba(180,139,49,0.12);
+  box-shadow: 0 2px 0.75rem rgba(180,139,49,0.12);
 }
 
 /* Thumbnail */
 .cardThumb {
-  width: 2.6250rem;
-  height: 3.3750rem;
+  width: 2.625rem;
+  height: 3.375rem;
   background: #f0f0f0;
-  border-radius: 0.3750rem;
+  border-radius: 0.375rem;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
 }
 .productCardSelected .cardThumb,
 .productCard:hover .cardThumb { background: #ede9df; }
 
 .cardThumbImg {
-  width: 2.6250rem;
-  height: 3.3750rem;
+  width: 2.625rem;
+  height: 3.375rem;
   object-fit: contain;
-  border-radius: 0.3750rem;
+  border-radius: 0.375rem;
   flex-shrink: 0;
 }
 
@@ -137,4 +99,3 @@
   color: #b48b31;
   flex-shrink: 0;
 }
-.bottomBar { z-index: 10; }
