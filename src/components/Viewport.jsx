@@ -1316,27 +1316,16 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
             if (selectedWallUid && selectedWallUid !== uid) setWallHighlight(selectedWallUid, 'none');
             selectedWallUid = uid;
             setWallHighlight(uid, 'select');
-            const mesh = wallMeshMap.get(uid);
-            if (mesh) {
-              const box = new THREE.Box3().setFromObject(mesh);
-              const top = new THREE.Vector3(); box.getCenter(top);
-              top.y = box.max.y + 0.5;
-              top.project(camera);
-              const rect = canvas.getBoundingClientRect();
-              const sp = {
-                x: (top.x + 1) / 2 * rect.width + rect.left,
-                y: (-top.y + 1) / 2 * rect.height + rect.top,
-              };
+            const sp = { x: e.clientX, y: e.clientY };
               onRadialMenuRef.current?.(null);
-              panCameraToShowMenu(sp);
               openWallRadialMenu(item, sp);
-            }
           }
         }
         return;
       }
 
-      // Check models
+      // Check models (not in draw mode)
+      if (modeRef.current === 'draw') return;
       const hit = getHitContainer(e.clientX, e.clientY);
       if (!hit?.userData.uid) return;
       const uid = hit.userData.uid;
