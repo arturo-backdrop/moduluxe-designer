@@ -71,6 +71,7 @@ export default function App() {
   // Load catalog + prefetch all GLBs
   useEffect(() => {
     if (!CONFIG.manifestUrl) { setCatalogReady(true); return; }
+
     fetch(CONFIG.manifestUrl)
       .then(r => r.json())
       .then(async data => {
@@ -98,16 +99,14 @@ export default function App() {
           if (!preset.file) return preset;
           try {
             const r = await fetch(preset.file);
-            const data = await r.json();
-            // Booth Planner project format
-            if (data.items) {
-              return { ...preset, items: data.items.map(it => ({
+            const pData = await r.json();
+            if (pData.items) {
+              return { ...preset, items: pData.items.map(it => ({
                 modelId: it.modelId || it.catalogId,
                 x: it.x || 0, z: it.z || 0, rotY: it.rotY || 0, color: it.color || null,
               }))};
             }
-            // Already an items array
-            if (Array.isArray(data)) return { ...preset, items: data };
+            if (Array.isArray(pData)) return { ...preset, items: pData };
             return preset;
           } catch(e) {
             console.warn('Failed to load preset file:', preset.file, e);
@@ -116,16 +115,31 @@ export default function App() {
         }));
         setPresets(resolvedPresets);
 
-        // Prefetch all GLBs
-        const withFile = items.filter(i => i.file && i.type !== 'preset');
-        setLoadProgress({ loaded: 0, total: withFile.length });
-        let loaded = 0;
-        await Promise.all(withFile.map(item =>
-          loadModel(item.file)
-            .then(() => { loaded++; setLoadProgress({ loaded, total: withFile.length }); })
-            .catch(() => { loaded++; setLoadProgress({ loaded, total: withFile.length }); })
-        ));
+        // UI ready immediately — GLBs load in background
         setCatalogReady(true);
+
+        const withFile = items
+          .filter(i => i.file && i.type !== 'preset')
+          .slice()
+          .sort((a, b) => (b.load_priority || 0) - (a.load_priority || 0));
+
+        let loaded = 0;
+        setLoadProgress({ loaded: 0, total: withFile.length });
+
+        const CONCURRENCY = 4;
+        let idx = 0;
+        function next() {
+          if (idx >= withFile.length) return;
+          const item = withFile[idx++];
+          loadModel(item.file)
+            .catch(() => {})
+            .finally(() => {
+              loaded++;
+              setLoadProgress({ loaded, total: withFile.length });
+              next();
+            });
+        }
+        for (let i = 0; i < CONCURRENCY; i++) next();
       })
       .catch(e => { console.warn('Catalog load failed:', e); setCatalogReady(true); });
   }, []);
