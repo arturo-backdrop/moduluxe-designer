@@ -7,6 +7,25 @@
   pointer-events: none;
 }
 
+/* ── Tooltip ─────────────────────────────────────────────── */
+.tooltip {
+  background: rgba(26,26,46,0.92);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 400;
+  padding: 0.5rem 0.875rem;
+  border-radius: 2rem;
+  pointer-events: none;
+  animation: fadeIn 0.25s ease;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* ── Main pill ───────────────────────────────────────────── */
 .toolbar {
   display: flex;
@@ -39,7 +58,28 @@
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* ── Shared ──────────────────────────────────────────────── */
+/* ── Hint ────────────────────────────────────────────────── */
+.hint {
+  font-size: 0.6875rem;
+  color: rgba(255,255,255,0.75);
+  background: rgba(26,26,46,0.6);
+  border: none;
+  border-radius: 2rem;
+  padding: 0.375rem 1rem;
+  cursor: pointer;
+  pointer-events: all;
+  transition: background 0.15s, color 0.15s;
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.3s ease 0.1s both;
+  font-family: inherit;
+}
+.hint:hover {
+  background: rgba(26,26,46,0.85);
+  color: white;
+}
+.hint strong { color: #b48b31; font-weight: 600; }
+
+/* ── Divider ─────────────────────────────────────────────── */
 .divider {
   width: 1px;
   height: 1.25rem;
@@ -47,22 +87,11 @@
   margin: 0 0.25rem;
   flex-shrink: 0;
 }
+.drawPill .divider { background: rgba(255,255,255,0.15); }
 
-.drawPill .divider {
-  background: rgba(255,255,255,0.15);
-}
-
-.toolGroup {
-  display: flex;
-  align-items: center;
-  gap: 0.125rem;
-}
-
-.unitsGroup {
-  display: flex;
-  align-items: center;
-  gap: 0.125rem;
-}
+/* ── Groups ──────────────────────────────────────────────── */
+.toolGroup { display: flex; align-items: center; gap: 0.125rem; }
+.unitsGroup { display: flex; align-items: center; gap: 0.125rem; }
 
 /* ── Buttons ─────────────────────────────────────────────── */
 .toolBtn {
@@ -80,25 +109,14 @@
   white-space: nowrap;
 }
 .toolBtn:hover { background: #f5f5f5; color: #333; }
-.toolBtnActive {
-  background: #b48b31 !important;
-  color: white !important;
-}
+.toolBtnActive { background: #b48b31 !important; color: white !important; }
 
-/* Draw pill buttons */
 .drawPill .toolBtn { color: rgba(255,255,255,0.7); }
 .drawPill .toolBtn:hover { background: rgba(255,255,255,0.1); color: white; }
 .drawPill .toolBtnActive { background: #b48b31 !important; color: white !important; }
 
-.toolIcon {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-.toolLabel {
-  font-size: 0.75rem;
-  font-weight: 500;
-}
+.toolIcon { display: flex; align-items: center; flex-shrink: 0; }
+.toolLabel { font-size: 0.75rem; font-weight: 500; }
 
 .unitBtn {
   padding: 0.375rem 0.5rem;
@@ -114,7 +132,4 @@
   pointer-events: all;
 }
 .unitBtn:hover { background: #f5f5f5; color: #333; }
-.unitBtnActive {
-  color: #b48b31;
-  font-weight: 700;
-}
+.unitBtnActive { color: #b48b31; font-weight: 700; }
