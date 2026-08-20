@@ -144,13 +144,13 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
           </div>
         </div>
         <div>
-          <div style="font-size:9px;color:#999;margin-bottom:3px;">Glass — ${Math.round((wp.glassRatio||0)*100)}%</div>
+          <div id="rm_glass_label" style="font-size:9px;color:#999;margin-bottom:3px;">Glass — ${Math.round((wp.glassRatio||0)*100)}%</div>
           <input id="rm_glass" type="range" min="0" max="1" step="0.01" value="${wp.glassRatio||0}"
             style="width:100%;accent-color:#b48b31;" />
         </div>` : ''}
         ${isDoor ? `
         <div>
-          <div style="font-size:9px;color:#999;margin-bottom:3px;">Open — ${Math.round(wp.openAngle||45)}°</div>
+          <div id="rm_open_label" style="font-size:9px;color:#999;margin-bottom:3px;">Open — ${Math.round(wp.openAngle||45)}°</div>
           <input id="rm_open" type="range" min="-90" max="90" step="1" value="${wp.openAngle||45}"
             style="width:100%;accent-color:#b48b31;" />
         </div>` : ''}
@@ -666,8 +666,18 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
         if (hInc) hInc.onclick = () => { wp.height = parseFloat((wp.height+STEP_H).toFixed(2)); emit(); refreshCard(); };
         if (tDec) tDec.onclick = () => { wp.thickness = Math.max(0.05, parseFloat((wp.thickness-STEP_T).toFixed(3))); emit(); refreshCard(); };
         if (tInc) tInc.onclick = () => { wp.thickness = parseFloat((wp.thickness+STEP_T).toFixed(3)); emit(); refreshCard(); };
-        if (glass) glass.oninput = () => { wp.glassRatio = parseFloat(glass.value); emit(); refreshCard(); };
-        if (open)  open.oninput  = () => { wp.openAngle  = parseFloat(open.value);  emit(); refreshCard(); };
+        if (glass) glass.oninput = () => {
+          wp.glassRatio = parseFloat(glass.value);
+          const lbl = document.getElementById('rm_glass_label');
+          if (lbl) lbl.textContent = 'Glass — ' + Math.round(wp.glassRatio * 100) + '%';
+          emit();
+        };
+        if (open) open.oninput = () => {
+          wp.openAngle = parseFloat(open.value);
+          const lbl = document.getElementById('rm_open_label');
+          if (lbl) lbl.textContent = 'Open — ' + Math.round(wp.openAngle) + '°';
+          emit();
+        };
         const wDec = document.getElementById('rm_w_dec');
         const wInc = document.getElementById('rm_w_inc');
         const STEP_W = 0.05;
