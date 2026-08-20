@@ -20,6 +20,7 @@ export const CONFIG = {
   // ── Catalog ────────────────────────────────────────────────
   // Loaded from deploy.config.js — change it there
   manifestUrl: DEPLOY.manifestUrl,
+  presetsUrl:  DEPLOY.presetsUrl || null,
 
   // ── HubSpot ────────────────────────────────────────────────
   // Leave null to skip HubSpot and just show a confirmation message
