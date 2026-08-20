@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './BottomBar.module.css';
 
-const BAR_TITLE = 'Your build';
+const BAR_TITLE = 'Your products';
 const WALL_TYPES = new Set(['wall','column','door']);
 
 function ThumbPlaceholder() {
