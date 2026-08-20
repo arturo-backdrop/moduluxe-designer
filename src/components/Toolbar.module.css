@@ -1,0 +1,79 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 2rem;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  padding: 0.3rem 0.5rem;
+  gap: 0.25rem;
+  pointer-events: all;
+  user-select: none;
+}
+
+.toolGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.unitsGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.divider {
+  width: 1px;
+  height: 1.25rem;
+  background: #f0f0f0;
+  margin: 0 0.25rem;
+  flex-shrink: 0;
+}
+
+.toolBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.375rem 0.625rem;
+  border-radius: 1.5rem;
+  border: none;
+  background: transparent;
+  color: #666;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.toolBtn:hover { background: #f5f5f5; color: #333; }
+.toolBtnActive {
+  background: #b48b31 !important;
+  color: white !important;
+}
+
+.toolIcon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.toolLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.unitBtn {
+  padding: 0.375rem 0.5rem;
+  border-radius: 1.5rem;
+  border: none;
+  background: transparent;
+  color: #666;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  font-family: inherit;
+}
+.unitBtn:hover { background: #f5f5f5; color: #333; }
+.unitBtnActive {
+  color: #b48b31;
+  font-weight: 700;
+}
