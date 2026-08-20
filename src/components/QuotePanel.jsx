@@ -70,8 +70,8 @@ function ListModal({ sceneItems, catalog, onClose }) {
         <div style={{ display:'grid', gridTemplateColumns:COL, gap:'0 8px', padding:'0 4px 8px 4px', marginBottom:4 }}>
           <span style={{ fontSize:10, color:'#bbb', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Item</span>
           <span style={{ fontSize:10, color:'#bbb', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', textAlign:'center' }}>Qty</span>
-          <span style={{ fontSize:10, color:'#bbb', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', textAlign:'right' }}>Unit</span>
-          <span style={{ fontSize:10, color:'#bbb', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', textAlign:'right' }}>Total</span>
+          <span style={{ fontSize:10, color:'#bbb', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', textAlign:'center' }}>Unit</span>
+          <span style={{ fontSize:10, color:'#bbb', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', textAlign:'center' }}>Total</span>
         </div>
 
         {/* Items */}
@@ -85,7 +85,7 @@ function ListModal({ sceneItems, catalog, onClose }) {
               <div style={{ display:'grid', gridTemplateColumns:COL, gap:'0 8px', alignItems:'center' }}>
                 <span style={{ fontWeight:600, fontSize:13, color:'#1a1a1a' }}>{line.name}</span>
                 <span style={{ textAlign:'center', fontSize:13, color:'#888', fontWeight:500 }}>{line.count}</span>
-                <span style={{ textAlign:'right', fontSize:13, color:'#888' }}>
+                <span style={{ textAlign:'center', fontSize:13, color:'#888' }}>
                   {line.unitPrice > 0 ? fmt(line.unitPrice) : <span style={{color:'#ddd'}}>—</span>}
                 </span>
                 <span style={{ textAlign:'right', fontSize:13, fontWeight:700, color: line.total > 0 ? '#1a1a1a' : '#ddd' }}>
