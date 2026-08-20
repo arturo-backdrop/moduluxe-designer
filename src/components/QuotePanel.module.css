@@ -14,10 +14,10 @@
   font-size: 0.75rem;
   font-weight: 500;
   color: #aaa;
-  text-align: right;
+  text-align: center;
 }
 
-.totalBlock { display: flex; flex-direction: column; gap: 2px; align-items: flex-end; }
+.totalBlock { display: flex; flex-direction: column; gap: 2px; align-items: center; }
 .totalLabel {
   font-size: 0.75rem;
   font-weight: 500;
