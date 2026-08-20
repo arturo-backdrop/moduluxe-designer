@@ -6,7 +6,7 @@ const DRAW_TOOLS = [
   {
     id: 'wall',
     label: 'Wall',
-    tooltip: '🧱 Click to start drawing a wall, click again to finish.',
+    tooltip: 'Click on the floor to start drawing a wall, right click to stop.',
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
         <rect x="3" y="3" width="18" height="18" rx="1"/>
@@ -16,7 +16,7 @@ const DRAW_TOOLS = [
   {
     id: 'column',
     label: 'Column',
-    tooltip: '🏛 Click anywhere on the floor to place a column.',
+    tooltip: 'Click anywhere on the floor to place a column.',
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
         <rect x="8" y="2" width="8" height="20" rx="1"/>
@@ -26,7 +26,7 @@ const DRAW_TOOLS = [
   {
     id: 'door',
     label: 'Door',
-    tooltip: '🚪 Click on a wall to insert a door opening.',
+    tooltip: 'Click on the bottom of any wall to insert a door opening.',
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
         <rect x="3" y="2" width="13" height="20" rx="1"/>
@@ -128,12 +128,7 @@ export default function Toolbar({ mode, activeTool, onToolChange, units, onUnits
         </button>
       </div>
 
-      {/* Hint — only in draw mode */}
-      {mode === 'draw' && (
-        <button className={styles.hint} onClick={() => onModeChange('place')}>
-          ✨ Want to add products? Switch to <strong>Place products</strong>
-        </button>
-      )}
+
 
     </div>
   );
