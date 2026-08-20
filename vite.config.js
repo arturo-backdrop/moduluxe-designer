@@ -5,4 +5,7 @@ import { DEPLOY } from './deploy.config.js';
 export default defineConfig({
   plugins: [react()],
   base: DEPLOY.base,
+  build: {
+    assetsDir: 'app-bundle',
+  },
 });

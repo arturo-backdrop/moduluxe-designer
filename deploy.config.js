@@ -9,14 +9,14 @@ export const DEPLOY = {
   // GitHub Pages subdirectory:  '/moduluxe-designer/'
   // Root domain (Cloudflare, Vercel, Netlify): '/'
   // Custom subdirectory: '/my-app/'
-  base: '/',
+  base: '/static/designer/distrib/',
 
   // ── Model Library ───────────────────────────────────────────
   // URL to the manifest.json of the 3D model library.
   // Current: GitHub raw (public repo)
   // Private host: 'https://your-domain.com/library/manifest.json'
-  manifestUrl: 'http://localhost:9000/api/manifest',
-  presetsUrl: 'http://localhost:9000/api/presets',
+  manifestUrl: '/api/manifest',
+  presetsUrl: '/api/presets',
 
   // ── App Info ─────────────────────────────────────────────────
   appName: 'Moduluxe Designer',
