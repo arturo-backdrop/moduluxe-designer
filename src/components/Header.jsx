@@ -139,20 +139,7 @@ export default function Header({
             <span>New</span>
           </button>
 
-          <div className={styles.pillDivider} />
 
-          {/* Units selector */}
-          <div className={styles.unitsBtns}>
-            {UNIT_KEYS.map(u => (
-              <button
-                key={u}
-                className={`${styles.unitBtn} ${units === u ? styles.unitBtnActive : ''}`}
-                onClick={() => onUnitsChange(u)}
-              >
-                {UNITS[u].label}
-              </button>
-            ))}
-          </div>
 
 
         </div>
