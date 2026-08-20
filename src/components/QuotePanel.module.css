@@ -2,6 +2,8 @@
 .quotePill {
   background: white;
   border-radius: 1.2500rem;
+  width: 100%;
+  box-sizing: border-box;
   box-shadow: 0 0.2500rem 1.5000rem rgba(0,0,0,0.10);
   padding: 1.25rem 1.25rem 1rem;
   display: flex;
