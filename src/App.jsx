@@ -347,7 +347,6 @@ export default function App() {
               onNew={handleNew}
               units={units}
               onUnitsChange={setUnits}
-              onStartTour={startTour}
             />
           </div>
         </div>
@@ -643,7 +642,7 @@ export default function App() {
           );
         })()}
 
-        {tourActive && <Tour onDone={doneTour} onAction={handleTourAction} />}
+        {/* Tour disabled */}
       </div>
     </div>
   )
