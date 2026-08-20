@@ -250,30 +250,7 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
         </div>
       </div>
 
-      {/* ── Toolbar ── */}
-      <div className={styles.rightCol} style={{ paddingTop: logoHeight + 38 }}>
-        <div className={styles.zoomWrap}>
-          <button className={styles.zoomBtn} title="Zoom in"
-            onClick={() => window.dispatchEvent(new CustomEvent('viewport:zoom', { detail: 1 }))}>
-            {Icons.zoomIn}
-          </button>
-          <div className={styles.zoomDivider} />
-          <button className={styles.zoomBtn} title="Zoom out"
-            onClick={() => window.dispatchEvent(new CustomEvent('viewport:zoom', { detail: -1 }))}>
-            {Icons.zoomOut}
-          </button>
-        </div>
-
-        <div className={styles.toolsContainer}>
-          <ToolBtn id="select" label="Select" icon={Icons.select} active={activeTool==='select'} onClick={onToolChange} />
-          <div className={`${styles.drawTools} ${!isPlace ? styles.drawToolsVisible : styles.drawToolsHidden}`}>
-            <div className={styles.toolDivider} />
-            <ToolBtn id="wall"   label="Wall"   icon={Icons.wall}   active={activeTool==='wall'}   onClick={onToolChange} data-tour="tool-wall" />
-            <ToolBtn id="column" label="Column" icon={Icons.column} active={activeTool==='column'} onClick={onToolChange} data-tour="tool-column" />
-            <ToolBtn id="door"   label="Door"   icon={Icons.door}   active={activeTool==='door'}   onClick={onToolChange} data-tour="tool-door" />
-          </div>
-        </div>
-      </div>
+      
 
     </div>
   );
