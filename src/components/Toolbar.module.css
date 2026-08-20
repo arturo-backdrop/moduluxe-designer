@@ -1,3 +1,13 @@
+/* ── Stack wrapper ───────────────────────────────────────── */
+.toolbarStack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+/* ── Main pill ───────────────────────────────────────────── */
 .toolbar {
   display: flex;
   align-items: center;
@@ -8,6 +18,38 @@
   gap: 0.25rem;
   pointer-events: all;
   user-select: none;
+}
+
+/* ── Draw tools pill ─────────────────────────────────────── */
+.drawPill {
+  display: flex;
+  align-items: center;
+  background: #1a1a2e;
+  border-radius: 2rem;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.20);
+  padding: 0.3rem 0.5rem;
+  gap: 0.25rem;
+  pointer-events: all;
+  user-select: none;
+  animation: popIn 0.4s cubic-bezier(0.34,1.4,0.64,1);
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.85); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Shared ──────────────────────────────────────────────── */
+.divider {
+  width: 1px;
+  height: 1.25rem;
+  background: #f0f0f0;
+  margin: 0 0.25rem;
+  flex-shrink: 0;
+}
+
+.drawPill .divider {
+  background: rgba(255,255,255,0.15);
 }
 
 .toolGroup {
@@ -22,14 +64,7 @@
   gap: 0.125rem;
 }
 
-.divider {
-  width: 1px;
-  height: 1.25rem;
-  background: #f0f0f0;
-  margin: 0 0.25rem;
-  flex-shrink: 0;
-}
-
+/* ── Buttons ─────────────────────────────────────────────── */
 .toolBtn {
   display: flex;
   align-items: center;
@@ -49,6 +84,11 @@
   background: #b48b31 !important;
   color: white !important;
 }
+
+/* Draw pill buttons */
+.drawPill .toolBtn { color: rgba(255,255,255,0.7); }
+.drawPill .toolBtn:hover { background: rgba(255,255,255,0.1); color: white; }
+.drawPill .toolBtnActive { background: #b48b31 !important; color: white !important; }
 
 .toolIcon {
   display: flex;
@@ -71,6 +111,7 @@
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
   font-family: inherit;
+  pointer-events: all;
 }
 .unitBtn:hover { background: #f5f5f5; color: #333; }
 .unitBtnActive {
