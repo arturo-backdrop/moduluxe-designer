@@ -130,6 +130,11 @@ export default function Toolbar({ mode, activeTool, onToolChange, units, onUnits
 
 
 
+      {/* Camera hint */}
+      <div className={styles.cameraHint}>
+        Orbit: left click · Pan: right click
+      </div>
+
     </div>
   );
 }
