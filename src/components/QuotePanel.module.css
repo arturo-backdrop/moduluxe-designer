@@ -13,7 +13,7 @@
 }
 
 .itemCount {
-  font-size: 0.6875rem;
+  font-size: 0.6188rem;
   font-weight: 400;
   color: #aaa;
   text-align: left;
@@ -26,19 +26,19 @@
   align-items: flex-start;
 }
 .totalLabel {
-  font-size: 0.6875rem;
+  font-size: 0.6188rem;
   font-weight: 400;
   color: #888;
 }
 .totalValue {
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 900;
   color: #1a1a1a;
   line-height: 1.1;
   letter-spacing: -0.02em;
 }
 .rentText {
-  font-size: 0.6875rem;
+  font-size: 0.6188rem;
   font-weight: 400;
   color: #b48b31;
   margin-top: 0.125rem;
@@ -54,8 +54,8 @@
   color: white;
   font-family: 'Figtree', sans-serif;
   font-weight: 700;
-  font-size: 0.9375rem;
-  padding: 0.75rem 1.25rem;
+  font-size: 0.8438rem;
+  padding: 0.675rem 1.25rem;
   border-radius: 0.875rem;
   border: none;
   cursor: pointer;
@@ -68,13 +68,13 @@
 
 /* ── Phone ───────────────────────────────────────────────── */
 .phoneRow {
-  font-size: 0.6875rem;
+  font-size: 0.6188rem;
   color: #bbb;
   text-align: center;
   line-height: 1.5;
 }
 .phoneLink {
-  font-size: 0.9375rem;
+  font-size: 0.8438rem;
   font-weight: 700;
   color: #b48b31;
   text-decoration: none;
