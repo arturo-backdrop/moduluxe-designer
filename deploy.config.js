@@ -1,6 +1,9 @@
 // ── Deploy Configuration ──────────────────────────────────────
 // Edit this file when moving to a new host.
 // Then run: npm run build
+//
+// NOTE: This file is in .gitignore — it stays on your machine only.
+// Copy deploy.config.template.js to deploy.config.js and fill in your values.
 
 export const DEPLOY = {
 
@@ -13,12 +16,19 @@ export const DEPLOY = {
 
   // ── Model Library ───────────────────────────────────────────
   // URL to the manifest.json of the 3D model library.
-  // Current: GitHub raw (public repo)
-  // Private host: 'https://your-domain.com/library/manifest.json'
   manifestUrl: 'https://raw.githubusercontent.com/arturo-backdrop/Backdrop-3D-Library/main/models/manifest-client.json',
+
+  // ── Presets URL ─────────────────────────────────────────────
+  // Optional: separate endpoint for presets (production servers)
+  // Leave null to load presets from the manifest file instead
+  presetsUrl: null,
+
+  // ── Build Output ─────────────────────────────────────────────
+  // Optional: custom assets directory name in the build output
+  // Leave null for Vite default ('assets')
+  assetsDir: null,
 
   // ── App Info ─────────────────────────────────────────────────
   appName: 'Moduluxe Designer',
   version: '0.0.8',
 };
-
