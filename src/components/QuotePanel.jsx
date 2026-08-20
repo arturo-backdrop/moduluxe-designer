@@ -172,7 +172,7 @@ export default function QuotePanel({ config, sceneItems, catalog }) {
           <div className={styles.rentText}>{RENT_TEXT}</div>
         </div>
         <button className={styles.quoteBtn} onClick={() => setOpen(true)} disabled={count === 0}>
-          Get List
+          <span>Get a quote</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <line x1="5" y1="12" x2="19" y2="12"/>
             <polyline points="12 5 19 12 12 19"/>
