@@ -126,6 +126,11 @@
 .pillIcon svg { width: 16px; height: 16px; }
 
 .pillLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-weight: 700;
   font-size: 13px;
   color: #1a1a1a;
