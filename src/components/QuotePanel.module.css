@@ -3,10 +3,10 @@
   background: white;
   border-radius: 1.2500rem;
   box-shadow: 0 0.2500rem 1.5000rem rgba(0,0,0,0.10);
-  padding: 1.0000rem 1.1250rem;
+  padding: 1.1250rem 1.1250rem;
   display: flex;
   flex-direction: column;
-  gap: 0.6250rem;
+  gap: 0.75rem;
   pointer-events: all;
 }
 
@@ -24,15 +24,15 @@
 }
 .totalValue {
   font-size: 1.125rem;
-  font-weight: 900;
+  font-weight: 700;
   color: #1a1a1a;
-  line-height: 1.1;
+  line-height: 1.2;
 }
 .rentText {
   font-size: 0.75rem;
   font-weight: 500;
   color: #b48b31;
-  margin-top: 0.1875rem;
+  margin-top: 0.125rem;
 }
 
 /* ── Get a quote button ───────────────────────────────────── */
@@ -45,9 +45,9 @@
   color: white;
   font-family: 'Figtree', sans-serif;
   font-weight: 700;
-  font-size: 1.125rem;
-  padding: 0.8125rem 1.1250rem;
-  border-radius: 0.8750rem;
+  font-size: 0.875rem;
+  padding: 0.75rem 1.1250rem;
+  border-radius: 0.875rem;
   border: none;
   cursor: pointer;
   width: 100%;
@@ -62,7 +62,7 @@
   font-size: 0.75rem;
   color: #bbb;
   text-align: center;
-  line-height: 1.8;
+  line-height: 1.6;
 }
 .phoneLink {
   font-size: 0.875rem;
