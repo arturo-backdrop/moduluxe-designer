@@ -377,6 +377,8 @@ export default function App() {
           flexDirection: 'column',
           gap: '0.75rem',
           pointerEvents: 'all',
+          paddingRight: '0.75rem',
+          boxSizing: 'border-box',
         }}>
           {/* BottomBar — scrolleable, takes remaining space */}
           <div style={{ flex: 1, minHeight: 0, position: 'relative', borderRadius: '1.25rem', overflow: 'hidden' }}>
@@ -403,7 +405,7 @@ export default function App() {
             }} />
           </div>
           {/* QuotePanel + VideoWidget — fixed at bottom */}
-          <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem', paddingRight: '0.75rem' }}>
+          <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
             <VideoWidget config={CONFIG} />
           </div>
