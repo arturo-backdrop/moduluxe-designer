@@ -332,7 +332,7 @@ export default function App() {
       }}>
 
         {/* Header — absolute centered over full viewport */}
-        <div style={{ position: 'absolute', top: '0.75rem', left: 0, right: 0, display: 'flex', justifyContent: 'center', pointerEvents: 'none', zIndex: 10 }}>
+        <div style={{ position: 'absolute', top: '0.75rem', left: 'clamp(380px, 35vw, 500px)', right: 'clamp(240px, 18vw, 300px)', display: 'flex', justifyContent: 'center', pointerEvents: 'none', zIndex: 10 }}>
           <div style={{ pointerEvents: 'all' }}>
             <Header
               config={CONFIG}
