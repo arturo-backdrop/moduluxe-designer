@@ -10,6 +10,7 @@ import Viewport    from './components/Viewport.jsx';
 import RadialMenu  from './components/RadialMenu.jsx';
 import Sidebar     from './components/Sidebar.jsx';
 import Header      from './components/Header.jsx';
+import Toolbar     from './components/Toolbar.jsx';
 import BottomBar   from './components/BottomBar.jsx';
 import QuotePanel  from './components/QuotePanel.jsx';
 import VideoWidget from './components/VideoWidget.jsx';
@@ -330,6 +331,17 @@ export default function App() {
         gap: '0rem',
         boxSizing: 'border-box',
       }}>
+
+        {/* Toolbar — absolute centered at bottom */}
+        <div style={{ position: 'absolute', bottom: '0.75rem', left: 0, right: 0, display: 'flex', justifyContent: 'center', pointerEvents: 'none', zIndex: 10 }}>
+          <Toolbar
+            mode={mode}
+            activeTool={activeTool}
+            onToolChange={(t) => { setActiveTool(t); if (t === 'wall') checkTourAction('select_wall'); }}
+            units={units}
+            onUnitsChange={setUnits}
+          />
+        </div>
 
         {/* Header — absolute centered over full viewport */}
         <div style={{ position: 'absolute', top: '0.75rem', left: 0, right: 0, display: 'flex', justifyContent: 'center', pointerEvents: 'none', zIndex: 10 }}>
