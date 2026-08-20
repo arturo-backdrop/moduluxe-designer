@@ -3,10 +3,10 @@
   background: white;
   border-radius: 1.2500rem;
   box-shadow: 0 0.2500rem 1.5000rem rgba(0,0,0,0.10);
-  padding: 1.25rem 1.25rem 1rem;
+  padding: 0.9375rem 1.25rem 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.625rem;
+  gap: 0.46875rem;
   pointer-events: all;
 }
 
@@ -29,7 +29,7 @@
   color: #888;
 }
 .totalValue {
-  font-size: 1.75rem;
+  font-size: 1.3125rem;
   font-weight: 900;
   color: #1a1a1a;
   line-height: 1.1;
@@ -52,8 +52,8 @@
   color: white;
   font-family: 'Figtree', sans-serif;
   font-weight: 700;
-  font-size: 1rem;
-  padding: 0.875rem 1.25rem;
+  font-size: 0.875rem;
+  padding: 0.65625rem 1.25rem;
   border-radius: 0.875rem;
   border: none;
   cursor: pointer;
