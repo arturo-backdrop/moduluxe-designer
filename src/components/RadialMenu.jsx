@@ -145,7 +145,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
         </div>
         <div>
           <div style="font-size:9px;color:#999;margin-bottom:3px;">Glass — ${Math.round((wp.glassRatio||0)*100)}%</div>
-          <input id="rm_glass" type="range" min="0" max="1" step="0.05" value="${wp.glassRatio||0}"
+          <input id="rm_glass" type="range" min="0" max="1" step="0.01" value="${wp.glassRatio||0}"
             style="width:100%;accent-color:#b48b31;" />
         </div>` : ''}
         ${isDoor ? `
