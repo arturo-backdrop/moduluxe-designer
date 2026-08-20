@@ -380,16 +380,28 @@ export default function App() {
           pointerEvents: 'all',
         }}>
           {/* BottomBar — scrolleable, takes remaining space */}
-          <div style={{
-            flex: 1,
-            minHeight: 0,
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            scrollbarWidth: 'none',
-            borderRadius: '1.25rem',
-          }}>
-            <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog}
-              onSelectModel={modelId => viewportEngRef.current?.highlightModel(modelId)} />
+          <div style={{ flex: 1, minHeight: 0, position: 'relative', borderRadius: '1.25rem', overflow: 'hidden' }}>
+            {/* Scroll container */}
+            <div style={{
+              height: '100%',
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              scrollbarWidth: 'none',
+            }}>
+              <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog}
+                onSelectModel={modelId => viewportEngRef.current?.highlightModel(modelId)} />
+            </div>
+            {/* Fade at bottom */}
+            <div style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: '4rem',
+              background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.95))',
+              borderRadius: '0 0 1.25rem 1.25rem',
+              pointerEvents: 'none',
+            }} />
           </div>
           {/* QuotePanel + VideoWidget — fixed at bottom */}
           <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
