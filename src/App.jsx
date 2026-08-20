@@ -340,6 +340,7 @@ export default function App() {
             onToolChange={(t) => { setActiveTool(t); if (t === 'wall') checkTourAction('select_wall'); }}
             units={units}
             onUnitsChange={setUnits}
+            onModeChange={(m) => { setMode(m); }}
           />
         </div>
 
