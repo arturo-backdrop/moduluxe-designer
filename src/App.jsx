@@ -418,7 +418,7 @@ export default function App() {
             }} />
           </div>
           {/* QuotePanel + VideoWidget — fixed at bottom */}
-          <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem', alignSelf: 'flex-end' }}>
+          <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
             <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
             <VideoWidget config={CONFIG} />
           </div>
