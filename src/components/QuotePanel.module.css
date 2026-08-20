@@ -14,9 +14,10 @@
   font-size: 0.75rem;
   font-weight: 500;
   color: #aaa;
+  text-align: right;
 }
 
-.totalBlock { display: flex; flex-direction: column; gap: 2px; }
+.totalBlock { display: flex; flex-direction: column; gap: 2px; align-items: flex-end; }
 .totalLabel {
   font-size: 0.75rem;
   font-weight: 500;
@@ -33,6 +34,7 @@
   font-weight: 500;
   color: #b48b31;
   margin-top: 0.125rem;
+  text-align: right;
 }
 
 /* ── Get a quote button ───────────────────────────────────── */
