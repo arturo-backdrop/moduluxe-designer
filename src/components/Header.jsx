@@ -154,16 +154,7 @@ export default function Header({
             ))}
           </div>
 
-          {onStartTour && (
-            <>
-              <div className={styles.pillDivider} />
-              <button
-                onClick={onStartTour}
-                title="How to use"
-                className={styles.tourBtn}
-              >?</button>
-            </>
-          )}
+
         </div>
 
         {/* Mode toggle */}
