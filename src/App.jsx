@@ -352,7 +352,7 @@ export default function App() {
         </div>
 
         {/* Sidebar — fixed width, full height */}
-        <div style={{ flexShrink: 0, width: 'clamp(300px, 23vw, 400px)', height: '100%', position: 'relative', pointerEvents: 'all' }}>
+        <div style={{ flexShrink: 0, width: 'clamp(300px, 23vw, 500px)', height: '100%', position: 'relative', pointerEvents: 'all' }}>
           <Sidebar
             config={CONFIG}
             units={units}
@@ -371,7 +371,7 @@ export default function App() {
         {/* Right panel — full height, BottomBar scrolls, Quote+Video fixed at bottom */}
         <div style={{
           flexShrink: 0,
-          width: 'clamp(240px, 18vw, 300px)',
+          width: 'clamp(240px, 18vw, 400px)',
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
