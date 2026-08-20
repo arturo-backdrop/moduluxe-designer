@@ -160,6 +160,15 @@ export default function Header({
         </div>
       </div>
 
+      {/* Hint — shown in draw mode */}
+      {mode === 'draw' && (
+        <div className={styles.hintWrap}>
+          <button className={styles.hint} onClick={() => onModeChange('place')}>
+            Want to add products? Switch to Place products
+          </button>
+        </div>
+      )}
+
       {/* Version — fixed bottom right */}
       <div className={styles.version}>v{APP_VERSION}</div>
     </>
