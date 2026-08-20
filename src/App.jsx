@@ -385,8 +385,7 @@ export default function App() {
             minHeight: 0,
             overflowY: 'auto',
             overflowX: 'hidden',
-            scrollbarWidth: 'thin',
-            scrollbarColor: '#e0e0e0 transparent',
+            scrollbarWidth: 'none',
             borderRadius: '1.25rem',
           }}>
             <BottomBar config={CONFIG} sceneItems={sceneItems} catalog={catalog}
