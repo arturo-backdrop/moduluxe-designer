@@ -19,14 +19,21 @@ export const DEPLOY = {
   manifestUrl: 'https://raw.githubusercontent.com/arturo-backdrop/Backdrop-3D-Library/main/models/manifest-client.json',
 
   // ── Presets URL ─────────────────────────────────────────────
-  // Optional: separate endpoint for presets (production servers)
-  // Leave null to load presets from the manifest file instead
+  // Optional separate endpoint for presets.
+  // Leave null to load presets from the manifest instead.
   presetsUrl: null,
 
   // ── Build Output ─────────────────────────────────────────────
-  // Optional: custom assets directory name in the build output
-  // Leave null for Vite default ('assets')
+  // Optional: custom assets directory in the build output.
+  // Leave null for Vite default ('assets').
   assetsDir: null,
+
+  // ── Video Widget ─────────────────────────────────────────────
+  // YouTube video shown in the bottom right panel.
+  // Leave null to hide the video widget entirely.
+  youtubeId:     'fQNPDMpov2M',
+  videoTitle:    'NY Toy Fair TSB Awards',
+  videoDuration: '1:59',
 
   // ── App Info ─────────────────────────────────────────────────
   appName: 'Moduluxe Designer',
