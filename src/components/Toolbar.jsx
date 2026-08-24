@@ -44,7 +44,9 @@ export default function Toolbar({ mode, activeTool, onToolChange, units, onUnits
 
       {/* Camera hint */}
       <div className={styles.cameraHint}>
-        Orbit: left click · Pan: right click
+        {mode === 'place'
+          ? 'Select: left click · Settings: right click'
+          : 'Orbit: left click · Pan: right click'}
       </div>
 
       {/* Draw tools pill — only in draw mode */}
