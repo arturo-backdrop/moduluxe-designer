@@ -42,17 +42,13 @@ export default function Toolbar({ mode, activeTool, onToolChange, units, onUnits
   return (
     <div className={styles.toolbarStack}>
 
-      {/* Camera hint */}
-      {mode === 'place' ? (
-        <div className={styles.cameraHint}>
-          <span>Select: left click · Settings: right click</span>
-          <span>Orbit: left click · Pan: right click</span>
-        </div>
-      ) : (
-        <div className={styles.cameraHint}>
-          Orbit: left click · Pan: right click
-        </div>
-      )}
+      {/* Hints — always visible */}
+      <div className={styles.hintRow}>
+        {mode === 'place' && (
+          <div className={styles.cameraHint}>Select: left click · Settings: right click</div>
+        )}
+        <div className={styles.cameraHint}>Orbit: left click · Pan: right click</div>
+      </div>
 
       {/* Draw tools pill — only in draw mode */}
       {mode === 'draw' && (
