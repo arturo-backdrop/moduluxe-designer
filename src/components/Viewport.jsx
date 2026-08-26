@@ -980,6 +980,44 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
       const draggingUids = new Set(Object.keys(dragOffsets));
 
+      // Live edge snap — check nearby edges and override grid snap if close enough
+      const LIVE_SNAP_R = 0.35; // meters — larger radius for live feedback
+      function getLiveEdges(modelId, rotY, cx, cz) {
+        const def = catalogRef.current.find(m => m.id === modelId);
+        if (!def) return null;
+        const step = Math.round(rotY / (Math.PI / 2)) % 4;
+        const isRotated = step === 1 || step === -1 || step === 3 || step === -3;
+        const hw = (isRotated ? def.d : def.w) / 2;
+        const hd = (isRotated ? def.w : def.d) / 2;
+        return { minX: cx - hw, maxX: cx + hw, minZ: cz - hd, maxZ: cz + hd, hw, hd };
+      }
+      // Compute dragged edges at current grid-snapped position
+      const liveAnchorEdges = getLiveEdges(anchorObj.userData.modelId, anchorObj.rotation.y, clampedX, clampedZ);
+      let liveSnapDX = 0, liveSnapDZ = 0, liveSnapDist = LIVE_SNAP_R;
+      if (liveAnchorEdges) {
+        itemGroup.children.forEach(staticObj => {
+          if (draggingUids.has(staticObj.userData.uid)) return;
+          if (!staticObj.userData.modelId) return;
+          const se = getLiveEdges(staticObj.userData.modelId, staticObj.rotation.y, staticObj.position.x, staticObj.position.z);
+          if (!se) return;
+          // X pairs
+          [[liveAnchorEdges.maxX, se.minX, 'x', 1], [liveAnchorEdges.minX, se.maxX, 'x', -1]].forEach(([d, s, axis, sign]) => {
+            const dist = Math.abs(d - s);
+            if (dist < liveSnapDist) { liveSnapDist = dist; liveSnapDX = s - d; liveSnapDZ = 0; }
+          });
+          // Z pairs
+          [[liveAnchorEdges.maxZ, se.minZ, 'z', 1], [liveAnchorEdges.minZ, se.maxZ, 'z', -1]].forEach(([d, s, axis, sign]) => {
+            const dist = Math.abs(d - s);
+            if (dist < liveSnapDist) { liveSnapDist = dist; liveSnapDZ = s - d; liveSnapDX = 0; }
+          });
+        });
+      }
+      // Apply live edge snap offset
+      if (liveSnapDist < LIVE_SNAP_R) {
+        clampedX = Math.max(-floorW/2 - minX, Math.min(floorW/2 - maxX, clampedX + liveSnapDX));
+        clampedZ = Math.max(-floorD/2 - minZ, Math.min(floorD/2 - maxZ, clampedZ + liveSnapDZ));
+      }
+
       const ddx = clampedX - (pt.x + anchorOff.dx);
       const ddz = clampedZ - (pt.z + anchorOff.dz);
       // Move ALL members including OOB clones
