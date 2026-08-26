@@ -976,60 +976,9 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       }
       const draggingUids = new Set(Object.keys(dragOffsets));
 
-      // Live edge snap — use real mesh bounding boxes, no grid when snapping
-      const LIVE_SNAP_R = 0.25; // meters
-      let liveSnapDX = 0, liveSnapDZ = 0, liveSnapDist = LIVE_SNAP_R;
-
-      // First place objects at raw position (no grid) to compute real bounds
-      const rawPtX = pt.x + anchorOff.dx;
-      const rawPtZ = pt.z + anchorOff.dz;
-
-      // Temporarily move objects to raw position to get accurate bounds
-      Object.entries(dragOffsets).forEach(([uid, off]) => {
-        const obj = itemGroup.children.find(x => x.userData.uid === uid);
-        if (!obj) return;
-        obj.position.x = pt.x + off.dx;
-        obj.position.z = pt.z + off.dz;
-      });
-
-      // Get real bounds of all dragged objects at raw position
-      const draggedBounds = [];
-      Object.keys(dragOffsets).forEach(uid => {
-        const obj = itemGroup.children.find(x => x.userData.uid === uid);
-        if (!obj) return;
-        const b = new THREE.Box3().setFromObject(obj);
-        draggedBounds.push({ minX: b.min.x, maxX: b.max.x, minZ: b.min.z, maxZ: b.max.z });
-      });
-
-      itemGroup.children.forEach(staticObj => {
-        if (draggingUids.has(staticObj.userData.uid)) return;
-        if (!staticObj.userData.modelId) return;
-        const sb = new THREE.Box3().setFromObject(staticObj);
-        const se = { minX: sb.min.x, maxX: sb.max.x, minZ: sb.min.z, maxZ: sb.max.z };
-        draggedBounds.forEach(de => {
-          [[de.maxX, se.minX], [de.minX, se.maxX]].forEach(([d, s]) => {
-            const dist = Math.abs(d - s);
-            if (dist < liveSnapDist) { liveSnapDist = dist; liveSnapDX = s - d; liveSnapDZ = 0; }
-          });
-          [[de.maxZ, se.minZ], [de.minZ, se.maxZ]].forEach(([d, s]) => {
-            const dist = Math.abs(d - s);
-            if (dist < liveSnapDist) { liveSnapDist = dist; liveSnapDZ = s - d; liveSnapDX = 0; }
-          });
-        });
-      });
-
-      // Use edge snap if found, otherwise fall back to grid snap
-      let clampedX, clampedZ;
-      if (liveSnapDist < LIVE_SNAP_R) {
-        // Edge snap — no grid, exact position
-        clampedX = Math.max(-floorW/2 - minX, Math.min(floorW/2 - maxX, rawPtX + liveSnapDX));
-        clampedZ = Math.max(-floorD/2 - minZ, Math.min(floorD/2 - maxZ, rawPtZ + liveSnapDZ));
-      } else {
-        // Grid snap — no nearby edges
-        const rawX = snap(rawPtX), rawZ = snap(rawPtZ);
-        clampedX = Math.max(-floorW/2 - minX, Math.min(floorW/2 - maxX, rawX));
-        clampedZ = Math.max(-floorD/2 - minZ, Math.min(floorD/2 - maxZ, rawZ));
-      }
+      const rawX = snap(pt.x + anchorOff.dx), rawZ = snap(pt.z + anchorOff.dz);
+      let clampedX = Math.max(-floorW/2 - minX, Math.min(floorW/2 - maxX, rawX));
+      let clampedZ = Math.max(-floorD/2 - minZ, Math.min(floorD/2 - maxZ, rawZ));
 
       const ddx = clampedX - (pt.x + anchorOff.dx);
       const ddz = clampedZ - (pt.z + anchorOff.dz);
@@ -1131,16 +1080,26 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       } else {
         hideSnapLine();
         // Drag ended — snap to nearest object edge if within radius, then commit
-        const SNAP_ON_DROP_R = 0.25; // meters
+        const SNAP_ON_DROP_R = 0.15; // meters
         const draggingUidsSet = new Set(Object.keys(dragOffsets));
 
-        // Build edges of dragged group using real mesh bounding boxes
+        function getEdges(modelId, rotY, cx, cz) {
+          const def = catalogRef.current.find(m => m.id === modelId);
+          if (!def) return null;
+          const step = Math.round(rotY / (Math.PI / 2)) % 4;
+          const isRotated = step === 1 || step === -1 || step === 3 || step === -3;
+          const hw = (isRotated ? def.d : def.w) / 2;
+          const hd = (isRotated ? def.w : def.d) / 2;
+          return { minX: cx - hw, maxX: cx + hw, minZ: cz - hd, maxZ: cz + hd };
+        }
+
+        // Build edges of dragged group at current position
         const draggedEdges = [];
         Object.keys(dragOffsets).forEach(uid => {
           const obj = itemGroup.children.find(x => x.userData.uid === uid);
           if (!obj) return;
-          const b = new THREE.Box3().setFromObject(obj);
-          draggedEdges.push({ uid, obj, edges: { minX: b.min.x, maxX: b.max.x, minZ: b.min.z, maxZ: b.max.z } });
+          const e = getEdges(obj.userData.modelId, obj.rotation.y, obj.position.x, obj.position.z);
+          if (e) draggedEdges.push({ uid, obj, edges: e });
         });
 
         // Find best snap against stationary objects
@@ -1148,8 +1107,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         itemGroup.children.forEach(staticObj => {
           if (draggingUidsSet.has(staticObj.userData.uid)) return;
           if (!staticObj.userData.modelId) return;
-          const sb = new THREE.Box3().setFromObject(staticObj);
-          const se = { minX: sb.min.x, maxX: sb.max.x, minZ: sb.min.z, maxZ: sb.max.z };
+          const se = getEdges(staticObj.userData.modelId, staticObj.rotation.y, staticObj.position.x, staticObj.position.z);
           if (!se) return;
           draggedEdges.forEach(({ edges: de }) => {
             // X axis: right→left, left→right
