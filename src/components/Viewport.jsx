@@ -1131,27 +1131,16 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       } else {
         hideSnapLine();
         // Drag ended — snap to nearest object edge if within radius, then commit
-        const SNAP_ON_DROP_R = 0.15; // meters
+        const SNAP_ON_DROP_R = 0.25; // meters
         const draggingUidsSet = new Set(Object.keys(dragOffsets));
 
-        function getEdges(modelId, rotY, cx, cz) {
-          const def = catalogRef.current.find(m => m.id === modelId);
-          if (!def) return null;
-          // Snap rotY to nearest 90° step to determine which dim maps to which axis
-          const step = Math.round(rotY / (Math.PI / 2)) % 4;
-          const isRotated = step === 1 || step === -1 || step === 3 || step === -3;
-          const hw = (isRotated ? def.d : def.w) / 2;
-          const hd = (isRotated ? def.w : def.d) / 2;
-          return { minX: cx - hw, maxX: cx + hw, minZ: cz - hd, maxZ: cz + hd };
-        }
-
-        // Build edges of dragged group at current position
+        // Build edges of dragged group using real mesh bounding boxes
         const draggedEdges = [];
         Object.keys(dragOffsets).forEach(uid => {
           const obj = itemGroup.children.find(x => x.userData.uid === uid);
           if (!obj) return;
-          const e = getEdges(obj.userData.modelId, obj.rotation.y, obj.position.x, obj.position.z);
-          if (e) draggedEdges.push({ uid, obj, edges: e });
+          const b = new THREE.Box3().setFromObject(obj);
+          draggedEdges.push({ uid, obj, edges: { minX: b.min.x, maxX: b.max.x, minZ: b.min.z, maxZ: b.max.z } });
         });
 
         // Find best snap against stationary objects
@@ -1159,7 +1148,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         itemGroup.children.forEach(staticObj => {
           if (draggingUidsSet.has(staticObj.userData.uid)) return;
           if (!staticObj.userData.modelId) return;
-          const se = getEdges(staticObj.userData.modelId, staticObj.rotation.y, staticObj.position.x, staticObj.position.z);
+          const sb = new THREE.Box3().setFromObject(staticObj);
+          const se = { minX: sb.min.x, maxX: sb.max.x, minZ: sb.min.z, maxZ: sb.max.z };
           if (!se) return;
           draggedEdges.forEach(({ edges: de }) => {
             // X axis: right→left, left→right
