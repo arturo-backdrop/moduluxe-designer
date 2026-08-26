@@ -974,17 +974,25 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         const b = getObjBoundsLocal(anchorObj);
         minX = b.minX; maxX = b.maxX; minZ = b.minZ; maxZ = b.maxZ;
       }
-      const rawX = snap(pt.x + anchorOff.dx), rawZ = snap(pt.z + anchorOff.dz);
-      let clampedX = Math.max(-floorW/2 - minX, Math.min(floorW/2 - maxX, rawX));
-      let clampedZ = Math.max(-floorD/2 - minZ, Math.min(floorD/2 - maxZ, rawZ));
-
       const draggingUids = new Set(Object.keys(dragOffsets));
 
-      // Live edge snap — use real mesh bounding boxes
+      // Live edge snap — use real mesh bounding boxes, no grid when snapping
       const LIVE_SNAP_R = 0.25; // meters
       let liveSnapDX = 0, liveSnapDZ = 0, liveSnapDist = LIVE_SNAP_R;
 
-      // Get real bounds of all dragged objects at current position
+      // First place objects at raw position (no grid) to compute real bounds
+      const rawPtX = pt.x + anchorOff.dx;
+      const rawPtZ = pt.z + anchorOff.dz;
+
+      // Temporarily move objects to raw position to get accurate bounds
+      Object.entries(dragOffsets).forEach(([uid, off]) => {
+        const obj = itemGroup.children.find(x => x.userData.uid === uid);
+        if (!obj) return;
+        obj.position.x = pt.x + off.dx;
+        obj.position.z = pt.z + off.dz;
+      });
+
+      // Get real bounds of all dragged objects at raw position
       const draggedBounds = [];
       Object.keys(dragOffsets).forEach(uid => {
         const obj = itemGroup.children.find(x => x.userData.uid === uid);
@@ -999,29 +1007,28 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         const sb = new THREE.Box3().setFromObject(staticObj);
         const se = { minX: sb.min.x, maxX: sb.max.x, minZ: sb.min.z, maxZ: sb.max.z };
         draggedBounds.forEach(de => {
-          // X pairs
-          [
-            [de.maxX, se.minX],
-            [de.minX, se.maxX],
-          ].forEach(([d, s]) => {
+          [[de.maxX, se.minX], [de.minX, se.maxX]].forEach(([d, s]) => {
             const dist = Math.abs(d - s);
             if (dist < liveSnapDist) { liveSnapDist = dist; liveSnapDX = s - d; liveSnapDZ = 0; }
           });
-          // Z pairs
-          [
-            [de.maxZ, se.minZ],
-            [de.minZ, se.maxZ],
-          ].forEach(([d, s]) => {
+          [[de.maxZ, se.minZ], [de.minZ, se.maxZ]].forEach(([d, s]) => {
             const dist = Math.abs(d - s);
             if (dist < liveSnapDist) { liveSnapDist = dist; liveSnapDZ = s - d; liveSnapDX = 0; }
           });
         });
       });
 
-      // Apply live edge snap
+      // Use edge snap if found, otherwise fall back to grid snap
+      let clampedX, clampedZ;
       if (liveSnapDist < LIVE_SNAP_R) {
-        clampedX = Math.max(-floorW/2 - minX, Math.min(floorW/2 - maxX, clampedX + liveSnapDX));
-        clampedZ = Math.max(-floorD/2 - minZ, Math.min(floorD/2 - maxZ, clampedZ + liveSnapDZ));
+        // Edge snap — no grid, exact position
+        clampedX = Math.max(-floorW/2 - minX, Math.min(floorW/2 - maxX, rawPtX + liveSnapDX));
+        clampedZ = Math.max(-floorD/2 - minZ, Math.min(floorD/2 - maxZ, rawPtZ + liveSnapDZ));
+      } else {
+        // Grid snap — no nearby edges
+        const rawX = snap(rawPtX), rawZ = snap(rawPtZ);
+        clampedX = Math.max(-floorW/2 - minX, Math.min(floorW/2 - maxX, rawX));
+        clampedZ = Math.max(-floorD/2 - minZ, Math.min(floorD/2 - maxZ, rawZ));
       }
 
       const ddx = clampedX - (pt.x + anchorOff.dx);
