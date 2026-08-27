@@ -976,9 +976,88 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       }
       const draggingUids = new Set(Object.keys(dragOffsets));
 
-      const rawX = snap(pt.x + anchorOff.dx), rawZ = snap(pt.z + anchorOff.dz);
-      let clampedX = Math.max(-floorW/2 - minX, Math.min(floorW/2 - maxX, rawX));
-      let clampedZ = Math.max(-floorD/2 - minZ, Math.min(floorD/2 - maxZ, rawZ));
+      // ── Snap system ───────────────────────────────────────────
+      const SOCKET_SNAP_R = 0.12; // meters — socket snap radius
+      const AXIS_SNAP_R   = 0.06; // meters — axis alignment threshold
+      const AXIS_SEARCH_R = 2.0;  // meters — how far to look for axis alignment
+
+      const rawPtX = pt.x + anchorOff.dx;
+      const rawPtZ = pt.z + anchorOff.dz;
+
+      // Temporarily place objects at raw position
+      Object.entries(dragOffsets).forEach(([uid, off]) => {
+        const obj = itemGroup.children.find(x => x.userData.uid === uid);
+        if (!obj) return;
+        obj.position.x = pt.x + off.dx;
+        obj.position.z = pt.z + off.dz;
+      });
+
+      // Collect snap points of dragged objects in world space
+      const dragSnapPts = [];
+      Object.keys(dragOffsets).forEach(uid => {
+        const obj = itemGroup.children.find(x => x.userData.uid === uid);
+        if (!obj || !obj.userData.snapPoints?.length) return;
+        obj.userData.snapPoints.forEach(sp => {
+          dragSnapPts.push({ x: obj.position.x + sp.x, z: obj.position.z + sp.z });
+        });
+      });
+
+      let snapDX = 0, snapDZ = 0, bestSnapDist = SOCKET_SNAP_R;
+      let axisLockX = null, axisLockZ = null;
+
+      if (dragSnapPts.length > 0) {
+        // 1. Socket snap — find closest snap_ pair
+        itemGroup.children.forEach(staticObj => {
+          if (draggingUids.has(staticObj.userData.uid)) return;
+          if (!staticObj.userData.snapPoints?.length) return;
+          staticObj.userData.snapPoints.forEach(sp => {
+            const wx = staticObj.position.x + sp.x;
+            const wz = staticObj.position.z + sp.z;
+            dragSnapPts.forEach(dp => {
+              const dist = Math.sqrt((dp.x - wx) ** 2 + (dp.z - wz) ** 2);
+              if (dist < bestSnapDist) {
+                bestSnapDist = dist;
+                snapDX = wx - dp.x;
+                snapDZ = wz - dp.z;
+              }
+            });
+          });
+        });
+
+        // 2. Axis snap — if no socket snap, check for axis alignment
+        if (bestSnapDist >= SOCKET_SNAP_R) {
+          itemGroup.children.forEach(staticObj => {
+            if (draggingUids.has(staticObj.userData.uid)) return;
+            if (!staticObj.userData.snapPoints?.length) return;
+            staticObj.userData.snapPoints.forEach(sp => {
+              const wx = staticObj.position.x + sp.x;
+              const wz = staticObj.position.z + sp.z;
+              dragSnapPts.forEach(dp => {
+                const distToStatic = Math.sqrt((dp.x - wx) ** 2 + (dp.z - wz) ** 2);
+                if (distToStatic > AXIS_SEARCH_R) return;
+                if (Math.abs(dp.x - wx) < AXIS_SNAP_R && axisLockX === null) axisLockX = wx - dp.x;
+                if (Math.abs(dp.z - wz) < AXIS_SNAP_R && axisLockZ === null) axisLockZ = wz - dp.z;
+              });
+            });
+          });
+        }
+      }
+
+      // Apply snap
+      let finalDX = 0, finalDZ = 0;
+      if (bestSnapDist < SOCKET_SNAP_R) {
+        // Socket snap — exact, no grid
+        finalDX = snapDX;
+        finalDZ = snapDZ;
+      } else {
+        // Axis snap + grid
+        const rawX = snap(rawPtX), rawZ = snap(rawPtZ);
+        finalDX = snap(rawPtX) - rawPtX + (axisLockX || 0);
+        finalDZ = snap(rawPtZ) - rawPtZ + (axisLockZ || 0);
+      }
+
+      let clampedX = Math.max(-floorW/2 - minX, Math.min(floorW/2 - maxX, rawPtX + finalDX));
+      let clampedZ = Math.max(-floorD/2 - minZ, Math.min(floorD/2 - maxZ, rawPtZ + finalDZ));
 
       const ddx = clampedX - (pt.x + anchorOff.dx);
       const ddz = clampedZ - (pt.z + anchorOff.dz);
@@ -1402,6 +1481,10 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         root.userData.modelId = modelId;
         root.traverse(c => { if (c.isMesh) { c.castShadow=c.receiveShadow=true; } });
         if (def?.paintable !== false) applyPaintColor(root, def?.color);
+        // Store snap points on container for snap system
+        if (root.userData.snapPoints?.length) {
+          container.userData.snapPoints = root.userData.snapPoints;
+        }
         container.remove(ph);
         container.add(root);
         attachOutlines(root);
