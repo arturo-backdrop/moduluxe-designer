@@ -255,6 +255,18 @@ async function buildScene(json, bin) {
   );
   root.userData.socketPositions = socketMap;
 
+  // Auto-detect snap_ Empties — store X,Z positions for snap system
+  const snapPoints = [];
+  root.traverse(obj => {
+    if (obj.name && obj.name.startsWith('snap_')) {
+      // Get world position relative to root
+      const wp = new THREE.Vector3();
+      obj.getWorldPosition(wp);
+      snapPoints.push({ name: obj.name, x: wp.x, z: wp.z });
+    }
+  });
+  root.userData.snapPoints = snapPoints;
+
   return root;
 }
 
