@@ -257,19 +257,19 @@ async function buildScene(json, bin) {
 
   // Auto-detect snap_ Empties from GLB JSON — store X,Z for snap system
   const snapPoints = [];
-  if (glbJson && glbJson.nodes) {
+  if (json && json.nodes) {
     const rootQuat = { x:0, y:0, z:0, w:1 };
     const rootPos  = { x:0, y:0, z:0 };
     function visitForSnap(nodeIdx, parentPos, parentQuat) {
-      const nd = glbJson.nodes[nodeIdx];
+      const nd = json.nodes[nodeIdx];
       if (!nd) return;
-      const { wPos } = getNodeWorldTransform(glbJson, nodeIdx, parentPos, parentQuat);
+      const { wPos } = getNodeWorldTransform(json, nodeIdx, parentPos, parentQuat);
       if (nd.name && nd.name.startsWith('snap_')) {
         snapPoints.push({ name: nd.name, x: wPos.x, z: wPos.z });
       }
       (nd.children || []).forEach(ci => visitForSnap(ci, wPos, { x:0,y:0,z:0,w:1 }));
     }
-    (glbJson.scenes?.[0]?.nodes || []).forEach(ni => visitForSnap(ni, rootPos, rootQuat));
+    (json.scenes?.[0]?.nodes || []).forEach(ni => visitForSnap(ni, rootPos, rootQuat));
   }
   root.userData.snapPoints = snapPoints;
 
