@@ -257,19 +257,25 @@ async function buildScene(json, bin) {
 
   // Auto-detect snap_ Empties from GLB JSON — store X,Z for snap system
   const snapPoints = [];
-  if (json && json.nodes) {
-    const rootQuat = { x:0, y:0, z:0, w:1 };
-    const rootPos  = { x:0, y:0, z:0 };
-    function visitForSnap(nodeIdx, parentPos, parentQuat) {
-      const nd = json.nodes[nodeIdx];
-      if (!nd) return;
-      const { wPos } = getNodeWorldTransform(json, nodeIdx, parentPos, parentQuat);
-      if (nd.name && nd.name.startsWith('snap_')) {
-        snapPoints.push({ name: nd.name, x: wPos.x, z: wPos.z });
+  try {
+    if (json && json.nodes) {
+      const rootQuat = { x:0, y:0, z:0, w:1 };
+      const rootPos  = { x:0, y:0, z:0 };
+      function visitForSnap(nodeIdx, parentPos, parentQuat) {
+        const nd = json.nodes[nodeIdx];
+        if (!nd) return;
+        const result = getNodeWorldTransform(json, nodeIdx, parentPos, parentQuat);
+        if (!result) return;
+        const { wPos, wQuat } = result;
+        if (nd.name && nd.name.startsWith('snap_')) {
+          snapPoints.push({ name: nd.name, x: wPos.x, z: wPos.z });
+        }
+        (nd.children || []).forEach(ci => visitForSnap(ci, wPos, wQuat));
       }
-      (nd.children || []).forEach(ci => visitForSnap(ci, wPos, { x:0,y:0,z:0,w:1 }));
+      (json.scenes?.[0]?.nodes || []).forEach(ni => visitForSnap(ni, rootPos, rootQuat));
     }
-    (json.scenes?.[0]?.nodes || []).forEach(ni => visitForSnap(ni, rootPos, rootQuat));
+  } catch(e) {
+    console.warn('snapPoints parse error:', e);
   }
   root.userData.snapPoints = snapPoints;
 
