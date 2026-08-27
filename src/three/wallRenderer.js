@@ -32,9 +32,14 @@ export function buildWallMesh(item, allItems) {
   group.userData.wallUid = item.uid;
 
   const solidMat = new THREE.MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.0 });
-  const glassMat = new THREE.MeshPhysicalMaterial({
-    color: 0xadd8e6, transparent: true, opacity: 0.35,
-    transmission: 0.88, thickness, ior: 1.5, roughness: 0.05, side: THREE.DoubleSide,
+  const glassMat = new THREE.MeshStandardMaterial({
+    color: 0xc8e8f5,
+    transparent: true,
+    opacity: 0.22,
+    roughness: 0.05,
+    metalness: 0.1,
+    envMapIntensity: 1.2,
+    side: THREE.DoubleSide,
   });
 
   const solidH = height * (1 - glassRatio);
