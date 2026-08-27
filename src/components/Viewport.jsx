@@ -1057,10 +1057,9 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         finalDX = snapDX;
         finalDZ = snapDZ;
       } else {
-        // Axis snap + grid
-        const rawX = snap(rawPtX), rawZ = snap(rawPtZ);
-        finalDX = snap(rawPtX) - rawPtX + (axisLockX || 0);
-        finalDZ = snap(rawPtZ) - rawPtZ + (axisLockZ || 0);
+        // Axis snap only — no grid, free movement
+        finalDX = axisLockX || 0;
+        finalDZ = axisLockZ || 0;
       }
 
       let clampedX = Math.max(-floorW/2 - minX, Math.min(floorW/2 - maxX, rawPtX + finalDX));
