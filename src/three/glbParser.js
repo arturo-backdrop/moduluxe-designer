@@ -266,7 +266,7 @@ async function buildScene(json, bin) {
         if (!nd) return;
         const result = getNodeWorldTransform(json, nodeIdx, parentPos, parentQuat);
         if (!result) return;
-        const { wPos, wQuat } = result;
+        const { pos: wPos, quat: wQuat } = result;
         if (nd.name && nd.name.startsWith('snap_')) {
           snapPoints.push({ name: nd.name, x: wPos.x, z: wPos.z });
         }
