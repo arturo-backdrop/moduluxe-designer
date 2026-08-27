@@ -1194,44 +1194,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           });
         }
 
-        // Legacy edge snap fallback for objects without snapPoints
-        if (bestDist >= SNAP_ON_DROP_R) {
-          function getEdges(modelId, rotY, cx, cz) {
-            const def = catalogRef.current.find(m => m.id === modelId);
-            if (!def) return null;
-            const step = Math.round(rotY / (Math.PI / 2)) % 4;
-            const isRotated = step === 1 || step === -1 || step === 3 || step === -3;
-            const hw = (isRotated ? def.d : def.w) / 2;
-            const hd = (isRotated ? def.w : def.d) / 2;
-            return { minX: cx - hw, maxX: cx + hw, minZ: cz - hd, maxZ: cz + hd };
-          }
-          const draggedEdges = [];
-          Object.keys(dragOffsets).forEach(uid => {
-            const obj = itemGroup.children.find(x => x.userData.uid === uid);
-            if (!obj) return;
-            const e = getEdges(obj.userData.modelId, obj.rotation.y, obj.position.x, obj.position.z);
-            if (e) draggedEdges.push({ uid, obj, edges: e });
-          });
-          itemGroup.children.forEach(staticObj => {
-            if (draggingUidsSet.has(staticObj.userData.uid)) return;
-            if (!staticObj.userData.modelId) return;
-            if (staticObj.userData.snapPoints?.length) return; // already handled above
-            const se = getEdges(staticObj.userData.modelId, staticObj.rotation.y, staticObj.position.x, staticObj.position.z);
-            if (!se) return;
-            draggedEdges.forEach(({ edges: de }) => {
-            // X axis: right→left, left→right
-            [[de.maxX, se.minX], [de.minX, se.maxX]].forEach(([d, s]) => {
-              const dist = Math.abs(d - s);
-              if (dist < bestDist) { bestDist = dist; bestDX = s - d; bestDZ = 0; }
-            });
-            // Z axis
-            [[de.maxZ, se.minZ], [de.minZ, se.maxZ]].forEach(([d, s]) => {
-              const dist = Math.abs(d - s);
-              if (dist < bestDist) { bestDist = dist; bestDZ = s - d; bestDX = 0; }
-            });
-          });
-        });
-        } // end legacy edge snap fallback
+
 
         // Apply snap offset to all dragged objects
         if (bestDX !== 0 || bestDZ !== 0) {
