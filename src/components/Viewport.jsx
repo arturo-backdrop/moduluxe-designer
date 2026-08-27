@@ -1097,56 +1097,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         obj.position.z = pt.z + off.dz + ddz;
       });
 
-      // Snap preview — detect nearest edge and show guide line
-      const SNAP_PREVIEW_R = 0.15;
-      function getEdgesPreview(modelId, rotY, cx, cz) {
-        const def = catalogRef.current.find(m => m.id === modelId);
-        if (!def) return null;
-        const step = Math.round(rotY / (Math.PI / 2)) % 4;
-        const isRotated = step === 1 || step === -1 || step === 3 || step === -3;
-        const hw = (isRotated ? def.d : def.w) / 2;
-        const hd = (isRotated ? def.w : def.d) / 2;
-        return { minX: cx - hw, maxX: cx + hw, minZ: cz - hd, maxZ: cz + hd, hw, hd, cx, cz };
-      }
-      const dragEdgesPreview = [];
-      Object.keys(dragOffsets).forEach(uid => {
-        const obj = itemGroup.children.find(x => x.userData.uid === uid);
-        if (!obj) return;
-        const e = getEdgesPreview(obj.userData.modelId, obj.rotation.y, obj.position.x, obj.position.z);
-        if (e) dragEdgesPreview.push(e);
-      });
-      let previewFound = false;
-      let previewBestDist = SNAP_PREVIEW_R;
-      let previewLine = null;
-      itemGroup.children.forEach(staticObj => {
-        if (draggingUids.has(staticObj.userData.uid)) return;
-        if (!staticObj.userData.modelId) return;
-        const se = getEdgesPreview(staticObj.userData.modelId, staticObj.rotation.y, staticObj.position.x, staticObj.position.z);
-        if (!se) return;
-        dragEdgesPreview.forEach(de => {
-          // X axis pairs
-          [[de.maxX, se.minX, 'x'], [de.minX, se.maxX, 'x'],
-           [de.maxZ, se.minZ, 'z'], [de.minZ, se.maxZ, 'z']].forEach(([d, s, axis]) => {
-            const dist = Math.abs(d - s);
-            if (dist < previewBestDist) {
-              previewBestDist = dist;
-              previewFound = true;
-              if (axis === 'x') {
-                // Vertical line (Z axis) at x=s
-                previewLine = { x1: s, z1: se.cz - se.hd - 0.1, x2: s, z2: se.cz + se.hd + 0.1 };
-              } else {
-                // Horizontal line (X axis) at z=s
-                previewLine = { x1: se.cx - se.hw - 0.1, z1: s, x2: se.cx + se.hw + 0.1, z2: s };
-              }
-            }
-          });
-        });
-      });
-      if (previewFound && previewLine) {
-        showSnapLine(previewLine.x1, previewLine.z1, previewLine.x2, previewLine.z2);
-      } else {
-        hideSnapLine();
-      }
+      // Snap lines handled by new snap system above
 
       updateDot(anchorObj);
     };
