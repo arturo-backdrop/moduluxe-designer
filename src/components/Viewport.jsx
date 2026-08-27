@@ -1159,36 +1159,66 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       } else {
         hideSnapLine();
         // Drag ended — snap to nearest object edge if within radius, then commit
-        const SNAP_ON_DROP_R = 0.15; // meters
+        const SNAP_ON_DROP_R = 0.12; // meters — same as live snap radius
         const draggingUidsSet = new Set(Object.keys(dragOffsets));
 
-        function getEdges(modelId, rotY, cx, cz) {
-          const def = catalogRef.current.find(m => m.id === modelId);
-          if (!def) return null;
-          const step = Math.round(rotY / (Math.PI / 2)) % 4;
-          const isRotated = step === 1 || step === -1 || step === 3 || step === -3;
-          const hw = (isRotated ? def.d : def.w) / 2;
-          const hd = (isRotated ? def.w : def.d) / 2;
-          return { minX: cx - hw, maxX: cx + hw, minZ: cz - hd, maxZ: cz + hd };
-        }
-
-        // Build edges of dragged group at current position
-        const draggedEdges = [];
+        // Collect snap points of dragged objects
+        const dragSnapPtsOnDrop = [];
         Object.keys(dragOffsets).forEach(uid => {
           const obj = itemGroup.children.find(x => x.userData.uid === uid);
           if (!obj) return;
-          const e = getEdges(obj.userData.modelId, obj.rotation.y, obj.position.x, obj.position.z);
-          if (e) draggedEdges.push({ uid, obj, edges: e });
+          (obj.userData.snapPoints || []).forEach(sp => {
+            dragSnapPtsOnDrop.push({ obj, x: obj.position.x + sp.x, z: obj.position.z + sp.z });
+          });
         });
 
-        // Find best snap against stationary objects
+        // Find best snap against stationary objects using snapPoints
         let bestDX = 0, bestDZ = 0, bestDist = SNAP_ON_DROP_R;
-        itemGroup.children.forEach(staticObj => {
-          if (draggingUidsSet.has(staticObj.userData.uid)) return;
-          if (!staticObj.userData.modelId) return;
-          const se = getEdges(staticObj.userData.modelId, staticObj.rotation.y, staticObj.position.x, staticObj.position.z);
-          if (!se) return;
-          draggedEdges.forEach(({ edges: de }) => {
+
+        if (dragSnapPtsOnDrop.length > 0) {
+          itemGroup.children.forEach(staticObj => {
+            if (draggingUidsSet.has(staticObj.userData.uid)) return;
+            if (!staticObj.userData.snapPoints?.length) return;
+            staticObj.userData.snapPoints.forEach(sp => {
+              const wx = staticObj.position.x + sp.x;
+              const wz = staticObj.position.z + sp.z;
+              dragSnapPtsOnDrop.forEach(dp => {
+                const dist = Math.sqrt((dp.x - wx) ** 2 + (dp.z - wz) ** 2);
+                if (dist < bestDist) {
+                  bestDist = dist;
+                  bestDX = wx - dp.x;
+                  bestDZ = wz - dp.z;
+                }
+              });
+            });
+          });
+        }
+
+        // Legacy edge snap fallback for objects without snapPoints
+        if (bestDist >= SNAP_ON_DROP_R) {
+          function getEdges(modelId, rotY, cx, cz) {
+            const def = catalogRef.current.find(m => m.id === modelId);
+            if (!def) return null;
+            const step = Math.round(rotY / (Math.PI / 2)) % 4;
+            const isRotated = step === 1 || step === -1 || step === 3 || step === -3;
+            const hw = (isRotated ? def.d : def.w) / 2;
+            const hd = (isRotated ? def.w : def.d) / 2;
+            return { minX: cx - hw, maxX: cx + hw, minZ: cz - hd, maxZ: cz + hd };
+          }
+          const draggedEdges = [];
+          Object.keys(dragOffsets).forEach(uid => {
+            const obj = itemGroup.children.find(x => x.userData.uid === uid);
+            if (!obj) return;
+            const e = getEdges(obj.userData.modelId, obj.rotation.y, obj.position.x, obj.position.z);
+            if (e) draggedEdges.push({ uid, obj, edges: e });
+          });
+          itemGroup.children.forEach(staticObj => {
+            if (draggingUidsSet.has(staticObj.userData.uid)) return;
+            if (!staticObj.userData.modelId) return;
+            if (staticObj.userData.snapPoints?.length) return; // already handled above
+            const se = getEdges(staticObj.userData.modelId, staticObj.rotation.y, staticObj.position.x, staticObj.position.z);
+            if (!se) return;
+            draggedEdges.forEach(({ edges: de }) => {
             // X axis: right→left, left→right
             [[de.maxX, se.minX], [de.minX, se.maxX]].forEach(([d, s]) => {
               const dist = Math.abs(d - s);
