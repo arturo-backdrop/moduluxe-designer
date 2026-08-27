@@ -1231,6 +1231,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
             });
           });
         });
+        } // end legacy edge snap fallback
 
         // Apply snap offset to all dragged objects
         if (bestDX !== 0 || bestDZ !== 0) {
