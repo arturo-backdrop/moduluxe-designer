@@ -1050,16 +1050,38 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         }
       }
 
-      // Apply snap
+      // Apply snap and show guide line
       let finalDX = 0, finalDZ = 0;
       if (bestSnapDist < SOCKET_SNAP_R) {
         // Socket snap — exact, no grid
         finalDX = snapDX;
         finalDZ = snapDZ;
-      } else {
-        // Axis snap only — no grid, free movement
+        // Show snap line between the two snap points
+        const dp = dragSnapPts[0];
+        if (dp) {
+          showSnapLine(
+            dp.x + finalDX - 0.5, dp.z + finalDZ,
+            dp.x + finalDX + 0.5, dp.z + finalDZ
+          );
+        }
+      } else if (axisLockX !== null || axisLockZ !== null) {
+        // Axis snap — show alignment guide line
         finalDX = axisLockX || 0;
         finalDZ = axisLockZ || 0;
+        const cx = rawPtX + finalDX;
+        const cz = rawPtZ + finalDZ;
+        if (axisLockX !== null) {
+          // Vertical line (X axis locked)
+          showSnapLine(cx, cz - 3, cx, cz + 3);
+        } else {
+          // Horizontal line (Z axis locked)
+          showSnapLine(cx - 3, cz, cx + 3, cz);
+        }
+      } else {
+        // Free movement — no snap, no line
+        finalDX = 0;
+        finalDZ = 0;
+        hideSnapLine();
       }
 
       let clampedX = Math.max(-floorW/2 - minX, Math.min(floorW/2 - maxX, rawPtX + finalDX));
