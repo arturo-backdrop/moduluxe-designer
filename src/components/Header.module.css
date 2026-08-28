@@ -237,3 +237,15 @@
   from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+.floorBadge {
+  font-size: 0.6rem;
+  font-weight: 500;
+  color: #b48b31;
+  background: rgba(180,139,49,0.1);
+  border: 1px solid rgba(180,139,49,0.25);
+  border-radius: 2rem;
+  padding: 0.15rem 0.5rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
