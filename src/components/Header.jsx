@@ -115,6 +115,7 @@ export default function Header({
             <>
               <div className={styles.pillDivider} />
               <div className={styles.floorSection}>
+                <span className={styles.floorTitle}>Floor size</span>
                 <span className={styles.floorW}>{toDisplay(floorSize.w, units, true)}</span>
                 <span className={styles.floorX}>×</span>
                 <span className={styles.floorD}>{toDisplay(floorSize.d, units, true)}</span>
