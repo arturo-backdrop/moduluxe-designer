@@ -1197,8 +1197,6 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         onChangeRef.current?.(next);
         onCommitRef.current?.(next);
 
-        // Auto-toggle legs for all dragged objects
-        Object.keys(dragOffsets).forEach(uid => autoToggleLegs(uid));
 
         // Snap pulse animation if socket snap was used
         if (bestDist < SNAP_ON_DROP_R && dragSnapPtsOnDrop.length > 0) {
@@ -1647,43 +1645,6 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       onChangeRef.current?.(next);
     }
 
-    // ── Auto-toggle legs based on floor edge proximity ──────────
-    const EDGE_THRESHOLD = 0.35; // meters — distance from floor edge to switch legs
-    function autoToggleLegs(uid) {
-      const container = itemGroup.children.find(x => x.userData.uid === uid);
-      if (!container) return;
-
-      // Check if model has auto_legs meshes
-      let hasEdge = false, hasCenter = false;
-      container.traverse(obj => {
-        if (obj.name === 'auto_legs_edge')   hasEdge   = true;
-        if (obj.name === 'auto_legs_center') hasCenter = true;
-      });
-      if (!hasEdge && !hasCenter) return;
-
-      const fW = floorW;
-      const fD = floorD;
-      const x = container.position.x;
-      const z = container.position.z;
-
-      const nearEdge =
-        Math.abs(x - fW / 2)  < EDGE_THRESHOLD ||
-        Math.abs(x + fW / 2)  < EDGE_THRESHOLD ||
-        Math.abs(z - fD / 2)  < EDGE_THRESHOLD ||
-        Math.abs(z + fD / 2)  < EDGE_THRESHOLD;
-
-      container.traverse(obj => {
-        if (obj.name === 'auto_legs_edge')   obj.visible = nearEdge;
-        if (obj.name === 'auto_legs_center') obj.visible = !nearEdge;
-      });
-    }
-
-    function autoToggleLegsAll() {
-      itemGroup.children.forEach(obj => {
-        if (obj.userData.uid) autoToggleLegs(obj.userData.uid);
-      });
-    }
-
     // ── Snap pulse animation ─────────────────────────────────
     function snapPulse(uids) {
       const DURATION = 200; // ms
@@ -2065,8 +2026,6 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       },
     };
     if (externalEngRef) externalEngRef.current = engRef.current;
-    // Auto-toggle legs on scene load
-    autoToggleLegsAll();
 
     // ── Zoom from toolbar ──────────────────────────────────────
     const onZoom = e => {
