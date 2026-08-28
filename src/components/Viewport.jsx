@@ -1686,8 +1686,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
     // ── Snap pulse animation ─────────────────────────────────
     function snapPulse(uids) {
-      const DURATION = 180; // ms
-      const SCALE    = 1.025;
+      const DURATION = 200; // ms
+      const SCALE    = 1.06;
       const start    = performance.now();
       const objects  = uids
         .map(uid => itemGroup.children.find(x => x.userData.uid === uid))
@@ -1696,8 +1696,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
       function tick(now) {
         const t = Math.min((now - start) / DURATION, 1);
-        // ease: sin curve — goes up then back to 1
-        const s = 1 + Math.sin(t * Math.PI) * (SCALE - 1);
+        // Bouncy: overshoot then settle — damped spring feel
+        const s = 1 + Math.sin(t * Math.PI * 1.6) * (SCALE - 1) * Math.pow(1 - t, 0.8);
         objects.forEach(obj => obj.scale.set(s, s, s));
         if (t < 1) requestAnimationFrame(tick);
         else objects.forEach(obj => obj.scale.set(1, 1, 1));
