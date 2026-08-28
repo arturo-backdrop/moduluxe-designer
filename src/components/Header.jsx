@@ -85,6 +85,7 @@ export default function Header({
       <div className={styles.headerWrap}>
         {/* Project pill */}
         <div className={styles.projectPill}>
+          <div className={styles.pillInner}>
           <div className={styles.nameWrap}>
             <span ref={spanRef} className={styles.nameHidden} aria-hidden="true">
               {projectName || ' '}
@@ -111,6 +112,10 @@ export default function Header({
               </svg>
             </button>
           </div>
+          {floorSize?.label && (
+            <div className={styles.floorLabel}>{floorSize.label}</div>
+          )}
+          </div>
 
           <div className={styles.pillDivider} />
 
@@ -127,6 +132,10 @@ export default function Header({
                 <path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/>
               </svg>
             </button>
+          </div>
+          {floorSize?.label && (
+            <div className={styles.floorLabel}>{floorSize.label}</div>
+          )}
           </div>
 
           <div className={styles.pillDivider} />
