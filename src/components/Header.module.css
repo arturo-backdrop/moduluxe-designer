@@ -279,3 +279,17 @@
   line-height: 1;
   padding-left: 0.1rem;
 }
+
+.floorSection {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #888;
+  white-space: nowrap;
+}
+.floorX {
+  color: #ccc;
+  font-size: 0.6rem;
+}
