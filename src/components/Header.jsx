@@ -85,36 +85,33 @@ export default function Header({
       <div className={styles.headerWrap}>
         {/* Project pill */}
         <div className={styles.projectPill}>
-          <div className={styles.pillInner}>
-          <div className={styles.nameWrap}>
-            <span ref={spanRef} className={styles.nameHidden} aria-hidden="true">
-              {projectName || ' '}
-            </span>
-            <input
-              ref={inputRef}
-              className={styles.nameInput}
-              value={projectName}
-              onChange={e => onProjectNameChange(e.target.value)}
-              onBlur={() => { if (!projectName.trim()) onProjectNameChange('My Booth Design'); }}
-              onKeyDown={e => e.key === 'Enter' && inputRef.current?.blur()}
-              spellCheck={false}
-            />
+          <div className={styles.nameSection}>
+            <div className={styles.nameWrap}>
+              <span ref={spanRef} className={styles.nameHidden} aria-hidden="true">
+                {projectName || ' '}
+              </span>
+              <input
+                ref={inputRef}
+                className={styles.nameInput}
+                value={projectName}
+                onChange={e => onProjectNameChange(e.target.value)}
+                onBlur={() => { if (!projectName.trim()) onProjectNameChange('My Booth Design'); }}
+                onKeyDown={e => e.key === 'Enter' && inputRef.current?.blur()}
+                spellCheck={false}
+              />
+              <button className={styles.editBtn}
+                onClick={() => { inputRef.current?.focus(); inputRef.current?.select(); }}
+                tabIndex={-1} title="Rename">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+            </div>
             {floorSize?.label && (
-              <span className={styles.floorBadge}>{floorSize.label}</span>
+              <div className={styles.floorLabel}>{floorSize.label}</div>
             )}
-            <button className={styles.editBtn}
-              onClick={() => { inputRef.current?.focus(); inputRef.current?.select(); }}
-              tabIndex={-1} title="Rename">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-              </svg>
-            </button>
-          </div>
-          {floorSize?.label && (
-            <div className={styles.floorLabel}>{floorSize.label}</div>
-          )}
           </div>
 
           <div className={styles.pillDivider} />
@@ -132,10 +129,6 @@ export default function Header({
                 <path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/>
               </svg>
             </button>
-          </div>
-          {floorSize?.label && (
-            <div className={styles.floorLabel}>{floorSize.label}</div>
-          )}
           </div>
 
           <div className={styles.pillDivider} />
