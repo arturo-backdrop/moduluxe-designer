@@ -374,6 +374,7 @@ export default function App() {
               onNew={handleNew}
               units={units}
               onUnitsChange={setUnits}
+              floorSize={CONFIG.floorSizes.find(f => f.w === floorSize?.w && f.d === floorSize?.d) || null}
             />
           </div>
         </div>
