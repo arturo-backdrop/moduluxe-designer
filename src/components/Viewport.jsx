@@ -1200,6 +1200,29 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         // Auto-toggle legs for all dragged objects
         Object.keys(dragOffsets).forEach(uid => autoToggleLegs(uid));
 
+        // Snap pulse animation if socket snap was used
+        if (bestDist < SNAP_ON_DROP_R && dragSnapPtsOnDrop.length > 0) {
+          const draggedUids = Object.keys(dragOffsets);
+          // Find which static object snapped
+          const snapTarget = (() => {
+            let closest = null, closestDist = SNAP_ON_DROP_R;
+            itemGroup.children.forEach(staticObj => {
+              if (draggingUidsSet.has(staticObj.userData.uid)) return;
+              if (!staticObj.userData.snapPoints?.length) return;
+              staticObj.userData.snapPoints.forEach(sp => {
+                const wx = staticObj.position.x + sp.x;
+                const wz = staticObj.position.z + sp.z;
+                dragSnapPtsOnDrop.forEach(dp => {
+                  const dist = Math.sqrt((dp.x - wx) ** 2 + (dp.z - wz) ** 2);
+                  if (dist < closestDist) { closestDist = dist; closest = staticObj.userData.uid; }
+                });
+              });
+            });
+            return closest;
+          })();
+          snapPulse([...draggedUids, snapTarget].filter(Boolean));
+        }
+
         // After drag — just keep selection, radial opens on right click
         canvas.style.cursor = hoveredUid ? 'grab' : 'default';
       }
@@ -1659,6 +1682,27 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       itemGroup.children.forEach(obj => {
         if (obj.userData.uid) autoToggleLegs(obj.userData.uid);
       });
+    }
+
+    // ── Snap pulse animation ─────────────────────────────────
+    function snapPulse(uids) {
+      const DURATION = 180; // ms
+      const SCALE    = 1.025;
+      const start    = performance.now();
+      const objects  = uids
+        .map(uid => itemGroup.children.find(x => x.userData.uid === uid))
+        .filter(Boolean);
+      if (objects.length === 0) return;
+
+      function tick(now) {
+        const t = Math.min((now - start) / DURATION, 1);
+        // ease: sin curve — goes up then back to 1
+        const s = 1 + Math.sin(t * Math.PI) * (SCALE - 1);
+        objects.forEach(obj => obj.scale.set(s, s, s));
+        if (t < 1) requestAnimationFrame(tick);
+        else objects.forEach(obj => obj.scale.set(1, 1, 1));
+      }
+      requestAnimationFrame(tick);
     }
 
     // ── Socket accessory management ───────────────────────────
