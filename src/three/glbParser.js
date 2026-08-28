@@ -116,11 +116,13 @@ async function buildMaterial(json, bin, matIndex, matCache) {
 
   // Textured or paint_color — always create new (per-GLB cache only)
   const mat = new THREE.MeshStandardMaterial({
-    color:       new THREE.Color(bc[0], bc[1], bc[2]),
-    roughness:   pbr.roughnessFactor ?? 0.6,
-    metalness:   pbr.metallicFactor  ?? 0.1,
-    transparent: bc[3] < 1,
-    opacity:     bc[3] ?? 1,
+    color:             new THREE.Color(bc[0], bc[1], bc[2]),
+    roughness:         pbr.roughnessFactor ?? 0.6,
+    metalness:         pbr.metallicFactor  ?? 0.1,
+    transparent:       bc[3] < 1,
+    opacity:           bc[3] ?? 1,
+    emissive:          isEmissive ? new THREE.Color(bc[0], bc[1], bc[2]) : new THREE.Color(0, 0, 0),
+    emissiveIntensity: isEmissive ? 0.6 : 0,
   });
   if (m.name) mat.name = m.name;
   if (m.doubleSided) mat.side = THREE.DoubleSide;
