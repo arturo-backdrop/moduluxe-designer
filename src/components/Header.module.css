@@ -293,3 +293,10 @@
   color: #ccc;
   font-size: 0.6rem;
 }
+
+.floorTitle {
+  font-size: 0.6rem;
+  font-weight: 400;
+  color: #bbb;
+  margin-right: 0.2rem;
+}
