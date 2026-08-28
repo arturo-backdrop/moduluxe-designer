@@ -8,6 +8,7 @@ export default function Header({
   mode, onModeChange,
   canUndo, canRedo, onUndo, onRedo,
   onNew, units, onUnitsChange, onStartTour,
+  floorSize,
 }) {
   const inputRef = useRef(null);
   const spanRef  = useRef(null);
