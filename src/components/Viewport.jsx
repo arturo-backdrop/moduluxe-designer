@@ -1661,8 +1661,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       });
       if (!hasEdge && !hasCenter) return;
 
-      const fW = floorSizeRef?.current?.w || floorW;
-      const fD = floorSizeRef?.current?.d || floorD;
+      const fW = floorW;
+      const fD = floorD;
       const x = container.position.x;
       const z = container.position.z;
 
