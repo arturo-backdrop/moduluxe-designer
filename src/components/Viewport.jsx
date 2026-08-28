@@ -100,7 +100,6 @@ function setOutlineVisible(container, v) {
 
 // ── Paint color system ────────────────────────────────────────
 const PAINT_MAT = 'paint_color';
-const PAINT_MAT_EMISSIVE = 'paint_color_emissive';
 
 function applyPaintColor(root, color) {
   const paintColor = new THREE.Color(color || '#3a6ea5');
@@ -115,13 +114,10 @@ function applyPaintColor(root, color) {
     if (!c.isMesh || !c.material) return;
     const mats = Array.isArray(c.material) ? c.material : [c.material];
     mats.forEach(mat => {
-      if (hasPaint && mat.name !== PAINT_MAT && mat.name !== PAINT_MAT_EMISSIVE) return;
-      const isEmissiveMat = mat.name === 'paint_color_emissive';
+      if (hasPaint && mat.name !== PAINT_MAT) return;
       const enhanced = new THREE.MeshStandardMaterial({
         name: mat.name, color: paintColor,
         roughness: 0.55, metalness: 0.05, envMapIntensity: 1.2,
-        emissive: isEmissiveMat ? paintColor : new THREE.Color(0,0,0),
-        emissiveIntensity: isEmissiveMat ? 0.6 : 0,
         map: mat.map||null, normalMap: mat.normalMap||null,
         roughnessMap: mat.roughnessMap||null, metalnessMap: mat.metalnessMap||null,
         aoMap: mat.aoMap||null,
