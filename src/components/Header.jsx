@@ -97,6 +97,9 @@ export default function Header({
               onKeyDown={e => e.key === 'Enter' && inputRef.current?.blur()}
               spellCheck={false}
             />
+            {floorSize?.label && (
+              <span className={styles.floorBadge}>{floorSize.label}</span>
+            )}
             <button className={styles.editBtn}
               onClick={() => { inputRef.current?.focus(); inputRef.current?.select(); }}
               tabIndex={-1} title="Rename">
