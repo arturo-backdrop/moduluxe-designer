@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import styles from './Header.module.css';
 import { APP_VERSION } from '../version.js';
-import { UNIT_KEYS, UNITS } from '../units.js';
+import { UNIT_KEYS, UNITS, toDisplay } from '../units.js';
 
 export default function Header({
   config, projectName, onProjectNameChange,
@@ -109,10 +109,18 @@ export default function Header({
                 </svg>
               </button>
             </div>
-            {floorSize?.label && (
-              <div className={styles.floorLabel}>{floorSize.label}</div>
-            )}
           </div>
+
+          {floorSize && (
+            <>
+              <div className={styles.pillDivider} />
+              <div className={styles.floorSection}>
+                <span className={styles.floorW}>{toDisplay(floorSize.w, units, true)}</span>
+                <span className={styles.floorX}>×</span>
+                <span className={styles.floorD}>{toDisplay(floorSize.d, units, true)}</span>
+              </div>
+            </>
+          )}
 
           <div className={styles.pillDivider} />
 
