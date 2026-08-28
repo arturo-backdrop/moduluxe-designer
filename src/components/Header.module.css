@@ -264,3 +264,18 @@
   line-height: 1;
   padding-left: 0.1rem;
 }
+
+.nameSection {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+}
+.floorLabel {
+  font-size: 0.55rem;
+  font-weight: 400;
+  color: #aaa;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  padding-left: 0.1rem;
+}
