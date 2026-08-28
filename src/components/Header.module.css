@@ -238,65 +238,7 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.floorBadge {
-  font-size: 0.6rem;
-  font-weight: 500;
-  color: #b48b31;
-  background: rgba(180,139,49,0.1);
-  border: 1px solid rgba(180,139,49,0.25);
-  border-radius: 2rem;
-  padding: 0.15rem 0.5rem;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
 
-.pillInner {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.1rem;
-}
-.floorLabel {
-  font-size: 0.55rem;
-  font-weight: 400;
-  color: #aaa;
-  letter-spacing: 0.02em;
-  line-height: 1;
-  padding-left: 0.1rem;
-}
 
-.nameSection {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.1rem;
-}
-.floorLabel {
-  font-size: 0.55rem;
-  font-weight: 400;
-  color: #aaa;
-  letter-spacing: 0.02em;
-  line-height: 1;
-  padding-left: 0.1rem;
-}
 
-.floorSection {
-  display: flex;
-  align-items: center;
-  gap: 0.2rem;
-  font-size: 0.7rem;
-  font-weight: 500;
-  color: #888;
-  white-space: nowrap;
-}
-.floorX {
-  color: #ccc;
-  font-size: 0.6rem;
-}
 
-.floorTitle {
-  font-size: 0.6rem;
-  font-weight: 400;
-  color: #bbb;
-  margin-right: 0.2rem;
-}
