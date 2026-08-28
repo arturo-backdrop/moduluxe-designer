@@ -374,7 +374,6 @@ export default function App() {
               onNew={handleNew}
               units={units}
               onUnitsChange={setUnits}
-              floorSize={floorSize}
             />
           </div>
         </div>
