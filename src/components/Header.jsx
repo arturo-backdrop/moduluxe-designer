@@ -1,14 +1,13 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import styles from './Header.module.css';
 import { APP_VERSION } from '../version.js';
-import { UNIT_KEYS, UNITS, toDisplay } from '../units.js';
+import { UNIT_KEYS, UNITS } from '../units.js';
 
 export default function Header({
   config, projectName, onProjectNameChange,
   mode, onModeChange,
   canUndo, canRedo, onUndo, onRedo,
   onNew, units, onUnitsChange, onStartTour,
-  floorSize,
 }) {
   const inputRef = useRef(null);
   const spanRef  = useRef(null);
@@ -85,8 +84,7 @@ export default function Header({
       <div className={styles.headerWrap}>
         {/* Project pill */}
         <div className={styles.projectPill}>
-          <div className={styles.nameSection}>
-            <div className={styles.nameWrap}>
+          <div className={styles.nameWrap}>
               <span ref={spanRef} className={styles.nameHidden} aria-hidden="true">
                 {projectName || ' '}
               </span>
@@ -108,20 +106,7 @@ export default function Header({
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                 </svg>
               </button>
-            </div>
           </div>
-
-          {floorSize && (
-            <>
-              <div className={styles.pillDivider} />
-              <div className={styles.floorSection}>
-                <span className={styles.floorTitle}>Floor size</span>
-                <span className={styles.floorW}>{toDisplay(floorSize.w, units, true)}</span>
-                <span className={styles.floorX}>×</span>
-                <span className={styles.floorD}>{toDisplay(floorSize.d, units, true)}</span>
-              </div>
-            </>
-          )}
 
           <div className={styles.pillDivider} />
 
