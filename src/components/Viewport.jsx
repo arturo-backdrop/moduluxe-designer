@@ -1415,10 +1415,20 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       if (!sourceObj) return;
       const sp = project3D(sourceObj);
       panCameraToShowMenu(sp);
-      const toggleMeshes = [];
       const socketPositions = {};
+      // Merge parsed group info from spawn-time with current live visibility
+      const parsedToggleMeshes = sourceObj.userData.toggleMeshes || [];
+      const toggleMeshes = parsedToggleMeshes.map(t => {
+        let visible = t.isDefault; // fallback
+        sourceObj.traverse(c => { if (c.name === t.name && c.userData.isToggleMesh) visible = c.visible; });
+        return { ...t, visible };
+      });
+      // Also catch any toggle meshes not in parsedToggleMeshes (safety)
       sourceObj.traverse(child => {
-        if (child.userData.isToggleMesh) toggleMeshes.push({ name: child.name, visible: child.visible });
+        if (!child.userData.isToggleMesh) return;
+        if (!toggleMeshes.find(t => t.name === child.name)) {
+          toggleMeshes.push({ name: child.name, visible: child.visible, group: null, variant: null, isDefault: false });
+        }
       });
       sourceObj.traverse(c => { if (c.userData?.socketPositions) Object.assign(socketPositions, c.userData.socketPositions); });
       const isPresetGrp = savedItem?.isPresetGroup && savedItem?.groupId;
@@ -1481,6 +1491,9 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         // Store snap points on container for snap system
         if (root.userData.snapPoints?.length) {
           container.userData.snapPoints = root.userData.snapPoints;
+        }
+        if (root.userData.toggleMeshes?.length) {
+          container.userData.toggleMeshes = root.userData.toggleMeshes;
         }
         container.remove(ph);
         container.add(root);
@@ -2201,6 +2214,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
 
