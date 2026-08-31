@@ -556,6 +556,7 @@ export default function App() {
           return (
             <div style={{ position:'absolute', inset:0, pointerEvents:'none', zIndex:9 }}>
               <RadialMenu
+                key={radialMenu.uid}
                 x={radialMenu.x}
                 y={radialMenu.y}
                 modelName={item?.name || radialMenu.modelId || radialMenu.itemType || ''}
@@ -676,3 +677,4 @@ export default function App() {
     </div>
   )
 }
+
