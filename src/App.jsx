@@ -540,22 +540,24 @@ export default function App() {
           const sceneItem = sceneItems.find(i => i.uid === radialMenu.uid);
           const socketPositions = radialMenu.socketPositions || {};
           const savedSocketStates = sceneItem?.socketStates || {};
-          // Track how many times each socket name appears to assign positions by index
+          // Track how many times each socket name appears — assign each a unique positionIndex
           const socketNameCount = {};
           const manifestSockets = (item?.sockets || []).map(s => {
             const idx = socketNameCount[s.name] ?? 0;
             socketNameCount[s.name] = idx + 1;
             const allPositions = socketPositions[s.name] || [];
-            // If multiple sockets share the same name, each gets its own position slot
-            const myPositions = allPositions.length > 1 && (item?.sockets||[]).filter(x=>x.name===s.name).length > 1
+            const isDuplicate = (item?.sockets||[]).filter(x=>x.name===s.name).length > 1;
+            // Each duplicate socket gets its own single position; unique sockets get all positions
+            const myPositions = isDuplicate
               ? (allPositions[idx] ? [allPositions[idx]] : [])
               : allPositions;
-            const stateKey = allPositions.length > 1 && (item?.sockets||[]).filter(x=>x.name===s.name).length > 1
-              ? s.name + '_' + idx
-              : s.name;
+            // State key includes index for duplicates so each button saves state independently
+            const stateKey = isDuplicate ? s.name + '_' + idx : s.name;
             return {
               ...s,
-              name: stateKey,
+              // Keep original manifest name so Viewport can find the sockDef
+              _stateKey: stateKey,
+              _positionIndex: isDuplicate ? idx : null,
               socketPositions: myPositions,
               state: savedSocketStates[stateKey] || s.state || {},
             };
@@ -718,9 +720,12 @@ export default function App() {
                     }));
                   } else if (action === 'socket') {
                     const sockItem = catalog[radialMenu.modelId];
-                    const sockDef  = sockItem?.sockets?.find(s => s.name === data.name);
+                    // data.name may be a stateKey like socket_lamp_0 — find sockDef by base name
+                    const baseName = data.name.replace(/_\d+$/, '');
+                    const sockDef  = sockItem?.sockets?.find(s => s.name === baseName || s.name === data.name);
                     if (sockDef) {
-                      const positions = (radialMenu.socketPositions||{})[data.name] || [];
+                      // socketPositions uses the stateKey to store the single position for this slot
+                      const positions = data.socketPositions || (radialMenu.socketPositions||{})[baseName] || [];
                       viewportEngRef.current?.applySocketToUids([radialMenu.uid], data.name, data.state, { ...sockDef, socketPositions: positions });
                       setSceneItems(prev => {
                         const clickedItem = prev.find(i => i.uid === radialMenu.uid);
