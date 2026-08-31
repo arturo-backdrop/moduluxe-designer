@@ -545,12 +545,37 @@ export default function App() {
             socketPositions: socketPositions[s.name] || [],
             state: savedSocketStates[s.name] || s.state || {},
           }));
-          const toggleSockets = (radialMenu.toggleMeshes || []).map(t => ({
-            name:     t.name,
-            behavior: 'toggle_mesh',
-            label:    t.name.slice(7).replace(/_/g,' '),
-            state:    { on: t.visible },
-          }));
+          // Build toggle sockets — group toggle_[group]_[variant] into one toggle_group socket
+          const toggleMeshes = radialMenu.toggleMeshes || [];
+          const seenGroups = new Set();
+          const toggleSockets = [];
+          toggleMeshes.forEach(t => {
+            if (t.group) {
+              // Grouped toggle — emit one socket per group
+              if (!seenGroups.has(t.group)) {
+                seenGroups.add(t.group);
+                const groupName = t.group;
+                const variants = toggleMeshes.filter(m => m.group === groupName);
+                // State: which variant index is active (0 = first/default)
+                const activeIdx = variants.findIndex(v => v.isDefault);
+                toggleSockets.push({
+                  name:     'toggle_group_' + groupName,
+                  behavior: 'toggle_group',
+                  label:    groupName.charAt(0).toUpperCase() + groupName.slice(1),
+                  variants: variants.map(v => ({ meshName: v.name, label: v.variant })),
+                  state:    { activeIdx: activeIdx >= 0 ? activeIdx : 0 },
+                });
+              }
+            } else {
+              // Simple toggle_mesh
+              toggleSockets.push({
+                name:     t.name,
+                behavior: 'toggle_mesh',
+                label:    t.name.slice(7).replace(/_/g,' '),
+                state:    { on: t.visible },
+              });
+            }
+          });
           const manifestNames = new Set(manifestSockets.map(s=>s.name));
           const sockets = [...manifestSockets, ...toggleSockets.filter(s=>!manifestNames.has(s.name))];
           return (
@@ -642,6 +667,20 @@ export default function App() {
                       ? sceneItems.filter(i => i.groupId === srcItem.groupId).map(i => i.uid)
                       : [radialMenu.uid];
                     groupUids.forEach(uid => viewportEngRef.current?.toggleMeshVisibility(uid, data.meshName, data.visible));
+                  } else if (action === 'toggle_group') {
+                    // Show active variant, hide all others — propagate to group
+                    const srcItem = sceneItems.find(i => i.uid === radialMenu.uid);
+                    const groupUids = srcItem?.groupId
+                      ? sceneItems.filter(i => i.groupId === srcItem.groupId).map(i => i.uid)
+                      : [radialMenu.uid];
+                    data.variants.forEach((v, i) => {
+                      groupUids.forEach(uid => viewportEngRef.current?.toggleMeshVisibility(uid, v.meshName, i === data.activeIdx));
+                    });
+                    // Persist toggle state
+                    setSceneItems(prev => prev.map(i => {
+                      if (!groupUids.includes(i.uid)) return i;
+                      return { ...i, toggleStates: { ...(i.toggleStates||{}), [data.socketName]: { activeIdx: data.activeIdx } } };
+                    }));
                   } else if (action === 'socket') {
                     const sockItem = catalog[radialMenu.modelId];
                     const sockDef  = sockItem?.sockets?.find(s => s.name === data.name);
@@ -677,4 +716,5 @@ export default function App() {
     </div>
   )
 }
+
 
