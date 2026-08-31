@@ -586,6 +586,7 @@ export default function App() {
                 'toggle_back_panel': 'Double Sided',
               };
               const baseName = t.name.replace(/\.\d+$/, '');
+              console.log('[TOGGLE SOCKET]', t.name, 'baseName:', baseName, 'visible:', t.visible, 'label:', TOGGLE_LABELS[baseName]);
               const savedOn = sceneItem?.toggleStates?.[t.name];
               toggleSockets.push({
                 name:     t.name,
@@ -735,6 +736,7 @@ export default function App() {
     </div>
   )
 }
+
 
 
 
