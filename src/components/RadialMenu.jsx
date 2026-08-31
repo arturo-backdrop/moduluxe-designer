@@ -18,7 +18,7 @@ const CFG = {
 const ACCENT = '#b48b31';
 
 const BEHAVIOR_ICONS = {
-  fixed:'ti-bulb', distribute:'ti-layout-rows', toggle_mesh:'ti-eye',
+  fixed:'ti-bulb', distribute:'ti-layout-rows', toggle_mesh:'ti-eye', toggle_group:'ti-eye',
   color:'ti-palette', positions:'ti-layout-columns',
   slide_y:'ti-arrows-up-down', slide_x:'ti-arrows-left-right', slide_z:'ti-arrows-move',
 };
@@ -316,6 +316,21 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
             ${p.name.split('.').pop()}
           </button>
         `).join('')}
+      </div>`;
+  }
+  if (s.behavior === 'toggle_group') {
+    const variants = s.variants || [];
+    const activeIdx = state.activeIdx ?? 0;
+    const isAlt = activeIdx === 1;
+    return `
+      <div style="font-size:9px;color:#999;margin-bottom:4px;">${modelName}</div>
+      <div style="font-weight:900;font-size:12px;color:#1a1a1a;">${s.label}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+        <span style="font-size:11px;color:#666;min-width:36px;">${variants[0]?.label || ''}</span>
+        <div id="rm_tg_${s.name.replace(/[^a-zA-Z0-9]/g,'_')}" style="width:34px;height:18px;border-radius:9px;position:relative;cursor:pointer;background:${isAlt?ACCENT:'#e0e0e0'};transition:background 0.2s;flex-shrink:0;">
+          <div style="position:absolute;width:14px;height:14px;border-radius:50%;background:white;top:2px;left:${isAlt?'18px':'2px'};transition:left 0.2s;"></div>
+        </div>
+        <span style="font-size:11px;color:#666;min-width:36px;">${variants[1]?.label || ''}</span>
       </div>`;
   }
   return `<div style="font-size:9px;color:#999;">${modelName}</div>`;
@@ -631,6 +646,22 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
           const btn = document.getElementById(`rm_pos_${i}_${s.name}`);
           if (btn) btn.onclick = () => setPos(i);
         });
+      });
+
+      // Toggle group bindings
+      state.buttons.forEach(b => {
+        if (!b.socket || b.socket.behavior !== 'toggle_group') return;
+        const s = b.socket;
+        const safeId = s.name.replace(/[^a-zA-Z0-9]/g, '_');
+        const el = document.getElementById('rm_tg_' + safeId);
+        if (!el) return;
+        el.onclick = () => {
+          const cur = state.socketStates[s.name]?.activeIdx ?? 0;
+          const next = cur === 0 ? 1 : 0;
+          state.socketStates[s.name] = { activeIdx: next };
+          onAction?.('toggle_group', { socketName: s.name, variants: s.variants, activeIdx: next });
+          refreshCard();
+        };
       });
 
       // Wall/column/door props bindings
