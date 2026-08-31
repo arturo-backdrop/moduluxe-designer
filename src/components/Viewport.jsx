@@ -1731,17 +1731,23 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         if (!state?.on) return;
         const positions = socketDef?.socketPositions || [];
         if (positions.length === 0) return;
-        const pos = positions[0];
         if (!socketDef?.accessoryFile) return;
 
-        loadModel(socketDef.accessoryFile).then(orig => {
-          if (token.cancelled) return;
-          const acc = orig.clone(true);
-          acc.userData.isSocketAccessory = true;
-          acc.userData.socketName = socketName;
-          applyWorldPosToLocal(acc, pos);
-          container.add(acc);
-          sc[socketName] = acc;
+        // Multiple positions = place one accessory per socket empty
+        const grp = new THREE.Group();
+        grp.userData.isSocketAccessory = true;
+        grp.userData.socketName = socketName;
+        container.add(grp);
+        sc[socketName] = grp;
+        positions.forEach(pos => {
+          loadModel(socketDef.accessoryFile).then(orig => {
+            if (token.cancelled) return;
+            const acc = orig.clone(true);
+            acc.userData.isSocketAccessory = true;
+            acc.userData.socketName = socketName;
+            applyWorldPosToLocal(acc, pos);
+            grp.add(acc);
+          });
         });
       } else if (behavior === 'positions') {
         const posIdx = state?.positionIndex ?? -1;
