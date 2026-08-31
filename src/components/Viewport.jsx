@@ -1426,19 +1426,28 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       panCameraToShowMenu(sp);
       const socketPositions = {};
       // Build toggleMeshes from live traverse — parse group/variant from name directly
-      const toggleMeshes = [];
+      // First pass: collect raw data
+      const rawToggles = [];
       sourceObj.traverse(child => {
         if (!child.userData.isToggleMesh) return;
         const name = child.name;
         const base = name.replace(/\.\d+$/, ''); // strip .001 suffix
         const parts = base.slice(7).split('_');    // strip 'toggle_', split by _
-        // Pattern: toggle_[group]_[variant] e.g. toggle_feet_center
-        if (parts.length >= 2) {
-          const group = parts[0];
-          const variant = parts.slice(1).join('_');
-          toggleMeshes.push({ name, visible: child.visible, group, variant, isDefault: child.visible });
+        rawToggles.push({ name, base, parts, visible: child.visible });
+      });
+      // Second pass: a group is only real if multiple meshes share the same parts[0]
+      const groupCounts = {};
+      rawToggles.forEach(t => {
+        if (t.parts.length >= 2) {
+          groupCounts[t.parts[0]] = (groupCounts[t.parts[0]] || 0) + 1;
+        }
+      });
+      const toggleMeshes = rawToggles.map(t => {
+        const isRealGroup = t.parts.length >= 2 && groupCounts[t.parts[0]] > 1;
+        if (isRealGroup) {
+          return { name: t.name, visible: t.visible, group: t.parts[0], variant: t.parts.slice(1).join('_'), isDefault: t.visible };
         } else {
-          toggleMeshes.push({ name, visible: child.visible, group: null, variant: null, isDefault: false });
+          return { name: t.name, visible: t.visible, group: null, variant: null, isDefault: false };
         }
       });
       sourceObj.traverse(c => { if (c.userData?.socketPositions) Object.assign(socketPositions, c.userData.socketPositions); });
