@@ -188,18 +188,46 @@ async function buildScene(json, bin) {
   for (const ni of sceneDef.nodes) root.add(await buildNode(json, bin, ni, matCache));
 
   // Auto-detect toggle_ meshes — hide by default, expose as sockets
+  // Pattern: toggle_[group]_[variant] e.g. toggle_feet_center, toggle_feet_edge
+  // For grouped toggles: first variant (center) visible by default, rest hidden
   const toggleMeshes = [];
+  // First pass: collect all toggle meshes and determine groups
+  const toggleGroups = {}; // groupName -> [variantName, ...]
   root.traverse(obj => {
     if (!obj.name) return;
     const lower = obj.name.toLowerCase();
-    if (lower.startsWith('toggle_')) {
+    if (!lower.startsWith('toggle_')) return;
+    const parts = obj.name.slice(7).split('_'); // e.g. ['feet','center']
+    if (parts.length >= 2) {
+      const group = parts[0];
+      if (!toggleGroups[group]) toggleGroups[group] = [];
+      toggleGroups[group].push(obj.name);
+    }
+  });
+  // Second pass: set visibility and build toggleMeshes list
+  root.traverse(obj => {
+    if (!obj.name) return;
+    const lower = obj.name.toLowerCase();
+    if (!lower.startsWith('toggle_')) return;
+    obj.userData.isToggleMesh = true;
+    const parts = obj.name.slice(7).split('_');
+    if (parts.length >= 2) {
+      const group = parts[0];
+      const variants = toggleGroups[group] || [];
+      // First variant in the group = visible by default
+      const isDefault = variants[0] === obj.name;
+      obj.visible = isDefault;
+      const label = obj.name.slice(7).replace(/_/g, ' ');
+      toggleMeshes.push({ name: obj.name, label, group, variant: parts.slice(1).join('_'), isDefault });
+    } else {
+      // Simple toggle_ (no group) — hidden by default
       obj.visible = false;
-      obj.userData.isToggleMesh = true;
-      const label = obj.name.slice(7).replace(/_/g,' ');
-      toggleMeshes.push({ name: obj.name, label });
+      const label = obj.name.slice(7).replace(/_/g, ' ');
+      toggleMeshes.push({ name: obj.name, label, group: null, variant: null, isDefault: false });
     }
   });
   root.userData.toggleMeshes = toggleMeshes;
+  root.userData.toggleGroups = toggleGroups;
 
   // Auto-detect socket_ Empties (Object3D with no mesh descendants)
   const socketMap = {};
@@ -302,6 +330,7 @@ export function clearModelCache() {
   modelCache.clear();
   globalMatCache.clear();
 }
+
 
 
 
