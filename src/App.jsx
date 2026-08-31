@@ -540,28 +540,17 @@ export default function App() {
           const sceneItem = sceneItems.find(i => i.uid === radialMenu.uid);
           const socketPositions = radialMenu.socketPositions || {};
           const savedSocketStates = sceneItem?.socketStates || {};
-          // Track how many times each socket name appears — assign each a unique positionIndex
-          const socketNameCount = {};
-          const manifestSockets = (item?.sockets || []).map(s => {
-            const idx = socketNameCount[s.name] ?? 0;
-            socketNameCount[s.name] = idx + 1;
-            const allPositions = socketPositions[s.name] || [];
-            const isDuplicate = (item?.sockets||[]).filter(x=>x.name===s.name).length > 1;
-            // Each duplicate socket gets its own single position; unique sockets get all positions
-            const myPositions = isDuplicate
-              ? (allPositions[idx] ? [allPositions[idx]] : [])
-              : allPositions;
-            // State key includes index for duplicates so each button saves state independently
-            const stateKey = isDuplicate ? s.name + '_' + idx : s.name;
-            return {
-              ...s,
-              // Keep original manifest name so Viewport can find the sockDef
-              _stateKey: stateKey,
-              _positionIndex: isDuplicate ? idx : null,
-              socketPositions: myPositions,
-              state: savedSocketStates[stateKey] || s.state || {},
-            };
-          });
+          // Deduplicate sockets by name — multiple manifest entries collapse into one
+          const seenSockets = new Set();
+          const manifestSockets = (item?.sockets || []).filter(s => {
+            if (seenSockets.has(s.name)) return false;
+            seenSockets.add(s.name);
+            return true;
+          }).map(s => ({
+            ...s,
+            socketPositions: socketPositions[s.name] || [],
+            state: savedSocketStates[s.name] || s.state || {},
+          }));
           // Build toggle sockets — group toggle_[group]_[variant] into one toggle_group socket
           const toggleMeshes = radialMenu.toggleMeshes || [];
           const seenGroups = new Set();
