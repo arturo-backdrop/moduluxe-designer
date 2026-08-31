@@ -78,24 +78,8 @@ function buildButtons(sockets=[], itemType=null, paintable=true) {
     return { id: `group_${label}`, icon: BEHAVIOR_ICONS[members[0].behavior]||'ti-bulb',
       label, size: 48, hasProps: true, socketGroup: members };
   });
-  // Interleave: socket1, array, socket2, color, socket3, rotate, socket4, dup, del
-  const order = [];
-  const fixed = [...baseActions];
-  const sock  = [...socketBtns];
-  // Place sockets between fixed actions for even spread
-  const total = fixed.length + sock.length;
-  const step  = 360 / total;
-  // Merge: fixed actions get priority positions, sockets fill between
-  const merged = [];
-  let fi = 0, si = 0;
-  for (let i = 0; i < total; i++) {
-    // Place a socket every other slot if available
-    if (si < sock.length && (fi >= fixed.length || i % 2 === 0 && si * 2 <= fi)) {
-      merged.push(sock[si++]);
-    } else {
-      merged.push(fixed[fi++]);
-    }
-  }
+  // Sockets first, then base actions — all distributed evenly
+  const merged = [...socketBtns, ...baseActions];
   return distributeAngles(merged);
 }
 
@@ -863,6 +847,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       onClick={e=>e.stopPropagation()} />
   );
 }
+
 
 
 
