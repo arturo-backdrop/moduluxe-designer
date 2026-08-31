@@ -1425,18 +1425,20 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       const sp = project3D(sourceObj);
       panCameraToShowMenu(sp);
       const socketPositions = {};
-      // Merge parsed group info from spawn-time with current live visibility
-      const parsedToggleMeshes = sourceObj.userData.toggleMeshes || [];
-      const toggleMeshes = parsedToggleMeshes.map(t => {
-        let visible = t.isDefault; // fallback
-        sourceObj.traverse(c => { if (c.name === t.name && c.userData.isToggleMesh) visible = c.visible; });
-        return { ...t, visible };
-      });
-      // Also catch any toggle meshes not in parsedToggleMeshes (safety)
+      // Build toggleMeshes from live traverse — parse group/variant from name directly
+      const toggleMeshes = [];
       sourceObj.traverse(child => {
         if (!child.userData.isToggleMesh) return;
-        if (!toggleMeshes.find(t => t.name === child.name)) {
-          toggleMeshes.push({ name: child.name, visible: child.visible, group: null, variant: null, isDefault: false });
+        const name = child.name;
+        const base = name.replace(/\.\d+$/, ''); // strip .001 suffix
+        const parts = base.slice(7).split('_');    // strip 'toggle_', split by _
+        // Pattern: toggle_[group]_[variant] e.g. toggle_feet_center
+        if (parts.length >= 2) {
+          const group = parts[0];
+          const variant = parts.slice(1).join('_');
+          toggleMeshes.push({ name, visible: child.visible, group, variant, isDefault: child.visible });
+        } else {
+          toggleMeshes.push({ name, visible: child.visible, group: null, variant: null, isDefault: false });
         }
       });
       sourceObj.traverse(c => { if (c.userData?.socketPositions) Object.assign(socketPositions, c.userData.socketPositions); });
@@ -2223,6 +2225,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     />
   );
 }
+
 
 
 
