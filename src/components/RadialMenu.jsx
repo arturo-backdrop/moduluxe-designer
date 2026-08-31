@@ -249,8 +249,10 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
   const s = btn.socket, state = socketStates[s.name] || s.state || {};
 
   if (s.behavior === 'fixed' || s.behavior === 'toggle_mesh') {
-    const on = state.on;
     const isMeshToggle = s.behavior === 'toggle_mesh';
+    // toggle_mesh: visible=false is the default, so on=true means visible — display is normal
+    // but the mesh starts visible, so we invert the display for toggle_mesh
+    const on = isMeshToggle ? !state.on : state.on;
     return `
       <div style="font-size:9px;color:#999;margin-bottom:4px;">${modelName}</div>
       <div style="font-weight:900;font-size:12px;color:#1a1a1a;">${s.label}</div>
@@ -878,6 +880,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       onClick={e=>e.stopPropagation()} />
   );
 }
+
 
 
 
