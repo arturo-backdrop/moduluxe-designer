@@ -353,7 +353,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
     currentColor: initialColor,
     currentRotY:  initialRotY,
     arrayState: initialArrayState ? { count: initialArrayState.count, spacing: initialArrayState.spacing } : { count: 1, spacing: 0 },
-    socketStates: Object.fromEntries(sockets.map(s=>[(s._stateKey||s.name),{
+    socketStates: Object.fromEntries(sockets.map(s=>[s.name,{
       ...(s.behavior==='distribute' ? { spacing: 0.15, baseY: 0, count: 0 } : {}),
       ...(s.state||{})
     }])),
@@ -552,7 +552,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
           el.onclick = () => {
             const curOn = state.socketStates[s.name]?.on;
             state.socketStates[s.name] = { ...state.socketStates[s.name], on: !curOn };
-            onAction?.('socket', { name: s._stateKey||s.name, socketPositions: s.socketPositions||[], state: state.socketStates[s._stateKey||s.name] });
+            onAction?.('socket', { name: s.name, state: state.socketStates[s.name] });
             // Update button color immediately without full refresh
             const isOn = !curOn;
             el.style.background = isOn ? ACCENT : '#e8e8e8';
@@ -582,7 +582,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
             // Direct mesh visibility toggle
             onAction?.('toggle_mesh', { meshName: s.name, visible: !curOn });
           } else {
-            onAction?.('socket', { name:s._stateKey||s.name, socketPositions:s.socketPositions||[], state:state.socketStates[s._stateKey||s.name] });
+            onAction?.('socket', { name:s.name, state:state.socketStates[s.name] });
           }
           refreshCard();
         };
@@ -590,13 +590,13 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
         const inc = document.getElementById(`rm_inc_${s.name}`);
         if (dec) dec.onclick = () => {
           state.socketStates[s.name].count = Math.max(0, (state.socketStates[s.name].count||0)-1);
-          onAction?.('socket',{name:s._stateKey||s.name,socketPositions:s.socketPositions||[],state:state.socketStates[s._stateKey||s.name]});
+          onAction?.('socket',{name:s.name,state:state.socketStates[s.name]});
           const el = document.getElementById(`rm_count_${s.name}`);
           if (el) el.textContent = state.socketStates[s.name].count;
         };
         if (inc) inc.onclick = () => {
           state.socketStates[s.name].count = Math.min(s.max||4, (state.socketStates[s.name].count||0)+1);
-          onAction?.('socket',{name:s._stateKey||s.name,socketPositions:s.socketPositions||[],state:state.socketStates[s._stateKey||s.name]});
+          onAction?.('socket',{name:s.name,state:state.socketStates[s.name]});
           const el = document.getElementById(`rm_count_${s.name}`);
           if (el) el.textContent = state.socketStates[s.name].count;
         };
@@ -608,13 +608,13 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
         const spInc = document.getElementById(`rm_sp_inc_${s.name}`);
         if (spDec) spDec.onclick = () => {
           state.socketStates[s.name].spacing = Math.max(0, parseFloat(((state.socketStates[s.name].spacing||0) - STEP_SP).toFixed(4)));
-          onAction?.('socket',{name:s._stateKey||s.name,socketPositions:s.socketPositions||[],state:state.socketStates[s._stateKey||s.name]});
+          onAction?.('socket',{name:s.name,state:state.socketStates[s.name]});
           const el = document.getElementById(`rm_sp_val_${s.name}`);
           if (el) el.textContent = (state.socketStates[s.name].spacing * u.factor).toFixed(1);
         };
         if (spInc) spInc.onclick = () => {
           state.socketStates[s.name].spacing = parseFloat(((state.socketStates[s.name].spacing||0) + STEP_SP).toFixed(4));
-          onAction?.('socket',{name:s._stateKey||s.name,socketPositions:s.socketPositions||[],state:state.socketStates[s._stateKey||s.name]});
+          onAction?.('socket',{name:s.name,state:state.socketStates[s.name]});
           const el = document.getElementById(`rm_sp_val_${s.name}`);
           if (el) el.textContent = (state.socketStates[s.name].spacing * u.factor).toFixed(1);
         };
@@ -624,13 +624,13 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
         const byInc = document.getElementById(`rm_by_inc_${s.name}`);
         if (byDec) byDec.onclick = () => {
           state.socketStates[s.name].baseY = parseFloat(((state.socketStates[s.name].baseY||0) - STEP_BY).toFixed(4));
-          onAction?.('socket',{name:s._stateKey||s.name,socketPositions:s.socketPositions||[],state:state.socketStates[s._stateKey||s.name]});
+          onAction?.('socket',{name:s.name,state:state.socketStates[s.name]});
           const el = document.getElementById(`rm_by_val_${s.name}`);
           if (el) el.textContent = (state.socketStates[s.name].baseY * u.factor).toFixed(1);
         };
         if (byInc) byInc.onclick = () => {
           state.socketStates[s.name].baseY = parseFloat(((state.socketStates[s.name].baseY||0) + STEP_BY).toFixed(4));
-          onAction?.('socket',{name:s._stateKey||s.name,socketPositions:s.socketPositions||[],state:state.socketStates[s._stateKey||s.name]});
+          onAction?.('socket',{name:s.name,state:state.socketStates[s.name]});
           const el = document.getElementById(`rm_by_val_${s.name}`);
           if (el) el.textContent = (state.socketStates[s.name].baseY * u.factor).toFixed(1);
         };
@@ -638,7 +638,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
         const posSlider = document.getElementById(`rm_pos_${s.name}`);
         const setPos = (idx) => {
           state.socketStates[s.name] = { ...state.socketStates[s.name], positionIndex: idx };
-          onAction?.('socket', { name: s._stateKey||s.name, socketPositions: s.socketPositions||[], state: state.socketStates[s._stateKey||s.name] });
+          onAction?.('socket', { name: s.name, state: state.socketStates[s.name] });
           refreshCard();
         };
         if (posSlider) posSlider.oninput = () => setPos(parseInt(posSlider.value));
@@ -776,7 +776,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
         if (b.socket?.behavior === 'fixed') {
           const curOn = state.socketStates[b.socket.name]?.on;
           state.socketStates[b.socket.name] = { ...state.socketStates[b.socket.name], on: !curOn };
-          onAction?.('socket', { name: b.socket._stateKey||b.socket.name, socketPositions: b.socket.socketPositions||[], state: state.socketStates[b.socket._stateKey||b.socket.name] });
+          onAction?.('socket', { name: b.socket.name, state: state.socketStates[b.socket.name] });
           const isOn = !curOn;
           circle.style.background = isOn ? ACCENT : 'white';
           const icon = circle.querySelector('i');
