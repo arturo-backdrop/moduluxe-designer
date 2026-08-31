@@ -581,15 +581,16 @@ export default function App() {
               }
             } else {
               // Simple toggle_mesh
-              // Label overrides for specific mesh names
+              // Label overrides — match by base name (strip .001 suffix)
               const TOGGLE_LABELS = {
                 'toggle_back_panel': 'Double Sided',
               };
+              const baseName = t.name.replace(/\.\d+$/, '');
               const savedOn = sceneItem?.toggleStates?.[t.name];
               toggleSockets.push({
                 name:     t.name,
                 behavior: 'toggle_mesh',
-                label:    TOGGLE_LABELS[t.name] || t.name.slice(7).replace(/_/g,' ').replace(/\w/g, c => c.toUpperCase()),
+                label:    TOGGLE_LABELS[baseName] || baseName.slice(7).replace(/_/g,' ').replace(/(?:^|\s)\w/g, c => c.toUpperCase()),
                 state:    { on: savedOn != null ? savedOn : t.visible },
               });
             }
@@ -734,6 +735,7 @@ export default function App() {
     </div>
   )
 }
+
 
 
 
