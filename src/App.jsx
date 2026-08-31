@@ -556,14 +556,27 @@ export default function App() {
                 seenGroups.add(t.group);
                 const groupName = t.group;
                 const variants = toggleMeshes.filter(m => m.group === groupName);
-                // State: which variant index is active (0 = first/default)
-                const activeIdx = variants.findIndex(v => v.isDefault);
+                const socketName = 'toggle_group_' + groupName;
+                // Read saved state from sceneItem.toggleStates, fall back to live visibility
+                const savedToggleState = sceneItem?.toggleStates?.[socketName];
+                let activeIdx;
+                if (savedToggleState != null) {
+                  activeIdx = savedToggleState.activeIdx ?? 0;
+                } else {
+                  // Determine from which variant is currently visible
+                  activeIdx = variants.findIndex(v => v.visible);
+                  if (activeIdx < 0) activeIdx = 0;
+                }
                 toggleSockets.push({
-                  name:     'toggle_group_' + groupName,
+                  name:     socketName,
                   behavior: 'toggle_group',
                   label:    groupName.charAt(0).toUpperCase() + groupName.slice(1),
-                  variants: variants.map(v => ({ meshName: v.name, label: v.variant })),
-                  state:    { activeIdx: activeIdx >= 0 ? activeIdx : 0 },
+                  variants: variants.map(v => ({
+                    meshName: v.name,
+                    label: v.variant.replace(/\.\d+$/, '').replace(/_/g,' ')
+                      .replace(/\b\w/g, c => c.toUpperCase()),
+                  })),
+                  state:    { activeIdx },
                 });
               }
             } else {
@@ -716,5 +729,6 @@ export default function App() {
     </div>
   )
 }
+
 
 
