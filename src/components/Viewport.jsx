@@ -952,11 +952,20 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
       // Helper: get exact bounds offset using Box3 — accounts for non-centered origins
       // Returns { minX, maxX, minZ, maxZ } relative to obj.position
+      // Only includes visible meshes so toggle_group changes reflect immediately
       function getObjBoundsLocal(obj) {
-        const b = new THREE.Box3().setFromObject(obj);
+        const b = new THREE.Box3();
+        obj.traverse(child => {
+          if (child.isMesh && child.visible) {
+            // Check all ancestors are visible too
+            let visible = true, cur = child;
+            while (cur && cur !== obj) { if (!cur.visible) { visible = false; break; } cur = cur.parent; }
+            if (visible) b.expandByObject(child);
+          }
+        });
+        if (b.isEmpty()) b.setFromObject(obj); // fallback
         const cx = (b.min.x + b.max.x) / 2, cz = (b.min.z + b.max.z) / 2;
         const hw = (b.max.x - b.min.x) / 2, hd = (b.max.z - b.min.z) / 2;
-        // Offset from obj.position to box center
         const ox = cx - obj.position.x, oz = cz - obj.position.z;
         return { minX: ox - hw, maxX: ox + hw, minZ: oz - hd, maxZ: oz + hd };
       }
