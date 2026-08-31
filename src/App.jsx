@@ -540,11 +540,26 @@ export default function App() {
           const sceneItem = sceneItems.find(i => i.uid === radialMenu.uid);
           const socketPositions = radialMenu.socketPositions || {};
           const savedSocketStates = sceneItem?.socketStates || {};
-          const manifestSockets = (item?.sockets || []).map(s => ({
-            ...s,
-            socketPositions: socketPositions[s.name] || [],
-            state: savedSocketStates[s.name] || s.state || {},
-          }));
+          // Track how many times each socket name appears to assign positions by index
+          const socketNameCount = {};
+          const manifestSockets = (item?.sockets || []).map(s => {
+            const idx = socketNameCount[s.name] ?? 0;
+            socketNameCount[s.name] = idx + 1;
+            const allPositions = socketPositions[s.name] || [];
+            // If multiple sockets share the same name, each gets its own position slot
+            const myPositions = allPositions.length > 1 && (item?.sockets||[]).filter(x=>x.name===s.name).length > 1
+              ? (allPositions[idx] ? [allPositions[idx]] : [])
+              : allPositions;
+            const stateKey = allPositions.length > 1 && (item?.sockets||[]).filter(x=>x.name===s.name).length > 1
+              ? s.name + '_' + idx
+              : s.name;
+            return {
+              ...s,
+              name: stateKey,
+              socketPositions: myPositions,
+              state: savedSocketStates[stateKey] || s.state || {},
+            };
+          });
           // Build toggle sockets — group toggle_[group]_[variant] into one toggle_group socket
           const toggleMeshes = radialMenu.toggleMeshes || [];
           const seenGroups = new Set();
