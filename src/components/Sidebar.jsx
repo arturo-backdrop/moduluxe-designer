@@ -245,9 +245,23 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
             {!loading && !activeCategory && (
               <div className={styles.emptyState}>Select a category</div>
             )}
-            {!loading && activeCategory === '__presets__' && presets.map(preset => (
-              <PresetItem key={preset.id} preset={preset} onLoad={onLoadPreset} />
-            ))}
+            {!loading && activeCategory === '__presets__' && (() => {
+              const grouped = {};
+              presets.forEach(p => {
+                const size = (p.sizes && p.sizes[0]) || 'Other';
+                if (!grouped[size]) grouped[size] = [];
+                grouped[size].push(p);
+              });
+              const sortedSizes = Object.keys(grouped).sort((a, b) => (parseInt(a)||0) - (parseInt(b)||0));
+              return sortedSizes.map(size => (
+                <div key={size}>
+                  <div style={{ fontSize:'0.625rem', fontWeight:600, color:'#888', textTransform:'uppercase', letterSpacing:'0.08em', padding:'0.5rem 0.25rem 0.25rem', borderTop:'1px solid #e0e0e0', marginTop:'0.25rem' }}>{size}</div>
+                  {grouped[size].map(preset => (
+                    <PresetItem key={preset.id} preset={preset} onLoad={onLoadPreset} />
+                  ))}
+                </div>
+              ));
+            })()}
             {!loading && activeCategory && activeCategory !== '__presets__' && (catalog[activeCategory] || []).map(item => (
               <ProductItem key={item.id} item={item} units={units} />
             ))}
