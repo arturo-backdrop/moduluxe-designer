@@ -134,38 +134,39 @@ function ListModal({ sceneItems, catalog, onClose }) {
             </div>
             <div style={{ fontSize:10, color:'#ccc', marginTop:4 }}>Final price may vary</div>
           </div>
-          {grandTotal > 0 && (
-            <div style={{ textAlign:'right' }}>
-              <div style={{ fontSize:11, color:'#1a1a1a', marginBottom:2, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Or Rent for</div>
-              <div style={{ fontSize:22, fontWeight:900, color:'#1a1a1a', lineHeight:1 }}>
-                {fmt(Math.round(grandTotal / 3))}
-              </div>
-              <div style={{ fontSize:10, color:'#ccc', marginTop:4 }}>per event</div>
+          <div style={{ textAlign:'right' }}>
+            <div style={{ fontSize:11, color:'#1a1a1a', marginBottom:2, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Or Rent for</div>
+            <div style={{ fontSize:22, fontWeight:900, color:'#1a1a1a', lineHeight:1 }}>
+              {grandTotal > 0 ? fmt(Math.round(grandTotal / 3)) : '—'}
             </div>
-          )}
+            <div style={{ fontSize:10, color:'#ccc', marginTop:4 }}>per event</div>
+          </div>
         </div>
 
         {/* CTA */}
-        <div style={{ marginTop:18, padding:'16px 20px', background:'#fdf8ef', borderRadius:14, display:'flex', justifyContent:'space-between', alignItems:'center', gap:16 }}>
-          <a href="tel:8887652711" style={{
-            fontSize:18, fontWeight:900, color:'#b48b31', textDecoration:'none',
-            display:'flex', alignItems:'center', gap:8,
-          }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.5a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
-            </svg>
-            (888) 765-2711
-          </a>
-          <a href="mailto:info@arturobackdrop.com" style={{
-            fontSize:18, fontWeight:900, color:'#b48b31', textDecoration:'none',
-            display:'flex', alignItems:'center', gap:8,
-          }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <rect x="2" y="4" width="20" height="16" rx="2"/>
-              <polyline points="2,4 12,13 22,4"/>
-            </svg>
-            info@arturobackdrop.com
-          </a>
+        <div style={{ marginTop:18, padding:'16px 20px', background:'#fdf8ef', borderRadius:14 }}>
+          <div style={{ fontSize:12, color:'#aaa', marginBottom:12, textAlign:'center' }}>Want to get a quote?</div>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:16 }}>
+            <a href="tel:8887652711" style={{
+              fontSize:18, fontWeight:900, color:'#b48b31', textDecoration:'none',
+              display:'flex', alignItems:'center', gap:8,
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.5a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+              (888) 765-2711
+            </a>
+            <a href="mailto:info@arturobackdrop.com" style={{
+              fontSize:18, fontWeight:900, color:'#b48b31', textDecoration:'none',
+              display:'flex', alignItems:'center', gap:8,
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <polyline points="2,4 12,13 22,4"/>
+              </svg>
+              info@arturobackdrop.com
+            </a>
+          </div>
         </div>
 
       </div>
