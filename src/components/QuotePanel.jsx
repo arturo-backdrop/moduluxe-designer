@@ -134,6 +134,15 @@ function ListModal({ sceneItems, catalog, onClose }) {
             </div>
             <div style={{ fontSize:10, color:'#ccc', marginTop:4 }}>Final price may vary</div>
           </div>
+          {grandTotal > 0 && (
+            <div style={{ textAlign:'right' }}>
+              <div style={{ fontSize:11, color:'#b48b31', marginBottom:2, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Or Rent for</div>
+              <div style={{ fontSize:22, fontWeight:900, color:'#b48b31', lineHeight:1 }}>
+                {fmt(Math.round(grandTotal / 3))}
+              </div>
+              <div style={{ fontSize:10, color:'#ccc', marginTop:4 }}>per event</div>
+            </div>
+          )}
         </div>
 
         {/* CTA */}
