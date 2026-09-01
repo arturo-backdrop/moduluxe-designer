@@ -99,7 +99,7 @@ function ListModal({ sceneItems, catalog, onClose }) {
               <div style={{ display:'grid', gridTemplateColumns:COL, gap:'0 8px', alignItems:'center' }}>
                 <span style={{ fontWeight:600, fontSize:13, color:'#1a1a1a' }}>{line.name}</span>
                 <span style={{ textAlign:'center', fontSize:13, color:'#888', fontWeight:500 }}>{line.count}</span>
-                <span style={{ textAlign:'center', fontSize:13, color:'#888' }}>
+                <span style={{ textAlign:'right', fontSize:13, color:'#888' }}>
                   {line.unitPrice > 0 ? fmt(line.unitPrice) : <span style={{color:'#ddd'}}>—</span>}
                 </span>
                 <span style={{ textAlign:'right', fontSize:13, fontWeight:700, color: line.total > 0 ? '#1a1a1a' : '#ddd' }}>
