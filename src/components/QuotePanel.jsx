@@ -156,7 +156,7 @@ function ListModal({ sceneItems, catalog, onClose }) {
 }
 
 // ── QuotePanel pill ───────────────────────────────────────────
-const RENT_TEXT = 'Or rent for 1/3 of the price';
+
 
 export default function QuotePanel({ config, sceneItems, catalog }) {
   const [open, setOpen] = useState(false);
@@ -183,7 +183,7 @@ export default function QuotePanel({ config, sceneItems, catalog }) {
         <div className={styles.totalBlock}>
           <div className={styles.totalLabel}>Estimated Total</div>
           <div className={styles.totalValue}>{total > 0 ? formatPrice(total) : 'Contact for pricing'}</div>
-          <div className={styles.rentText}>{RENT_TEXT}</div>
+          {total > 0 && <div className={styles.rentText}>Or rent for {formatPrice(Math.round(total / 3))}</div>}
         </div>
         <button className={styles.quoteBtn} onClick={() => setOpen(true)} disabled={count === 0}>
           <span>Get quote</span>
