@@ -255,7 +255,7 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
               const sortedSizes = Object.keys(grouped).sort((a, b) => (parseInt(a)||0) - (parseInt(b)||0));
               return sortedSizes.map(size => (
                 <div key={size}>
-                  <div style={{ fontSize:'0.625rem', fontWeight:600, color:'#888', textTransform:'uppercase', letterSpacing:'0.08em', padding:'0.5rem 0.25rem 0.25rem', borderTop:'1px solid #e0e0e0', marginTop:'0.25rem' }}>{size}</div>
+                  <div style={{ fontSize:'0.8rem', fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.06em', padding:'0.6rem 0.25rem 0.25rem', borderTop:'1px solid #e0e0e0', marginTop:'0.25rem' }}>{size}</div>
                   {grouped[size].map(preset => (
                     <PresetItem key={preset.id} preset={preset} onLoad={onLoadPreset} />
                   ))}
