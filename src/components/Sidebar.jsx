@@ -104,8 +104,7 @@ function PresetItem({ preset, onLoad }) {
         </div>
       </div>
       <div className={styles.cardFooter}>
-        <div className={styles.productName}>{preset.name}</div>
-        <div className={styles.productDims}>{preset.description || `${(preset.items||[]).length} items`}</div>
+        <div style={{ fontSize:'0.85rem', fontWeight:400, color:'#1a1a1a', lineHeight:1.3, padding:'0 0.25rem' }}>{preset.name}</div>
       </div>
     </div>
   );
