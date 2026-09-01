@@ -144,9 +144,9 @@ function ListModal({ sceneItems, catalog, onClose }) {
         </div>
 
         {/* CTA */}
-        <div style={{ marginTop:18, padding:'16px 20px', background:'#fdf8ef', borderRadius:14 }}>
-          <div style={{ fontSize:12, color:'#aaa', marginBottom:12, textAlign:'center' }}>Want to get a quote?</div>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:16 }}>
+        <div style={{ marginTop:18, padding:'16px 20px', background:'#fdf8ef', borderRadius:14, textAlign:'center' }}>
+          <div style={{ fontSize:12, color:'#aaa', marginBottom:12 }}>Want to get a quote?</div>
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:10 }}>
             <a href="tel:8887652711" style={{
               fontSize:18, fontWeight:900, color:'#b48b31', textDecoration:'none',
               display:'flex', alignItems:'center', gap:8,
