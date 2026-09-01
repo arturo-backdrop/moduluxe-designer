@@ -64,13 +64,24 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel }
       const def = catalog?.[item.modelId];
       const groupSize = (item.groupId && !item.isPresetGroup)
         ? sceneItems.filter(i => i.groupId === item.groupId).length : 1;
+      const seenSocketNames = new Set();
       (def?.sockets || []).forEach(s => {
-        const state = item.socketStates?.[s.name];
-        if (!state) return;
+        if (seenSocketNames.has(s.name)) return;
+        seenSocketNames.add(s.name);
         let qty = 0;
-        if (s.behavior === 'fixed' && state.on) qty = 1;
-        else if (s.behavior === 'distribute' && state.count > 0) qty = state.count;
-        else if (s.behavior === 'positions' && state.positionIndex >= 0) qty = 1;
+        if (s.behavior === 'fixed') {
+          // Count all indexed states: socket_lamp, socket_lamp_0, socket_lamp_1, etc.
+          const indexedStates = Object.entries(item.socketStates || {})
+            .filter(([k]) => k === s.name || k.startsWith(s.name + '_'))
+            .map(([, v]) => v);
+          qty = indexedStates.filter(v => v?.on).length;
+        } else if (s.behavior === 'distribute') {
+          const state = item.socketStates?.[s.name];
+          if (state?.count > 0) qty = state.count;
+        } else if (s.behavior === 'positions') {
+          const state = item.socketStates?.[s.name];
+          if (state?.positionIndex >= 0) qty = 1;
+        }
         if (qty > 0) {
           const label = s.label || s.name;
           accMap.set(label, (accMap.get(label) || 0) + qty * groupSize);
