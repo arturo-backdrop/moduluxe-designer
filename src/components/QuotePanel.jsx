@@ -27,16 +27,30 @@ function buildLineItems(sceneItems, catalog) {
     const def = catalog?.[item.modelId];
     const unitPrice = def?.price || 0;
     const accs = [];
+    // Deduplicate sockets by name for counting (manifest may have duplicates like 4x socket_lamp)
+    const seenSocketNames = new Set();
     (def?.sockets || []).forEach(s => {
-      const state = item.socketStates?.[s.name];
-      if (!state) return;
+      if (seenSocketNames.has(s.name)) return;
+      seenSocketNames.add(s.name);
       const accPrice = catalog?.__accessories?.[s.accessoryFile]?.price || 0;
-      if (s.behavior === 'fixed' && state.on)
-        accs.push({ label: s.label || s.name, qty: count, unitPrice: accPrice, total: accPrice * count });
-      else if (s.behavior === 'distribute' && state.count > 0)
-        accs.push({ label: s.label || s.name, qty: state.count * count, unitPrice: accPrice, total: accPrice * state.count * count });
-      else if (s.behavior === 'positions' && state.positionIndex >= 0)
-        accs.push({ label: s.label || s.name, qty: count, unitPrice: accPrice, total: accPrice * count });
+      if (s.behavior === 'fixed') {
+        // Count all states saved as socket_name, socket_name_0, socket_name_1, etc.
+        const directState = item.socketStates?.[s.name];
+        const indexedStates = Object.entries(item.socketStates || {})
+          .filter(([k]) => k === s.name || k.startsWith(s.name + '_'))
+          .map(([, v]) => v);
+        const onCount = indexedStates.filter(v => v?.on).length || (directState?.on ? 1 : 0);
+        if (onCount > 0)
+          accs.push({ label: s.label || s.name, qty: onCount * count, unitPrice: accPrice, total: accPrice * onCount * count });
+      } else if (s.behavior === 'distribute') {
+        const state = item.socketStates?.[s.name];
+        if (state?.count > 0)
+          accs.push({ label: s.label || s.name, qty: state.count * count, unitPrice: accPrice, total: accPrice * state.count * count });
+      } else if (s.behavior === 'positions') {
+        const state = item.socketStates?.[s.name];
+        if (state?.positionIndex >= 0)
+          accs.push({ label: s.label || s.name, qty: count, unitPrice: accPrice, total: accPrice * count });
+      }
     });
     return { name: def?.name || item.modelId, count, unitPrice, total: unitPrice * count, accs };
   });
