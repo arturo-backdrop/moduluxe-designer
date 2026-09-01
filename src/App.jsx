@@ -606,7 +606,7 @@ export default function App() {
                 name:     t.name,
                 behavior: 'toggle_mesh',
                 label:    TOGGLE_LABELS[baseName] || baseName.slice(7).replace(/_/g,' ').replace(/(?:^|\s)\w/g, c => c.toUpperCase()),
-                state:    { on: savedOn != null ? savedOn : t.visible },
+                state:    { on: savedOn != null ? savedOn : false },
               });
             }
           });
