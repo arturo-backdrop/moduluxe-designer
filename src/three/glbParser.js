@@ -189,15 +189,15 @@ async function buildScene(json, bin) {
 
   // Auto-detect toggle_ meshes — hide by default, expose as sockets
   // Pattern: toggle_[group]_[variant] e.g. toggle_feet_center, toggle_feet_edge
-  // For grouped toggles: first variant (center) visible by default, rest hidden
+  // A real group = multiple meshes sharing the same parts[0] prefix
   const toggleMeshes = [];
-  // First pass: collect all toggle meshes and determine groups
-  const toggleGroups = {}; // groupName -> [variantName, ...]
+  // First pass: collect all toggle meshes and count group members
+  const toggleGroups = {}; // groupName -> [meshName, ...]
   root.traverse(obj => {
     if (!obj.name) return;
-    const lower = obj.name.toLowerCase();
-    if (!lower.startsWith('toggle_')) return;
-    const parts = obj.name.slice(7).split('_'); // e.g. ['feet','center']
+    const base = obj.name.replace(/\.\d+$/, '');
+    if (!base.toLowerCase().startsWith('toggle_')) return;
+    const parts = base.slice(7).split('_');
     if (parts.length >= 2) {
       const group = parts[0];
       if (!toggleGroups[group]) toggleGroups[group] = [];
@@ -207,22 +207,23 @@ async function buildScene(json, bin) {
   // Second pass: set visibility and build toggleMeshes list
   root.traverse(obj => {
     if (!obj.name) return;
-    const lower = obj.name.toLowerCase();
-    if (!lower.startsWith('toggle_')) return;
+    const base = obj.name.replace(/\.\d+$/, '');
+    if (!base.toLowerCase().startsWith('toggle_')) return;
     obj.userData.isToggleMesh = true;
-    const parts = obj.name.slice(7).split('_');
-    if (parts.length >= 2) {
+    const parts = base.slice(7).split('_');
+    // Only a real group if multiple meshes share the same prefix
+    const isRealGroup = parts.length >= 2 && (toggleGroups[parts[0]] || []).length > 1;
+    if (isRealGroup) {
       const group = parts[0];
       const variants = toggleGroups[group] || [];
-      // First variant in the group = visible by default
       const isDefault = variants[0] === obj.name;
       obj.visible = isDefault;
-      const label = obj.name.slice(7).replace(/_/g, ' ');
+      const label = base.slice(7).replace(/_/g, ' ');
       toggleMeshes.push({ name: obj.name, label, group, variant: parts.slice(1).join('_'), isDefault });
     } else {
-      // Simple toggle_ (no group) — hidden by default
+      // Simple toggle_ — hidden by default
       obj.visible = false;
-      const label = obj.name.slice(7).replace(/_/g, ' ');
+      const label = base.slice(7).replace(/_/g, ' ');
       toggleMeshes.push({ name: obj.name, label, group: null, variant: null, isDefault: false });
     }
   });
