@@ -116,7 +116,7 @@ function ListModal({ sceneItems, catalog, onClose }) {
                   <span style={{ textAlign:'right', fontSize:11, color:'#aaa' }}>
                     {acc.unitPrice > 0 ? fmt(acc.unitPrice) : <span style={{color:'#ddd'}}>—</span>}
                   </span>
-                  <span style={{ textAlign:'right', fontSize:11, fontWeight:600, color: acc.total > 0 ? '#b48b31' : '#ddd' }}>
+                  <span style={{ textAlign:'right', fontSize:11, fontWeight:600, color: acc.total > 0 ? '#1a1a1a' : '#ddd' }}>
                     {acc.total > 0 ? fmt(acc.total) : '—'}
                   </span>
                 </div>
@@ -127,7 +127,7 @@ function ListModal({ sceneItems, catalog, onClose }) {
 
         {/* Estimated total */}
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', padding:'14px 4px 0', borderTop:'2px solid #f0f0f0', marginTop:4 }}>
-          <div>
+          <div style={{ textAlign:'right' }}>
             <div style={{ fontSize:11, color:'#1a1a1a', marginBottom:2, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Estimated Price</div>
             <div style={{ fontSize:22, fontWeight:900, color:'#1a1a1a', lineHeight:1 }}>
               {grandTotal > 0 ? fmt(grandTotal) : 'Contact for pricing'}
@@ -136,8 +136,8 @@ function ListModal({ sceneItems, catalog, onClose }) {
           </div>
           {grandTotal > 0 && (
             <div style={{ textAlign:'right' }}>
-              <div style={{ fontSize:11, color:'#b48b31', marginBottom:2, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Or Rent for</div>
-              <div style={{ fontSize:22, fontWeight:900, color:'#b48b31', lineHeight:1 }}>
+              <div style={{ fontSize:11, color:'#1a1a1a', marginBottom:2, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Or Rent for</div>
+              <div style={{ fontSize:22, fontWeight:900, color:'#1a1a1a', lineHeight:1 }}>
                 {fmt(Math.round(grandTotal / 3))}
               </div>
               <div style={{ fontSize:10, color:'#ccc', marginTop:4 }}>per event</div>
