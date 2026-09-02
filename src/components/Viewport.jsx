@@ -2001,6 +2001,18 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       selectedUidRef: { current: null },
       deleteContainer, rotateObject, applyColor, duplicateObject, applyArray,
       toggleMeshVisibility, applySocket, applySocketToUids,
+      getSocketPositions: (uid) => {
+        const container = itemGroup.children.find(x => x.userData.uid === uid);
+        const root = container?.children.find(c => c.userData.uid === uid);
+        return root?.userData?.socketPositions || {};
+      },
+      applyToggleStates: (uid, toggleStates) => {
+        const container = itemGroup.children.find(x => x.userData.uid === uid);
+        if (!container) return;
+        container.traverse(obj => {
+          if (toggleStates[obj.name] !== undefined) obj.visible = toggleStates[obj.name];
+        });
+      },
       syncWallItem, removeWallItem, rebuildHandles, wallMeshMap,
       getRotation: (uid) => {
         const obj = itemGroup.children.find(x => x.userData.uid === uid);
