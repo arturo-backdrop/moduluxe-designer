@@ -279,15 +279,16 @@ export default function App() {
     setRadialMenu(null);
 
     // After GLBs load, apply socketStates and toggleStates from preset
-    // Use a short delay to let the GLBs finish loading
     setTimeout(() => {
       newItems.forEach(item => {
         const catalogItem = catalog[item.modelId];
+        console.log('[preset restore] item:', item.modelId, 'socketStates:', item.socketStates, 'catalogItem:', !!catalogItem);
         if (!catalogItem) return;
 
         // Apply socketStates
         if (item.socketStates && Object.keys(item.socketStates).length > 0) {
           const socketPositions = viewportEngRef.current?.getSocketPositions?.(item.uid) || {};
+          console.log('[preset restore] socketPositions:', socketPositions);
           const socketNameCount = {};
           (catalogItem.sockets || []).forEach(s => {
             const baseName = s.name;
@@ -298,6 +299,7 @@ export default function App() {
             socketNameCount[baseName] = idx + 1;
             const stateKey = isDup ? baseName + '_' + idx : baseName;
             const state = item.socketStates[stateKey] || item.socketStates[baseName];
+            console.log('[preset restore] socket:', baseName, 'stateKey:', stateKey, 'state:', state, 'positions:', allPositions.length);
             if (!state) return;
             const myPositions = isDup ? (allPositions[idx] ? [allPositions[idx]] : []) : allPositions;
             viewportEngRef.current?.applySocketToUids([item.uid], stateKey, state, { ...s, socketPositions: myPositions });
@@ -309,7 +311,7 @@ export default function App() {
           viewportEngRef.current?.applyToggleStates?.(item.uid, item.toggleStates);
         }
       });
-    }, 1500); // wait for GLBs to load
+    }, 1500);
   }, [pushHistory, catalog]);
 
   const addSceneItem = useCallback((modelId) => {
