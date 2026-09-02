@@ -1535,9 +1535,11 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         if (saved?.socketStates) {
           const catalogItem = catalogRef.current.find(d => d.id === modelId);
           Object.entries(saved.socketStates).forEach(([socketName, state]) => {
-            const socketDef = catalogItem?.sockets?.find(s => s.name === socketName);
+            if (!state?.on) return; // skip if off or undefined
+            const baseName = socketName.replace(/_\d+$/, '');
+            const socketDef = catalogItem?.sockets?.find(s => s.name === baseName || s.name === socketName);
             if (socketDef) {
-              const positions = root.userData?.socketPositions?.[socketName] || [];
+              const positions = root.userData?.socketPositions?.[baseName] || [];
               applySocket(uid, socketName, state, { ...socketDef, socketPositions: positions });
             }
           });
