@@ -268,6 +268,8 @@ export default function App() {
       color: it.color || null,
       groupId,
       isPresetGroup: true,
+      socketStates: it.socketStates || {},
+      toggleStates: it.toggleStates || {},
     }));
     setSceneItems(prev => {
       const next = [...prev, ...newItems];
