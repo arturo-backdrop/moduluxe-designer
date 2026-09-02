@@ -160,14 +160,15 @@ export default function App() {
 
   // Once catalog is ready, restore socket/toggle states from saved project
   const restoredRef = useRef(false);
+  const restoreItemStatesRef = useRef(null);
   useEffect(() => {
     if (!catalogReady || restoredRef.current) return;
     restoredRef.current = true;
     const saved = loadSavedProject();
     if (saved?.sceneItems?.length) {
-      setTimeout(() => restoreItemStates(saved.sceneItems), 300);
+      setTimeout(() => restoreItemStatesRef.current?.(saved.sceneItems), 300);
     }
-  }, [catalogReady, restoreItemStates]);
+  }, [catalogReady]);
 
   useAutoSave({ projectName, floorSize, activePreset, sceneItems });
 
@@ -295,6 +296,7 @@ export default function App() {
       }
     });
   }, [catalog]);
+  restoreItemStatesRef.current = restoreItemStates;
 
   // Sidebar: load only preset items, keep floor size
   const handleLoadPreset = useCallback((preset) => {
@@ -320,8 +322,8 @@ export default function App() {
     setRadialMenu(null);
 
     // Apply socket and toggle states after GLBs finish loading
-    setTimeout(() => restoreItemStates(newItems), 300);
-  }, [pushHistory, catalog, restoreItemStates]);
+    setTimeout(() => restoreItemStatesRef.current?.(newItems), 300);
+  }, [pushHistory, catalog]);
 
   const addSceneItem = useCallback((modelId) => {
     const uid = `${modelId}_${Date.now()}`;
