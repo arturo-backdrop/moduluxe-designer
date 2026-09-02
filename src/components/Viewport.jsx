@@ -1531,8 +1531,27 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
             root.traverse(obj => { if (obj.name === meshName) obj.visible = visible; });
           });
         }
-        // Socket states are restored by handleLoadPreset setTimeout after GLBs load
-        // (using applySocketToUids which has correct position handling)
+        // Restore socket states immediately after GLB loads
+        if (saved?.socketStates && Object.keys(saved.socketStates).length > 0) {
+          const catalogItem = catalogRef.current.find(d => d.id === modelId);
+          if (catalogItem?.sockets?.length) {
+            const socketPositions = root.userData?.socketPositions || {};
+            const socketNameCount = {};
+            catalogItem.sockets.forEach(sockDef => {
+              const baseName = sockDef.name;
+              const totalWithName = catalogItem.sockets.filter(s => s.name === baseName).length;
+              const isDup = totalWithName > 1;
+              const idx = socketNameCount[baseName] ?? 0;
+              socketNameCount[baseName] = idx + 1;
+              const stateKey = isDup ? baseName + '_' + idx : baseName;
+              const state = saved.socketStates[stateKey] ?? saved.socketStates[baseName];
+              if (!state?.on) return;
+              const allPositions = socketPositions[baseName] || [];
+              const myPositions = isDup ? (allPositions[idx] ? [allPositions[idx]] : []) : allPositions;
+              applySocket(uid, stateKey, state, { ...sockDef, socketPositions: myPositions });
+            });
+          }
+        }
       }
 
       if (def?.file) {
