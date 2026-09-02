@@ -262,9 +262,12 @@ export default function App() {
         z: it.z || 0,
         rotY: it.rotY || 0,
         color: it.color || null,
+        socketStates: it.socketStates || {},
+        toggleStates: it.toggleStates || {},
       }));
       setSceneItems(items);
       pushHistory(items);
+      setTimeout(() => restoreItemStatesRef.current?.(items), 300);
     }
     setOnboardingDone(true);
   }, [pushHistory]);
