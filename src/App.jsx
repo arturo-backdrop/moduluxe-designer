@@ -284,13 +284,13 @@ export default function App() {
     setTimeout(() => {
       newItems.forEach(item => {
         const catalogItem = catalog[item.modelId];
-        console.log('[preset restore] item:', item.modelId, 'socketStates:', item.socketStates, 'catalogItem:', !!catalogItem);
+
         if (!catalogItem) return;
 
         // Apply socketStates
         if (item.socketStates && Object.keys(item.socketStates).length > 0) {
           const socketPositions = viewportEngRef.current?.getSocketPositions?.(item.uid) || {};
-          console.log('[preset restore] socketPositions:', socketPositions);
+
           const socketNameCount = {};
           (catalogItem.sockets || []).forEach(s => {
             const baseName = s.name;
@@ -301,7 +301,7 @@ export default function App() {
             socketNameCount[baseName] = idx + 1;
             const stateKey = isDup ? baseName + '_' + idx : baseName;
             const state = item.socketStates[stateKey] || item.socketStates[baseName];
-            console.log('[preset restore] socket:', baseName, 'stateKey:', stateKey, 'state:', state, 'positions:', allPositions.length);
+
             if (!state) return;
             const myPositions = isDup ? (allPositions[idx] ? [allPositions[idx]] : []) : allPositions;
             viewportEngRef.current?.applySocketToUids([item.uid], stateKey, state, { ...s, socketPositions: myPositions });
