@@ -146,7 +146,7 @@ export default function App() {
       .catch(e => { console.warn('Catalog load failed:', e); setCatalogReady(true); });
   }, []);
 
-  // Restore from localStorage
+  // Restore from localStorage — runs once on mount
   useEffect(() => {
     const saved = loadSavedProject();
     if (saved) {
@@ -155,11 +155,19 @@ export default function App() {
       setActivePreset(saved.activePreset || null);
       setSceneItems(saved.sceneItems   || []);
       if (saved.floorSize) setOnboardingDone(true);
-      if (saved.sceneItems?.length) {
-        setTimeout(() => restoreItemStates(saved.sceneItems), 500);
-      }
     }
   }, []);
+
+  // Once catalog is ready, restore socket/toggle states from saved project
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    if (!catalogReady || restoredRef.current) return;
+    restoredRef.current = true;
+    const saved = loadSavedProject();
+    if (saved?.sceneItems?.length) {
+      setTimeout(() => restoreItemStates(saved.sceneItems), 300);
+    }
+  }, [catalogReady, restoreItemStates]);
 
   useAutoSave({ projectName, floorSize, activePreset, sceneItems });
 
