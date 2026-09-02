@@ -104,6 +104,8 @@ export default function App() {
               return { ...preset, items: pData.items.map(it => ({
                 modelId: it.modelId || it.catalogId,
                 x: it.x || 0, z: it.z || 0, rotY: it.rotY || 0, color: it.color || null,
+                socketStates: it.socketStates || {},
+                toggleStates: it.toggleStates || {},
               }))};
             }
             if (Array.isArray(pData)) return { ...preset, items: pData };
