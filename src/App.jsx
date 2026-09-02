@@ -155,6 +155,9 @@ export default function App() {
       setActivePreset(saved.activePreset || null);
       setSceneItems(saved.sceneItems   || []);
       if (saved.floorSize) setOnboardingDone(true);
+      if (saved.sceneItems?.length) {
+        setTimeout(() => restoreItemStates(saved.sceneItems), 500);
+      }
     }
   }, []);
 
@@ -257,6 +260,34 @@ export default function App() {
     setOnboardingDone(true);
   }, [pushHistory]);
 
+  // Restore socket and toggle states for a list of items
+  const restoreItemStates = useCallback((itemList) => {
+    itemList.forEach(item => {
+      const catalogItem = catalog[item.modelId];
+      if (!catalogItem) return;
+      if (item.socketStates && Object.keys(item.socketStates).length > 0) {
+        const socketPositions = viewportEngRef.current?.getSocketPositions?.(item.uid) || {};
+        const socketNameCount = {};
+        (catalogItem.sockets || []).forEach(s => {
+          const baseName = s.name;
+          const allPositions = socketPositions[baseName] || [];
+          const totalWithName = (catalogItem.sockets||[]).filter(x=>x.name===baseName).length;
+          const isDup = totalWithName > 1;
+          const idx = socketNameCount[baseName] ?? 0;
+          socketNameCount[baseName] = idx + 1;
+          const stateKey = isDup ? baseName + '_' + idx : baseName;
+          const state = item.socketStates[stateKey] || item.socketStates[baseName];
+          if (!state?.on) return;
+          const myPositions = isDup ? (allPositions[idx] ? [allPositions[idx]] : []) : allPositions;
+          viewportEngRef.current?.applySocketToUids([item.uid], stateKey, state, { ...s, socketPositions: myPositions });
+        });
+      }
+      if (item.toggleStates && Object.keys(item.toggleStates).length > 0) {
+        viewportEngRef.current?.applyToggleStates?.(item.uid, item.toggleStates);
+      }
+    });
+  }, [catalog]);
+
   // Sidebar: load only preset items, keep floor size
   const handleLoadPreset = useCallback((preset) => {
     if (!preset?.items?.length) return;
@@ -280,8 +311,9 @@ export default function App() {
     });
     setRadialMenu(null);
 
-    // socketStates and toggleStates are restored in Viewport createObj when GLB loads
-  }, [pushHistory, catalog]);
+    // Apply socket and toggle states after GLBs finish loading
+    setTimeout(() => restoreItemStates(newItems), 300);
+  }, [pushHistory, catalog, restoreItemStates]);
 
   const addSceneItem = useCallback((modelId) => {
     const uid = `${modelId}_${Date.now()}`;
