@@ -1752,7 +1752,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       } else if (behavior === 'distribute') {
         const count   = state?.count ?? 0;
         const spacing = state?.spacing ?? 0;
-        const baseY   = state?.baseY ?? 0;
+        const baseY   = state?.baseY ?? state?.baseHeight ?? 0;
         if (count === 0) return;
         const positions = socketDef?.socketPositions || [];
         if (!socketDef?.accessoryFile || positions.length === 0) return;
