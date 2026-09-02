@@ -313,7 +313,7 @@ export default function App() {
           viewportEngRef.current?.applyToggleStates?.(item.uid, item.toggleStates);
         }
       });
-    }, 1500);
+    }, 300);
   }, [pushHistory, catalog]);
 
   const addSceneItem = useCallback((modelId) => {
