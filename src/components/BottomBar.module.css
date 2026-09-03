@@ -13,9 +13,9 @@
 .barTitle {
   font-weight: 600;
   font-size: 0.75rem;
-  color: #1a1a1a;
+  color: #ffffff;
   padding: 0.75rem 0.75rem 0.5rem;
-  background: white;
+  background: #1a1a1a;
   border-radius: 1.25rem 1.25rem 0 0;
   position: sticky;
   top: 0;
