@@ -185,7 +185,7 @@ async function buildScene(json, bin) {
   const matCache = new Map();
   const sceneDef = json.scenes[json.scene || 0];
   const root     = new THREE.Group();
-  for (const ni of sceneDef.nodes) root.add(await buildNode(json, bin, ni, matCache));
+  for (const ni of (sceneDef.nodes || [])) root.add(await buildNode(json, bin, ni, matCache));
 
   // Auto-detect toggle_ meshes — hide by default, expose as sockets
   // Pattern: toggle_[group]_[variant] e.g. toggle_feet_center, toggle_feet_edge
@@ -278,7 +278,7 @@ async function buildScene(json, bin) {
   const sceneDef2 = json.scenes[json.scene || 0];
   const identity = { x:0,y:0,z:0,w:1 };
   const origin   = { x:0,y:0,z:0 };
-  for (const ni of sceneDef2.nodes) traverseNodes(json, ni, origin, identity);
+  for (const ni of (sceneDef2.nodes || [])) traverseNodes(json, ni, origin, identity);
   Object.values(socketMap).forEach(arr =>
     arr.sort((a,b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
   );
