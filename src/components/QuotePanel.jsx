@@ -156,7 +156,7 @@ function ListModal({ sceneItems, catalog, onClose }) {
               </svg>
               (888) 765-2711
             </a>
-            <a href="mailto:info@arturobackdrop.com" style={{
+            <a href="mailto:info@backdrop.com" style={{
               fontSize:18, fontWeight:900, color:'#b48b31', textDecoration:'none',
               display:'flex', alignItems:'center', gap:8,
             }}>
@@ -164,7 +164,7 @@ function ListModal({ sceneItems, catalog, onClose }) {
                 <rect x="2" y="4" width="20" height="16" rx="2"/>
                 <polyline points="2,4 12,13 22,4"/>
               </svg>
-              info@arturobackdrop.com
+              info@backdrop.com
             </a>
           </div>
         </div>
