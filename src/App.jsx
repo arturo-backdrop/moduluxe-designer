@@ -389,18 +389,35 @@ export default function App() {
 
       {/* AI Render — Capture Mode overlay */}
       {captureMode && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 20, pointerEvents: 'none' }}>
-          {/* Viñeta oscura */}
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.65) 100%)',
-            pointerEvents: 'none',
-          }} />
+        <div style={{ position: 'absolute', inset: 0, zIndex: 20, pointerEvents: 'all' }}>
+          {/* Dark mask — top */}
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: '15%', clipPath: 'inset(0 0 calc(100% - (100% - 30%) / 2 * 1) 0)', pointerEvents: 'none' }} />
+
+          {/* SVG mask con recorte tipo viewfinder */}
+          <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <mask id="vfMask">
+                <rect width="100%" height="100%" fill="white"/>
+                {/* Viewfinder hole: 78% ancho, 65% alto, centrado con offset hacia arriba */}
+                <rect x="11%" y="8%" width="78%" height="65%" rx="4" fill="black"/>
+              </mask>
+            </defs>
+            {/* Overlay oscuro con hole */}
+            <rect width="100%" height="100%" fill="rgba(0,0,0,0.62)" mask="url(#vfMask)"/>
+            {/* Esquinas estilo cámara */}
+            {[['11%','8%',1,1],['89%','8%',-1,1],['11%','73%',1,-1],['89%','73%',-1,-1]].map(([cx,cy,dx,dy],i) => (
+              <g key={i}>
+                <line x1={cx} y1={cy} x2={`calc(${cx} + ${dx*28}px)`} y2={cy} stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                <line x1={cx} y1={cy} x2={cx} y2={`calc(${cy} + ${dy*28}px)`} stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+              </g>
+            ))}
+          </svg>
+
           {/* Banner inferior */}
           <div style={{
             position: 'absolute', bottom: 0, left: 0, right: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            gap: '1rem',
+            gap: '0.75rem',
             padding: '1.25rem 2rem',
             background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%)',
             pointerEvents: 'all',
@@ -409,62 +426,56 @@ export default function App() {
               color: 'white', fontSize: '0.9375rem', fontWeight: 400,
               fontFamily: "'Figtree', sans-serif",
               textShadow: '0 1px 4px rgba(0,0,0,0.5)',
-              marginRight: '0.5rem',
+              marginRight: '0.25rem',
             }}>
               Position your booth, then capture
             </span>
             {/* Zoom controls */}
-            <button
-              title="Zoom in"
-              onClick={() => window.dispatchEvent(new CustomEvent('viewport:zoom', { detail: 1 }))}
-              style={{
-                background: 'rgba(255,255,255,0.15)', color: 'white',
-                border: '1.5px solid rgba(255,255,255,0.4)',
-                borderRadius: '0.75rem', padding: '0.5rem 0.875rem',
-                fontFamily: "'Figtree', sans-serif", fontWeight: 400, fontSize: '1rem',
-                cursor: 'pointer', backdropFilter: 'blur(8px)',
-                lineHeight: 1,
-              }}
-            >+</button>
-            <button
-              title="Zoom out"
-              onClick={() => window.dispatchEvent(new CustomEvent('viewport:zoom', { detail: -1 }))}
-              style={{
-                background: 'rgba(255,255,255,0.15)', color: 'white',
-                border: '1.5px solid rgba(255,255,255,0.4)',
-                borderRadius: '0.75rem', padding: '0.5rem 0.875rem',
-                fontFamily: "'Figtree', sans-serif", fontWeight: 400, fontSize: '1rem',
-                cursor: 'pointer', backdropFilter: 'blur(8px)',
-                lineHeight: 1,
-                marginRight: '0.5rem',
-              }}
-            >−</button>
-            <button
-              onClick={() => setCaptureMode(false)}
-              style={{
-                background: 'rgba(255,255,255,0.15)', color: 'white',
-                border: '1.5px solid rgba(255,255,255,0.4)',
-                borderRadius: '0.75rem', padding: '0.5rem 1.25rem',
-                fontFamily: "'Figtree', sans-serif", fontWeight: 400, fontSize: '0.875rem',
-                cursor: 'pointer', backdropFilter: 'blur(8px)',
-                transition: 'background 0.15s',
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => { const img = viewportEngRef.current?.captureScreenshot?.(); setAiCapture(img); setCaptureMode(false); setAiModalOpen(true); }}
-              style={{
-                background: '#b48b31', color: 'white',
-                border: 'none',
-                borderRadius: '0.75rem', padding: '0.5rem 1.5rem',
-                fontFamily: "'Figtree', sans-serif", fontWeight: 400, fontSize: '0.875rem',
-                cursor: 'pointer',
-                transition: 'background 0.15s',
-              }}
-            >
-              Capture & Continue
-            </button>
+            {[{detail:1,title:'Zoom in',path:<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></>},{detail:-1,title:'Zoom out',path:<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></>}].map(({detail,title,path})=>(
+              <button key={detail} title={title}
+                onClick={() => window.dispatchEvent(new CustomEvent('viewport:zoom', { detail }))}
+                style={{
+                  background: 'rgba(255,255,255,0.15)', color: 'white',
+                  border: '1.5px solid rgba(255,255,255,0.4)',
+                  borderRadius: '0.75rem', padding: '0.45rem 0.7rem',
+                  cursor: 'pointer', backdropFilter: 'blur(8px)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">{path}</svg>
+              </button>
+            ))}
+            <button onClick={() => setCaptureMode(false)} style={{
+              background: 'rgba(255,255,255,0.15)', color: 'white',
+              border: '1.5px solid rgba(255,255,255,0.4)',
+              borderRadius: '0.75rem', padding: '0.5rem 1.25rem',
+              fontFamily: "'Figtree', sans-serif", fontWeight: 400, fontSize: '0.875rem',
+              cursor: 'pointer', backdropFilter: 'blur(8px)',
+            }}>Cancel</button>
+            <button onClick={() => {
+              const canvas = document.querySelector('canvas');
+              if (!canvas) return;
+              const rect = canvas.getBoundingClientRect();
+              const vw = rect.width, vh = rect.height;
+              const x = Math.round(vw * 0.11);
+              const y = Math.round(vh * 0.08);
+              const w = Math.round(vw * 0.78);
+              const h = Math.round(vh * 0.65);
+              const tmp = document.createElement('canvas');
+              tmp.width = w; tmp.height = h;
+              // Force a render first
+              viewportEngRef.current?.captureScreenshot?.();
+              tmp.getContext('2d').drawImage(canvas, x, y, w, h, 0, 0, w, h);
+              const img = tmp.toDataURL('image/png');
+              setAiCapture(img);
+              setCaptureMode(false);
+              setAiModalOpen(true);
+            }} style={{
+              background: '#b48b31', color: 'white',
+              border: 'none',
+              borderRadius: '0.75rem', padding: '0.5rem 1.5rem',
+              fontFamily: "'Figtree', sans-serif", fontWeight: 400, fontSize: '0.875rem',
+              cursor: 'pointer',
+            }}>Capture & Continue</button>
           </div>
         </div>
       )}
