@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import TheOnyxThumb from '../assets/TheOnyx_Thumbnail.png';
 import styles from './Onboarding.module.css';
 
 // ── Floor size SVG preview ────────────────────────────────────
@@ -169,12 +170,7 @@ export default function Onboarding({ config, presets: manifestPresets = [], onCo
             <div className={styles.modeGrid}>
               <div className={styles.modeCard} onClick={() => chooseMode('preset')}>
                 <div className={styles.modeIcon}>
-                  <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#b48b31" strokeWidth="1.5" strokeLinecap="round">
-                    <rect x="3" y="3" width="7" height="7" rx="1"/>
-                    <rect x="14" y="3" width="7" height="7" rx="1"/>
-                    <rect x="3" y="14" width="7" height="7" rx="1"/>
-                    <rect x="14" y="14" width="7" height="7" rx="1"/>
-                  </svg>
+                  <img src="./TheOnyx_Thumbnail.png" alt="Preset" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '6px' }} />
                 </div>
                 <div className={styles.modeLabel}>Start with a preset</div>
                 <div className={styles.modeDesc}>Choose a pre-configured layout ready to customize</div>
