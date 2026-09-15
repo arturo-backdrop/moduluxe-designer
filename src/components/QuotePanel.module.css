@@ -24,12 +24,14 @@
   color: white;
   font-family: 'Figtree', sans-serif;
   font-weight: 700;
-  font-size: 0.8438rem;
-  padding: 0.675rem 1.25rem;
+  font-size: 0.75rem;
+  padding: 0.45rem 1rem;
   border-radius: 0.875rem;
   border: none;
   cursor: pointer;
-  width: 100%;
+  width: auto;
+  display: block;
+  margin: 0 auto;
   text-align: center;
   transition: background 0.15s, transform 0.15s;
 }
