@@ -12,7 +12,8 @@ import Sidebar     from './components/Sidebar.jsx';
 import Header      from './components/Header.jsx';
 import Toolbar     from './components/Toolbar.jsx';
 import BottomBar   from './components/BottomBar.jsx';
-import QuotePanel  from './components/QuotePanel.jsx';
+import QuotePanel     from './components/QuotePanel.jsx';
+import AIRenderModal  from './components/AIRenderModal.jsx';
 import VideoWidget from './components/VideoWidget.jsx';
 
 const styles = {
@@ -62,6 +63,8 @@ export default function App() {
   const radialMenuWrapperRef = useRef(null);
   const viewportEngRef       = useRef(null);
   const [captureMode,    setCaptureMode]    = useState(false);
+  const [aiCapture,     setAiCapture]      = useState(null);  // base64 PNG
+  const [aiModalOpen,   setAiModalOpen]    = useState(false);
   const [history,        setHistory]        = useState([[]])
   const [historyIdx,     setHistoryIdx]     = useState(0);
   const historyRef    = useRef([[]]);
@@ -450,7 +453,7 @@ export default function App() {
               Cancel
             </button>
             <button
-              onClick={() => { /* TODO: capture canvas */ console.log('capture!'); setCaptureMode(false); }}
+              onClick={() => { const img = viewportEngRef.current?.captureScreenshot?.(); setAiCapture(img); setCaptureMode(false); setAiModalOpen(true); }}
               style={{
                 background: '#b48b31', color: 'white',
                 border: 'none',
@@ -884,6 +887,20 @@ export default function App() {
         })()}
 
         {/* Tour disabled */}
+
+      {/* AI Render Modal */}
+      {aiModalOpen && (
+        <AIRenderModal
+          captureDataUrl={aiCapture}
+          onClose={() => setAiModalOpen(false)}
+          onGenerate={(payload) => {
+            setAiModalOpen(false);
+            // TODO: abrir loading screen y llamar al endpoint
+            console.log('AI Render payload:', payload);
+          }}
+        />
+      )}
+
       </div>
     </div>
   )
