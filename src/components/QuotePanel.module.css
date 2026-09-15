@@ -12,11 +12,38 @@
   pointer-events: all;
 }
 
+.pillHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
 .itemCount {
   font-size: 0.6188rem;
   font-weight: 400;
   color: #aaa;
   text-align: left;
+  flex-shrink: 0;
+}
+
+.aiRenderBtn {
+  font-family: 'Figtree', sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #b48b31;
+  background: transparent;
+  border: 1.5px solid #b48b31;
+  border-radius: 2rem;
+  padding: 0.25rem 0.625rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.aiRenderBtn:hover {
+  background: #b48b31;
+  color: white;
 }
 
 .totalBlock {
