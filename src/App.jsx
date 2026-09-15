@@ -403,13 +403,39 @@ export default function App() {
             pointerEvents: 'all',
           }}>
             <span style={{
-              color: 'white', fontSize: '0.9375rem', fontWeight: 600,
+              color: 'white', fontSize: '0.9375rem', fontWeight: 400,
               fontFamily: "'Figtree', sans-serif",
               textShadow: '0 1px 4px rgba(0,0,0,0.5)',
               marginRight: '0.5rem',
             }}>
               Position your booth, then capture
             </span>
+            {/* Zoom controls */}
+            <button
+              title="Zoom in"
+              onClick={() => window.dispatchEvent(new CustomEvent('viewport:zoom', { detail: 1 }))}
+              style={{
+                background: 'rgba(255,255,255,0.15)', color: 'white',
+                border: '1.5px solid rgba(255,255,255,0.4)',
+                borderRadius: '0.75rem', padding: '0.5rem 0.875rem',
+                fontFamily: "'Figtree', sans-serif", fontWeight: 700, fontSize: '1rem',
+                cursor: 'pointer', backdropFilter: 'blur(8px)',
+                lineHeight: 1,
+              }}
+            >+</button>
+            <button
+              title="Zoom out"
+              onClick={() => window.dispatchEvent(new CustomEvent('viewport:zoom', { detail: -1 }))}
+              style={{
+                background: 'rgba(255,255,255,0.15)', color: 'white',
+                border: '1.5px solid rgba(255,255,255,0.4)',
+                borderRadius: '0.75rem', padding: '0.5rem 0.875rem',
+                fontFamily: "'Figtree', sans-serif", fontWeight: 700, fontSize: '1rem',
+                cursor: 'pointer', backdropFilter: 'blur(8px)',
+                lineHeight: 1,
+                marginRight: '0.5rem',
+              }}
+            >−</button>
             <button
               onClick={() => setCaptureMode(false)}
               style={{
