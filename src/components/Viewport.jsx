@@ -1988,6 +1988,13 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     }
 
     engRef.current = {
+      captureScreenshot: () => {
+        renderer.render(bgScene, bgCam);
+        renderer.autoClear = false;
+        renderer.render(scene, camera);
+        renderer.autoClear = true;
+        return canvasRef.current?.toDataURL('image/png') || null;
+      },
       itemGroup, spawnContainer, pendingPositions, project3D, camera, controls,
       selectedUidRef: { current: null },
       deleteContainer, rotateObject, applyColor, duplicateObject, applyArray,
