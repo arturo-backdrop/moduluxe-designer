@@ -177,7 +177,7 @@ function ListModal({ sceneItems, catalog, onClose }) {
 // ── QuotePanel pill ───────────────────────────────────────────
 
 
-export default function QuotePanel({ config, sceneItems, catalog }) {
+export default function QuotePanel({ config, sceneItems, catalog, onAIRender }) {
   const [open, setOpen] = useState(false);
 
   const items = sceneItems.filter(i => {
@@ -213,7 +213,7 @@ export default function QuotePanel({ config, sceneItems, catalog }) {
             <a href={`tel:${config.phoneHref}`} className={styles.phoneLink}>{config.phone}</a>
           </div>
         )}
-        <button className={styles.aiRenderBtn} onClick={() => {/* TODO: AI Render flow */}}>
+        <button className={styles.aiRenderBtn} onClick={() => onAIRender?.()}>
           Get a branded AI render
         </button>
       </div>
