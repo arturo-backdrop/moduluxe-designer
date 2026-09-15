@@ -128,7 +128,7 @@ function applyPaintColor(root, color) {
   });
 }
 
-export default function Viewport({ config, floorSize, sceneItems, onSceneItemsChange, onCommit, onRadialMenu, radialMenuWrapperRef, engRef: externalEngRef, mode = 'place', activeTool = 'select', onToolChange, onSelect }) {
+export default function Viewport({ config, floorSize, sceneItems, onSceneItemsChange, onCommit, onRadialMenu, radialMenuWrapperRef, engRef: externalEngRef, mode = 'place', activeTool = 'select', onToolChange, onSelect, captureMode = false }) {
   const canvasRef = useRef(null);
   const engRef    = useRef(null);
   const itemsRef    = useRef(sceneItems);
@@ -138,8 +138,10 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
   const onSelectRef     = useRef(onSelect);
   const catalogRef  = useRef(config._catalogFlat || []);
   const modeRef     = useRef(mode);
+  const captureModeRef = useRef(captureMode);
   const activeToolRef = useRef(activeTool);
   const onToolChangeRef = useRef(onToolChange);
+  useEffect(() => { captureModeRef.current = captureMode; }, [captureMode]);
   useEffect(() => { onRadialMenuRef.current = onRadialMenu; }, [onRadialMenu]);
   useEffect(() => { onSelectRef.current = onSelect; }, [onSelect]);
   useEffect(() => {
@@ -163,7 +165,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     if (!canvas) return;
 
     // Renderer
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, stencil: true });
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, stencil: true, preserveDrawingBuffer: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
@@ -821,6 +823,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     const onPointerMove = e => {
       // Don't process hover/drag when a modal overlay is open
       if (document.querySelector('[class*="modalOverlay"]')) return;
+      if (captureModeRef.current) return;
       // ── Draw Layout mode move ─────────────────────────────
       if (modeRef.current === 'draw') {
         const raw = groundPt(e.clientX, e.clientY);
