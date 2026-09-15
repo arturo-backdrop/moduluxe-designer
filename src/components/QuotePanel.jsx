@@ -198,7 +198,12 @@ export default function QuotePanel({ config, sceneItems, catalog }) {
   return (
     <>
       <div className={styles.quotePill} style={{ pointerEvents:'all' }} data-tour="quote-panel">
-        <div className={styles.itemCount}>{count} item{count !== 1 ? 's' : ''}</div>
+        <div className={styles.pillHeader}>
+          <div className={styles.itemCount}>{count} item{count !== 1 ? 's' : ''}</div>
+          <button className={styles.aiRenderBtn} onClick={() => {/* TODO: AI Render flow */}}>
+            Get a branded AI render
+          </button>
+        </div>
         <div className={styles.totalBlock}>
           <div className={styles.totalLabel}>Estimated Total</div>
           <div className={styles.totalValue}>{total > 0 ? formatPrice(total) : 'Contact for pricing'}</div>
