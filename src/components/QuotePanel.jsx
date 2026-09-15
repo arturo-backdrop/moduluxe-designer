@@ -218,10 +218,7 @@ export default function QuotePanel({ config, sceneItems, catalog }) {
           </div>
         )}
         <button className={styles.aiRenderBtn} onClick={() => {/* TODO: AI Render flow */}}>
-          <span>Get a branded AI render</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-          </svg>
+          Get a branded AI render
         </button>
       </div>
       {open && <ListModal sceneItems={sceneItems} catalog={catalog} onClose={() => setOpen(false)} />}
