@@ -20,22 +20,20 @@
 }
 
 .aiRenderBtn {
-  background: #b48b31;
-  color: white;
+  background: transparent;
+  color: #b48b31;
   font-family: 'Figtree', sans-serif;
   font-weight: 700;
-  font-size: 0.75rem;
-  padding: 0.45rem 1rem;
+  font-size: 0.8438rem;
+  padding: 0.675rem 1.25rem;
   border-radius: 0.875rem;
-  border: none;
+  border: 1.5px solid #b48b31;
   cursor: pointer;
-  width: auto;
-  display: block;
-  margin: 0 auto;
+  width: 100%;
   text-align: center;
-  transition: background 0.15s, transform 0.15s;
+  transition: background 0.15s, color 0.15s, transform 0.15s;
 }
-.aiRenderBtn:hover { background: #9a7628; transform: scale(1.01); }
+.aiRenderBtn:hover { background: #b48b31; color: white; transform: scale(1.01); }
 
 .totalBlock {
   display: flex;
