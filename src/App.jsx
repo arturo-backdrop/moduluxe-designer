@@ -389,7 +389,7 @@ export default function App() {
 
       {/* AI Render — Capture Mode overlay */}
       {captureMode && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 20, pointerEvents: 'all' }}>
+        <div style={{ position: 'absolute', inset: 0, zIndex: 20, pointerEvents: 'none' }}>
           {/* Dark mask — top */}
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: '15%', clipPath: 'inset(0 0 calc(100% - (100% - 30%) / 2 * 1) 0)', pointerEvents: 'none' }} />
 
@@ -398,14 +398,14 @@ export default function App() {
             <defs>
               <mask id="vfMask">
                 <rect width="100%" height="100%" fill="white"/>
-                {/* Viewfinder hole: 78% ancho, 65% alto, centrado con offset hacia arriba */}
-                <rect x="11%" y="8%" width="78%" height="65%" rx="4" fill="black"/>
+                {/* Viewfinder: 62% ancho, 78% alto, centrado verticalmente con offset arriba */}
+                <rect x="19%" y="5%" width="62%" height="78%" rx="16" fill="black"/>
               </mask>
             </defs>
             {/* Overlay oscuro con hole */}
             <rect width="100%" height="100%" fill="rgba(0,0,0,0.62)" mask="url(#vfMask)"/>
-            {/* Esquinas estilo cámara */}
-            {[['11%','8%',1,1],['89%','8%',-1,1],['11%','73%',1,-1],['89%','73%',-1,-1]].map(([cx,cy,dx,dy],i) => (
+            {/* Esquinas redondeadas estilo cámara */}
+            {[['19%','5%',1,1],['81%','5%',-1,1],['19%','83%',1,-1],['81%','83%',-1,-1]].map(([cx,cy,dx,dy],i) => (
               <g key={i}>
                 <line x1={cx} y1={cy} x2={`calc(${cx} + ${dx*28}px)`} y2={cy} stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
                 <line x1={cx} y1={cy} x2={cx} y2={`calc(${cy} + ${dy*28}px)`} stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
@@ -456,10 +456,10 @@ export default function App() {
               if (!canvas) return;
               const rect = canvas.getBoundingClientRect();
               const vw = rect.width, vh = rect.height;
-              const x = Math.round(vw * 0.11);
-              const y = Math.round(vh * 0.08);
-              const w = Math.round(vw * 0.78);
-              const h = Math.round(vh * 0.65);
+              const x = Math.round(vw * 0.19);
+              const y = Math.round(vh * 0.05);
+              const w = Math.round(vw * 0.62);
+              const h = Math.round(vh * 0.78);
               const tmp = document.createElement('canvas');
               tmp.width = w; tmp.height = h;
               // Force a render first
