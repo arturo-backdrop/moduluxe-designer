@@ -418,7 +418,7 @@ export default function App() {
                 background: 'rgba(255,255,255,0.15)', color: 'white',
                 border: '1.5px solid rgba(255,255,255,0.4)',
                 borderRadius: '0.75rem', padding: '0.5rem 0.875rem',
-                fontFamily: "'Figtree', sans-serif", fontWeight: 700, fontSize: '1rem',
+                fontFamily: "'Figtree', sans-serif", fontWeight: 400, fontSize: '1rem',
                 cursor: 'pointer', backdropFilter: 'blur(8px)',
                 lineHeight: 1,
               }}
@@ -430,7 +430,7 @@ export default function App() {
                 background: 'rgba(255,255,255,0.15)', color: 'white',
                 border: '1.5px solid rgba(255,255,255,0.4)',
                 borderRadius: '0.75rem', padding: '0.5rem 0.875rem',
-                fontFamily: "'Figtree', sans-serif", fontWeight: 700, fontSize: '1rem',
+                fontFamily: "'Figtree', sans-serif", fontWeight: 400, fontSize: '1rem',
                 cursor: 'pointer', backdropFilter: 'blur(8px)',
                 lineHeight: 1,
                 marginRight: '0.5rem',
@@ -442,7 +442,7 @@ export default function App() {
                 background: 'rgba(255,255,255,0.15)', color: 'white',
                 border: '1.5px solid rgba(255,255,255,0.4)',
                 borderRadius: '0.75rem', padding: '0.5rem 1.25rem',
-                fontFamily: "'Figtree', sans-serif", fontWeight: 600, fontSize: '0.875rem',
+                fontFamily: "'Figtree', sans-serif", fontWeight: 400, fontSize: '0.875rem',
                 cursor: 'pointer', backdropFilter: 'blur(8px)',
                 transition: 'background 0.15s',
               }}
@@ -455,7 +455,7 @@ export default function App() {
                 background: '#b48b31', color: 'white',
                 border: 'none',
                 borderRadius: '0.75rem', padding: '0.5rem 1.5rem',
-                fontFamily: "'Figtree', sans-serif", fontWeight: 700, fontSize: '0.875rem',
+                fontFamily: "'Figtree', sans-serif", fontWeight: 400, fontSize: '0.875rem',
                 cursor: 'pointer',
                 transition: 'background 0.15s',
               }}
