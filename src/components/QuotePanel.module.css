@@ -21,20 +21,20 @@
 
 .aiRenderBtn {
   font-family: 'Figtree', sans-serif;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 700;
-  color: #1a1a1a;
-  background: transparent;
-  border: 1.5px solid #b48b31;
-  border-radius: 2rem;
-  padding: 0.4rem 0.875rem;
+  color: #b48b31;
+  background: #fdf8ef;
+  border: none;
+  border-radius: 0.875rem;
+  padding: 0.675rem 1.25rem;
   cursor: pointer;
   width: 100%;
+  text-align: center;
   transition: background 0.15s, color 0.15s;
 }
 .aiRenderBtn:hover {
-  background: #b48b31;
-  color: white;
+  background: #f5ecd8;
 }
 
 .totalBlock {
