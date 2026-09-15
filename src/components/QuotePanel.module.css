@@ -20,22 +20,24 @@
 }
 
 .aiRenderBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background: #b48b31;
+  color: white;
   font-family: 'Figtree', sans-serif;
-  font-size: 0.8125rem;
   font-weight: 700;
-  color: #b48b31;
-  background: #fdf8ef;
-  border: none;
-  border-radius: 0.875rem;
+  font-size: 0.8438rem;
   padding: 0.675rem 1.25rem;
+  border-radius: 0.875rem;
+  border: none;
   cursor: pointer;
   width: 100%;
-  text-align: center;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, transform 0.15s;
 }
-.aiRenderBtn:hover {
-  background: #f5ecd8;
-}
+.aiRenderBtn svg { width: 1.1rem; height: 1.1rem; flex-shrink: 0; }
+.aiRenderBtn:hover { background: #9a7628; transform: scale(1.01); }
 
 .totalBlock {
   display: flex;
