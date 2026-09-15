@@ -170,7 +170,7 @@ export default function Onboarding({ config, presets: manifestPresets = [], onCo
             <div className={styles.modeGrid}>
               <div className={styles.modeCard} onClick={() => chooseMode('preset')}>
                 <div className={styles.modeIcon}>
-                  <img src="./TheOnyx_Thumbnail.png" alt="Preset" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '6px' }} />
+                  <img src={TheOnyxThumb} alt="Preset" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '6px' }} />
                 </div>
                 <div className={styles.modeLabel}>Start with a preset</div>
                 <div className={styles.modeDesc}>Choose a pre-configured layout ready to customize</div>
