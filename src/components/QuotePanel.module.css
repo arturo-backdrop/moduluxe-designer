@@ -64,7 +64,7 @@
 .quoteBtn {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 0.5rem;
   background: #b48b31;
   color: white;
