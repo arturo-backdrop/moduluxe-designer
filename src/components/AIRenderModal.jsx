@@ -1,0 +1,248 @@
+import React, { useState, useEffect, useRef } from 'react';
+
+const INDUSTRIES = [
+  'Technology',
+  'Healthcare & Medical',
+  'Food & Beverage',
+  'Manufacturing & Industrial',
+  'Construction',
+  'Retail & Fashion',
+  'Automotive',
+  'Finance & Banking',
+  'Gaming',
+  'Education',
+  'Government & Defense',
+  'Toy Industry',
+];
+
+const STORAGE_KEY = 'airender_form';
+
+function ColorSwatch({ label, value, onChange, optional }) {
+  const inputRef = useRef(null);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', flex: 1 }}>
+      <label style={{ fontSize: '0.6875rem', color: '#888', fontWeight: 500 }}>
+        {label}{optional && <span style={{ color: '#ccc' }}> (optional)</span>}
+      </label>
+      <div
+        onClick={() => inputRef.current?.click()}
+        style={{
+          width: '100%', height: '2.25rem',
+          borderRadius: '0.625rem',
+          background: value || '#eeeeee',
+          border: '1.5px solid #f0f0f0',
+          cursor: 'pointer',
+          transition: 'border-color 0.15s',
+          boxSizing: 'border-box',
+        }}
+      />
+      <input
+        ref={inputRef}
+        type="color"
+        value={value || '#ffffff'}
+        onChange={e => onChange(e.target.value)}
+        style={{ display: 'none' }}
+      />
+    </div>
+  );
+}
+
+function UploadButton({ label, accept, file, onChange, optional }) {
+  const inputRef = useRef(null);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+      <label style={{ fontSize: '0.6875rem', color: '#888', fontWeight: 500 }}>
+        {label}{optional && <span style={{ color: '#ccc' }}> (optional)</span>}
+      </label>
+      <div
+        onClick={() => inputRef.current?.click()}
+        style={{
+          display: 'flex', alignItems: 'center', gap: '0.5rem',
+          background: '#fafafa', border: '1.5px dashed #e0e0e0',
+          borderRadius: '0.625rem', padding: '0.5rem 0.75rem',
+          cursor: 'pointer', transition: 'border-color 0.15s',
+          fontSize: '0.8125rem', color: file ? '#1a1a1a' : '#bbb',
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        {file ? file.name : 'Upload file'}
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        style={{ display: 'none' }}
+        onChange={e => onChange(e.target.files[0] || null)}
+      />
+    </div>
+  );
+}
+
+export default function AIRenderModal({ captureDataUrl, onClose, onGenerate }) {
+  const [form, setForm] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : {
+        company: '', industry: INDUSTRIES[0],
+        primary: '#1a1a1a', secondary: '#b48b31', tertiary: '',
+      };
+    } catch { return { company: '', industry: INDUSTRIES[0], primary: '#1a1a1a', secondary: '#b48b31', tertiary: '' }; }
+  });
+  const [logo, setLogo]       = useState(null);
+  const [graphic, setGraphic] = useState(null);
+
+  // Persist form (except files) to localStorage
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(form)); } catch {}
+  }, [form]);
+
+  const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
+  const canSubmit = form.company.trim() && form.industry;
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 100,
+      background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '1rem',
+    }} onClick={onClose}>
+      <div style={{
+        background: 'white', borderRadius: '1.25rem',
+        width: 'min(36rem, 95vw)',
+        boxShadow: '0 1.5rem 5rem rgba(0,0,0,0.2)',
+        animation: 'modalIn 0.3s cubic-bezier(0.34,1.2,0.64,1)',
+        overflow: 'hidden',
+      }} onClick={e => e.stopPropagation()}>
+
+        {/* Capture preview */}
+        {captureDataUrl && (
+          <div style={{ width: '100%', height: '11rem', overflow: 'hidden', position: 'relative' }}>
+            <img
+              src={captureDataUrl}
+              alt="Booth capture"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(to bottom, transparent 60%, rgba(255,255,255,0.9) 100%)',
+            }} />
+          </div>
+        )}
+
+        {/* Form */}
+        <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+          {/* Title */}
+          <div>
+            <div style={{ fontWeight: 800, fontSize: '1.125rem', color: '#1a1a1a' }}>Get a branded AI render</div>
+            <div style={{ fontSize: '0.8rem', color: '#aaa', marginTop: '0.2rem' }}>
+              Fill in your brand details to generate a photorealistic render
+            </div>
+          </div>
+
+          {/* Company + Industry */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+              <label style={{ fontSize: '0.6875rem', color: '#888', fontWeight: 500 }}>
+                Company name <span style={{ color: '#b48b31' }}>*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="Acme Corp"
+                value={form.company}
+                onChange={e => set('company', e.target.value)}
+                style={{
+                  fontFamily: "'Figtree', sans-serif", fontSize: '0.875rem',
+                  color: '#1a1a1a', background: '#fafafa',
+                  border: '1.5px solid #f0f0f0', borderRadius: '0.625rem',
+                  padding: '0.575rem 0.75rem', outline: 'none',
+                  transition: 'border-color 0.15s', width: '100%', boxSizing: 'border-box',
+                }}
+                onFocus={e => e.target.style.borderColor = '#b48b31'}
+                onBlur={e => e.target.style.borderColor = '#f0f0f0'}
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+              <label style={{ fontSize: '0.6875rem', color: '#888', fontWeight: 500 }}>
+                Industry <span style={{ color: '#b48b31' }}>*</span>
+              </label>
+              <select
+                value={form.industry}
+                onChange={e => set('industry', e.target.value)}
+                style={{
+                  fontFamily: "'Figtree', sans-serif", fontSize: '0.875rem',
+                  color: '#1a1a1a', background: '#fafafa',
+                  border: '1.5px solid #f0f0f0', borderRadius: '0.625rem',
+                  padding: '0.575rem 0.75rem', outline: 'none',
+                  transition: 'border-color 0.15s', width: '100%', boxSizing: 'border-box',
+                  cursor: 'pointer',
+                }}
+              >
+                {INDUSTRIES.map(ind => <option key={ind} value={ind}>{ind}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Colors */}
+          <div>
+            <div style={{ fontSize: '0.6875rem', color: '#888', fontWeight: 500, marginBottom: '0.4rem' }}>Brand colors</div>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <ColorSwatch label="Primary" value={form.primary} onChange={v => set('primary', v)} />
+              <ColorSwatch label="Secondary" value={form.secondary} onChange={v => set('secondary', v)} />
+              <ColorSwatch label="Tertiary" value={form.tertiary} onChange={v => set('tertiary', v)} optional />
+            </div>
+          </div>
+
+          {/* Uploads */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <UploadButton
+              label="Company logo"
+              accept="image/png,image/webp,image/svg+xml"
+              file={logo}
+              onChange={setLogo}
+            />
+            <UploadButton
+              label="Panel graphic"
+              accept="image/png,image/webp,image/jpeg"
+              file={graphic}
+              onChange={setGraphic}
+              optional
+            />
+          </div>
+
+          {/* Footer */}
+          <div style={{ display: 'flex', gap: '0.625rem', marginTop: '0.25rem' }}>
+            <button
+              onClick={onClose}
+              style={{
+                padding: '0.7rem 1.25rem',
+                background: '#f5f5f5', color: '#666',
+                border: 'none', borderRadius: '0.75rem',
+                fontFamily: "'Figtree', sans-serif", fontWeight: 500, fontSize: '0.875rem',
+                cursor: 'pointer', transition: 'background 0.15s',
+              }}
+            >Cancel</button>
+            <button
+              onClick={() => canSubmit && onGenerate({ form, logo, graphic, captureDataUrl })}
+              disabled={!canSubmit}
+              style={{
+                flex: 1, padding: '0.7rem',
+                background: canSubmit ? '#b48b31' : '#e0e0e0',
+                color: canSubmit ? 'white' : '#aaa',
+                border: 'none', borderRadius: '0.75rem',
+                fontFamily: "'Figtree', sans-serif", fontWeight: 500, fontSize: '0.875rem',
+                cursor: canSubmit ? 'pointer' : 'default',
+                transition: 'background 0.15s',
+              }}
+            >Generate AI render</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}
