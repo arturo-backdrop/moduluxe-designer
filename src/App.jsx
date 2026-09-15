@@ -61,6 +61,7 @@ export default function App() {
   }, [tourActive]);
   const radialMenuWrapperRef = useRef(null);
   const viewportEngRef       = useRef(null);
+  const [captureMode,    setCaptureMode]    = useState(false);
   const [history,        setHistory]        = useState([[]])
   const [historyIdx,     setHistoryIdx]     = useState(0);
   const historyRef    = useRef([[]]);
@@ -383,11 +384,67 @@ export default function App() {
         />
       </div>
 
+      {/* AI Render — Capture Mode overlay */}
+      {captureMode && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 20, pointerEvents: 'none' }}>
+          {/* Viñeta oscura */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.65) 100%)',
+            pointerEvents: 'none',
+          }} />
+          {/* Banner inferior */}
+          <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            gap: '1rem',
+            padding: '1.25rem 2rem',
+            background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%)',
+            pointerEvents: 'all',
+          }}>
+            <span style={{
+              color: 'white', fontSize: '0.9375rem', fontWeight: 600,
+              fontFamily: "'Figtree', sans-serif",
+              textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+              marginRight: '0.5rem',
+            }}>
+              Position your booth, then capture
+            </span>
+            <button
+              onClick={() => setCaptureMode(false)}
+              style={{
+                background: 'rgba(255,255,255,0.15)', color: 'white',
+                border: '1.5px solid rgba(255,255,255,0.4)',
+                borderRadius: '0.75rem', padding: '0.5rem 1.25rem',
+                fontFamily: "'Figtree', sans-serif", fontWeight: 600, fontSize: '0.875rem',
+                cursor: 'pointer', backdropFilter: 'blur(8px)',
+                transition: 'background 0.15s',
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => { /* TODO: capture canvas */ console.log('capture!'); setCaptureMode(false); }}
+              style={{
+                background: '#b48b31', color: 'white',
+                border: 'none',
+                borderRadius: '0.75rem', padding: '0.5rem 1.5rem',
+                fontFamily: "'Figtree', sans-serif", fontWeight: 700, fontSize: '0.875rem',
+                cursor: 'pointer',
+                transition: 'background 0.15s',
+              }}
+            >
+              Capture & Continue
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* UI — floats over viewport */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 1,
         pointerEvents: 'none',
-        display: 'flex',
+        display: captureMode ? 'none' : 'flex',
         flexDirection: 'row',
         paddingTop: '0.75rem',
         paddingBottom: '0.75rem',
@@ -484,7 +541,7 @@ export default function App() {
           </div>
           {/* QuotePanel + VideoWidget — fixed at bottom */}
           <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
-            <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} />
+            <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} onAIRender={() => setCaptureMode(true)} />
             <VideoWidget config={CONFIG} />
           </div>
         </div>
