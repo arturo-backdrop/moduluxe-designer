@@ -384,6 +384,7 @@ export default function App() {
           radialMenuWrapperRef={radialMenuWrapperRef}
           engRef={viewportEngRef}
           onSelect={() => checkTourAction('select_object')}
+          captureMode={captureMode}
         />
       </div>
 
