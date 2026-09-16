@@ -22,7 +22,8 @@ export default function AIRenderLoading({ onComplete, placeholderUrl, projectNam
   const [done, setDone]           = useState(false);
   const [resultUrl, setResultUrl] = useState(null);
   const [showResult, setShowResult]   = useState(false);
-  const [showContact, setShowContact] = useState(false); // set by real backend later
+  const [showContact, setShowContact]   = useState(false);
+  const [showConfirm, setShowConfirm]   = useState(false); // set by real backend later
 
   // Phase cycling
   useEffect(() => {
@@ -170,6 +171,19 @@ export default function AIRenderLoading({ onComplete, placeholderUrl, projectNam
             {/* Result image */}
             {resultUrl && (
               <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', overflow: 'hidden' }}>
+                {/* X close button */}
+                <button onClick={() => setShowConfirm(true)} style={{
+                  position: 'absolute', top: '0.75rem', right: '0.75rem', zIndex: 3,
+                  width: '2rem', height: '2rem',
+                  background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)',
+                  border: 'none', borderRadius: '50%', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'white',
+                }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
                 <img src={resultUrl} alt="AI Render"
                   style={{
                     width: '100%', height: '100%', objectFit: 'cover', display: 'block',
@@ -354,6 +368,90 @@ export default function AIRenderLoading({ onComplete, placeholderUrl, projectNam
           </>
         )}
       </div>
+
+      {/* Confirm close modal */}
+      {showConfirm && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 300,
+          background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '1rem', pointerEvents: 'all',
+          animation: 'loadingOverlayIn 0.25s ease',
+        }} onClick={() => setShowConfirm(false)}>
+          <div style={{
+            background: 'white', borderRadius: '1.25rem',
+            width: 'min(22rem, 95vw)',
+            boxShadow: '0 1.5rem 5rem rgba(0,0,0,0.2)',
+            padding: '1.5rem',
+            display: 'flex', flexDirection: 'column', gap: '1rem',
+            animation: 'loadingScaleIn 0.3s cubic-bezier(0.34,1.2,0.64,1)',
+          }} onClick={e => e.stopPropagation()}>
+
+            {/* Title */}
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '1rem', color: '#1a1a1a', fontFamily: "'Figtree', sans-serif" }}>
+                Are you sure you want to close?
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#999', marginTop: '0.3rem', fontFamily: "'Figtree', sans-serif", lineHeight: 1.5 }}>
+                Your render won't be saved once you close this window. We recommend downloading it first.
+              </div>
+            </div>
+
+            {/* Save reminder */}
+            <div style={{
+              display: 'flex', alignItems: 'flex-start', gap: '0.5rem',
+              padding: '0.625rem 0.75rem',
+              background: '#fdf8ef', borderRadius: '0.625rem',
+              fontSize: '0.75rem', color: '#9a7628', lineHeight: 1.5,
+              fontFamily: "'Figtree', sans-serif",
+            }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0, marginTop: '1px' }}>
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              We recommend downloading your render — it won't be saved once you close this window.
+            </div>
+
+            {/* Buttons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <button onClick={async () => {
+                if (resultUrl) {
+                  try {
+                    const res = await fetch(resultUrl);
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    const slug = (projectName || 'Render').trim().replace(/\s+/g, '-');
+                    a.href = url; a.download = `${slug}-Render.png`;
+                    a.click(); URL.revokeObjectURL(url);
+                  } catch { window.open(resultUrl, '_blank'); }
+                }
+                onComplete?.({ imageUrl: resultUrl });
+              }} style={{
+                width: '100%', padding: '0.65rem',
+                background: 'linear-gradient(135deg, #b48b31, #c9a040)',
+                color: 'white', border: 'none', borderRadius: '0.75rem',
+                fontFamily: "'Figtree', sans-serif", fontWeight: 400, fontSize: '0.875rem',
+                cursor: 'pointer', boxShadow: '0 4px 12px rgba(180,139,49,0.3)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Download & Close
+              </button>
+              <button onClick={() => onComplete?.({ imageUrl: null })} style={{
+                width: '100%', padding: '0.65rem',
+                background: 'transparent', color: '#999', border: 'none',
+                borderRadius: '0.75rem', fontFamily: "'Figtree', sans-serif",
+                fontWeight: 400, fontSize: '0.875rem', cursor: 'pointer',
+              }}>
+                Close anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Contact modal */}
       {showContact && (
