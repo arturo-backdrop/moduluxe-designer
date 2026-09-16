@@ -19,8 +19,9 @@ export default function AIRenderLoading({ onComplete, placeholderUrl }) {
   const [phase, setPhase]       = useState(0);
   const [progress, setProgress] = useState(0);
   const [ripples, setRipples]   = useState([]);
-  const [done, setDone]         = useState(false);
-  const [resultUrl, setResultUrl] = useState(null); // set by real backend later
+  const [done, setDone]           = useState(false);
+  const [resultUrl, setResultUrl] = useState(null);
+  const [showResult, setShowResult] = useState(false); // set by real backend later
 
   // Phase cycling
   useEffect(() => {
@@ -43,6 +44,7 @@ export default function AIRenderLoading({ onComplete, placeholderUrl }) {
         // Simulate: use booth capture as placeholder until real backend is ready
         setResultUrl(placeholderUrl || null);
         setDone(true);
+        setTimeout(() => setShowResult(true), 80);
       }
     };
     raf = requestAnimationFrame(tick);
@@ -156,12 +158,26 @@ export default function AIRenderLoading({ onComplete, placeholderUrl }) {
 
         {done ? (
           /* ── Result state ── */
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{
+            display: 'flex', flexDirection: 'column',
+            opacity: showResult ? 1 : 0,
+            transform: showResult ? 'translateY(0)' : 'translateY(16px)',
+            transition: 'opacity 0.5s ease, transform 0.5s cubic-bezier(0.22,1,0.36,1)',
+          }}>
             {/* Result image */}
             {resultUrl && (
               <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', overflow: 'hidden' }}>
                 <img src={resultUrl} alt="AI Render"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  style={{
+                    width: '100%', height: '100%', objectFit: 'cover', display: 'block',
+                    animation: 'imgReveal 0.9s cubic-bezier(0.22,1,0.36,1) forwards',
+                  }} />
+                {/* Gold flash overlay */}
+                <div style={{
+                  position: 'absolute', inset: 0, pointerEvents: 'none',
+                  animation: 'goldFlash 0.7s ease-out forwards',
+                  background: 'rgba(180,139,49,0.35)',
+                }} />
                 {/* Simulated badge */}
                 <div style={{
                   position: 'absolute', top: '0.75rem', left: '0.75rem',
@@ -169,6 +185,7 @@ export default function AIRenderLoading({ onComplete, placeholderUrl }) {
                   color: 'white', borderRadius: '0.5rem',
                   padding: '0.25rem 0.625rem', fontSize: '0.6875rem', fontWeight: 500,
                   fontFamily: "'Figtree', sans-serif",
+                  animation: 'fadeSlideUp 0.4s 0.5s ease-out both',
                 }}>Simulated preview</div>
               </div>
             )}
@@ -272,6 +289,18 @@ export default function AIRenderLoading({ onComplete, placeholderUrl }) {
         @keyframes aiSpin    { to { transform: rotate(360deg); } }
         @keyframes aiRipple  { to { width: 160px; height: 160px; opacity: 0; } }
         @keyframes aiFadeIn  { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes imgReveal {
+          from { clip-path: inset(100% 0 0 0); transform: scale(1.04); }
+          to   { clip-path: inset(0% 0 0 0);   transform: scale(1); }
+        }
+        @keyframes goldFlash {
+          0%   { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        @keyframes fadeSlideUp {
+          from { opacity: 0; transform: translateY(6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
       `}</style>
     </div>
   );
