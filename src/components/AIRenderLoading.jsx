@@ -201,7 +201,7 @@ export default function AIRenderLoading({ onComplete, placeholderUrl }) {
                     Your render is ready!
                   </div>
                   <div style={{ fontSize: '0.8125rem', color: '#999', marginTop: '0.35rem', lineHeight: 1.5 }}>
-                    A creative visualization of your booth — colors and final details may vary.
+                    This AI render is a creative visualization to inspire your booth design — colors, graphics and final details may vary from the actual product.
                   </div>
                 </div>
                 {/* Checkmark badge */}
