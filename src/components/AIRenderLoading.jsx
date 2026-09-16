@@ -222,6 +222,19 @@ export default function AIRenderLoading({ onComplete, placeholderUrl, projectNam
               {/* Divider */}
               <div style={{ height: '1px', background: '#f0f0f0' }} />
 
+              {/* Save reminder */}
+              <div style={{
+                display: 'flex', alignItems: 'flex-start', gap: '0.5rem',
+                padding: '0.625rem 0.75rem',
+                background: '#fdf8ef', borderRadius: '0.625rem',
+                fontSize: '0.75rem', color: '#9a7628', lineHeight: 1.5,
+              }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0, marginTop: '1px' }}>
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                We recommend downloading your render — it won't be saved once you close this window.
+              </div>
+
               {/* CTAs — equal weight, stacked */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
                 <button onClick={() => setShowContact(true)}
