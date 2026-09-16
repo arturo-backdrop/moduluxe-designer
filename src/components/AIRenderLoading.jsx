@@ -56,10 +56,17 @@ export default function AIRenderLoading({ onComplete }) {
     const ctx = canvas.getContext('2d');
     let raf;
     const resize = () => {
-      canvas.width  = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
+      const w = canvas.offsetWidth;
+      const h = canvas.offsetHeight;
+      if (w > 0 && h > 0) {
+        canvas.width  = w;
+        canvas.height = h;
+        // Re-center mouse on resize
+        mouseRef.current = { x: 0.5, y: 0.5 };
+      }
     };
-    resize();
+    // Small delay to let the DOM paint the modal first
+    setTimeout(resize, 50);
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
 
@@ -115,7 +122,8 @@ export default function AIRenderLoading({ onComplete }) {
   }, []);
 
   const handleMouseMove = e => {
-    const r = e.currentTarget.getBoundingClientRect();
+    const r = canvasRef.current?.getBoundingClientRect();
+    if (!r) return;
     mouseRef.current = {
       x: (e.clientX - r.left) / r.width,
       y: (e.clientY - r.top)  / r.height,
@@ -123,7 +131,8 @@ export default function AIRenderLoading({ onComplete }) {
   };
 
   const handleClick = e => {
-    const r = e.currentTarget.getBoundingClientRect();
+    const r = canvasRef.current?.getBoundingClientRect();
+    if (!r) return;
     const id = Date.now();
     setRipples(prev => [...prev, { id, x: e.clientX - r.left, y: e.clientY - r.top }]);
     setTimeout(() => setRipples(prev => prev.filter(p => p.id !== id)), 900);
