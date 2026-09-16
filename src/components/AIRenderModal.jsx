@@ -103,13 +103,15 @@ export default function AIRenderModal({ captureDataUrl, onClose, onGenerate }) {
       <div style={{
         background: 'white', borderRadius: '1.25rem',
         width: 'min(36rem, 95vw)',
+        maxHeight: '92vh',
         boxShadow: '0 1.5rem 5rem rgba(0,0,0,0.2)',
         overflow: 'hidden',
+        display: 'flex', flexDirection: 'column',
       }} onClick={e => e.stopPropagation()}>
 
         {/* Capture preview — 4:3 aspect ratio */}
         {captureDataUrl && (
-          <div style={{ width: '100%', aspectRatio: '4/3', background: '#f0f0f0', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ width: '100%', aspectRatio: '4/3', maxHeight: '38vh', background: '#f0f0f0', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
             <img src={captureDataUrl} alt="Booth capture"
               style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
             <div style={{
@@ -121,7 +123,7 @@ export default function AIRenderModal({ captureDataUrl, onClose, onGenerate }) {
         )}
 
         {/* Form */}
-        <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', overflowY: 'auto', flex: 1 }}>
 
           {/* Title */}
           <div>
