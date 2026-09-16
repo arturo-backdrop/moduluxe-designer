@@ -13,7 +13,7 @@ const PHASES = [
 
 const SIMULATE_MS = 6000;
 
-export default function AIRenderLoading({ onComplete, placeholderUrl }) {
+export default function AIRenderLoading({ onComplete, placeholderUrl, projectName = 'AI Render' }) {
   const canvasRef    = useRef(null);
   const mouseRef     = useRef({ x: 0.5, y: 0.5 });
   const [phase, setPhase]       = useState(0);
@@ -250,7 +250,8 @@ export default function AIRenderLoading({ onComplete, placeholderUrl }) {
                       const blob = await res.blob();
                       const url = URL.createObjectURL(blob);
                       const a = document.createElement('a');
-                      a.href = url; a.download = 'backdrop-ai-render.png';
+                      const slug = projectName.trim().replace(/\s+/g, '-') || 'AI-Render';
+                      a.href = url; a.download = `${slug}-AI-Render.png`;
                       a.click(); URL.revokeObjectURL(url);
                     } catch {
                       window.open(resultUrl, '_blank');
