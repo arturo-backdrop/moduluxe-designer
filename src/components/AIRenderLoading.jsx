@@ -147,6 +147,7 @@ export default function AIRenderLoading({ onComplete, placeholderUrl }) {
       background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '1rem', pointerEvents: 'all',
+      animation: 'loadingOverlayIn 0.3s ease',
     }}>
       <div style={{
         background: 'white', borderRadius: '1.25rem',
@@ -154,6 +155,7 @@ export default function AIRenderLoading({ onComplete, placeholderUrl }) {
         boxShadow: '0 1.5rem 5rem rgba(0,0,0,0.2)',
         overflow: 'hidden',
         display: 'flex', flexDirection: 'column',
+        animation: 'loadingScaleIn 0.35s cubic-bezier(0.34,1.2,0.64,1)',
       }}>
 
         {done ? (
@@ -286,6 +288,11 @@ export default function AIRenderLoading({ onComplete, placeholderUrl }) {
       </div>
 
       <style>{`
+        @keyframes loadingOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes loadingScaleIn  {
+          from { opacity: 0; transform: scale(0.94) translateY(12px); }
+          to   { opacity: 1; transform: scale(1)    translateY(0); }
+        }
         @keyframes aiSpin    { to { transform: rotate(360deg); } }
         @keyframes aiRipple  { to { width: 160px; height: 160px; opacity: 0; } }
         @keyframes aiFadeIn  { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
