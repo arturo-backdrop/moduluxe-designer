@@ -395,7 +395,7 @@ export default function App() {
 
       {/* AI Render — Capture Mode overlay */}
       {captureMode && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 20, pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', inset: 0, zIndex: 20, pointerEvents: 'none', animation: 'captureOverlayIn 0.4s ease' }}>
           {/* Dark mask — top */}
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: '15%', clipPath: 'inset(0 0 calc(100% - (100% - 30%) / 2 * 1) 0)', pointerEvents: 'none' }} />
 
@@ -436,6 +436,7 @@ export default function App() {
             padding: '1.25rem 2rem',
             background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%)',
             pointerEvents: 'all',
+            animation: 'captureBannerIn 0.45s cubic-bezier(0.22,1,0.36,1)',
           }}>
             <span style={{
               color: 'white', fontSize: '0.9375rem', fontWeight: 400,
@@ -502,6 +503,20 @@ export default function App() {
             }}>Capture & Continue</button>
           </div>
         </div>
+      )}
+
+      {/* Capture mode animations */}
+      {captureMode && (
+        <style>{`
+          @keyframes captureOverlayIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+          }
+          @keyframes captureBannerIn {
+            from { opacity: 0; transform: translateY(1.5rem); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
+        `}</style>
       )}
 
       {/* UI — floats over viewport */}
