@@ -438,14 +438,22 @@ export default function App() {
             pointerEvents: 'all',
             animation: 'captureBannerIn 0.45s cubic-bezier(0.22,1,0.36,1)',
           }}>
-            <span style={{
-              color: 'white', fontSize: '0.9375rem', fontWeight: 400,
-              fontFamily: "'Figtree', sans-serif",
-              textShadow: '0 1px 4px rgba(0,0,0,0.5)',
-              marginRight: '0.25rem',
-            }}>
-              Position your booth, then capture
-            </span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem', marginRight: '0.25rem' }}>
+              <span style={{
+                color: 'white', fontSize: '0.9375rem', fontWeight: 400,
+                fontFamily: "'Figtree', sans-serif",
+                textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+              }}>
+                Position your booth, then capture
+              </span>
+              <span style={{
+                color: 'rgba(255,255,255,0.55)', fontSize: '0.75rem', fontWeight: 400,
+                fontFamily: "'Figtree', sans-serif",
+                textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+              }}>
+                💡 Tip: use a front or side angle for best results
+              </span>
+            </div>
             {/* Zoom controls */}
             {[{detail:1,title:'Zoom in',path:<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></>},{detail:-1,title:'Zoom out',path:<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></>}].map(({detail,title,path})=>(
               <button key={detail} title={title}
