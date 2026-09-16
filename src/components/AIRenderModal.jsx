@@ -29,6 +29,12 @@ function ColorSwatch({ label, value, onChange, optional }) {
       }} />
       <input ref={inputRef} type="color" value={value || '#ffffff'}
         onChange={e => onChange(e.target.value)} style={{ display: 'none' }} />
+    <style>{`
+      @keyframes modalScaleIn {
+        from { opacity: 0; transform: scale(0.94) translateY(12px); }
+        to   { opacity: 1; transform: scale(1)    translateY(0); }
+      }
+    `}</style>
     </div>
   );
 }
@@ -57,6 +63,12 @@ function UploadButton({ label, accept, file, onChange, optional }) {
       </div>
       <input ref={inputRef} type="file" accept={accept} style={{ display: 'none' }}
         onChange={e => onChange(e.target.files[0] || null)} />
+    <style>{`
+      @keyframes modalScaleIn {
+        from { opacity: 0; transform: scale(0.94) translateY(12px); }
+        to   { opacity: 1; transform: scale(1)    translateY(0); }
+      }
+    `}</style>
     </div>
   );
 }
@@ -106,6 +118,7 @@ export default function AIRenderModal({ captureDataUrl, onClose, onGenerate, onR
         boxShadow: '0 1.5rem 5rem rgba(0,0,0,0.2)',
         overflowY: 'auto',
         overflowX: 'hidden',
+        animation: 'modalScaleIn 0.35s cubic-bezier(0.34,1.2,0.64,1)',
       }} onClick={e => e.stopPropagation()}>
 
         {/* Capture preview — 4:3 aspect ratio */}
@@ -227,6 +240,12 @@ export default function AIRenderModal({ captureDataUrl, onClose, onGenerate, onR
 
         </div>
       </div>
+    <style>{`
+      @keyframes modalScaleIn {
+        from { opacity: 0; transform: scale(0.94) translateY(12px); }
+        to   { opacity: 1; transform: scale(1)    translateY(0); }
+      }
+    `}</style>
     </div>
   );
 }
