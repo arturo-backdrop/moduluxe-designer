@@ -940,6 +940,7 @@ export default function App() {
         <AIRenderModal
           captureDataUrl={aiCapture}
           onClose={() => setAiModalOpen(false)}
+          onRecapture={() => { setAiModalOpen(false); setCaptureMode(true); }}
           onGenerate={(payload) => {
             setAiModalOpen(false);
             setAiLoading(true);
