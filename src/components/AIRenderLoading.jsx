@@ -21,7 +21,8 @@ export default function AIRenderLoading({ onComplete, placeholderUrl }) {
   const [ripples, setRipples]   = useState([]);
   const [done, setDone]           = useState(false);
   const [resultUrl, setResultUrl] = useState(null);
-  const [showResult, setShowResult] = useState(false); // set by real backend later
+  const [showResult, setShowResult]   = useState(false);
+  const [showContact, setShowContact] = useState(false); // set by real backend later
 
   // Phase cycling
   useEffect(() => {
@@ -223,7 +224,7 @@ export default function AIRenderLoading({ onComplete, placeholderUrl }) {
 
               {/* CTAs — equal weight, stacked */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-                <button onClick={() => onComplete?.({ imageUrl: resultUrl, getInTouch: true })}
+                <button onClick={() => setShowContact(true)}
                   style={{
                     width: '100%', padding: '0.65rem',
                     background: 'linear-gradient(135deg, #b48b31, #c9a040)',
@@ -242,7 +243,19 @@ export default function AIRenderLoading({ onComplete, placeholderUrl }) {
                   </svg>
                   Talk to our team
                 </button>
-                <button onClick={() => onComplete?.({ imageUrl: resultUrl })}
+                <button onClick={async () => {
+                    if (!resultUrl) return;
+                    try {
+                      const res = await fetch(resultUrl);
+                      const blob = await res.blob();
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url; a.download = 'backdrop-ai-render.png';
+                      a.click(); URL.revokeObjectURL(url);
+                    } catch {
+                      window.open(resultUrl, '_blank');
+                    }
+                  }}
                   style={{
                     width: '100%', padding: '0.65rem',
                     background: 'white', color: '#1a1a1a',
@@ -327,6 +340,105 @@ export default function AIRenderLoading({ onComplete, placeholderUrl }) {
           </>
         )}
       </div>
+
+      {/* Contact modal */}
+      {showContact && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 200,
+          background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '1rem', pointerEvents: 'all',
+          animation: 'loadingOverlayIn 0.25s ease',
+        }} onClick={() => setShowContact(false)}>
+          <div style={{
+            background: 'white', borderRadius: '1.25rem',
+            width: 'min(22rem, 95vw)',
+            boxShadow: '0 1.5rem 5rem rgba(0,0,0,0.2)',
+            overflow: 'hidden',
+            animation: 'loadingScaleIn 0.3s cubic-bezier(0.34,1.2,0.64,1)',
+          }} onClick={e => e.stopPropagation()}>
+
+            {/* Header */}
+            <div style={{
+              background: 'linear-gradient(135deg, #b48b31, #c9a040)',
+              padding: '1.5rem',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '1.5rem', marginBottom: '0.4rem' }}>👋</div>
+              <div style={{ fontWeight: 700, fontSize: '1rem', color: 'white', fontFamily: "'Figtree', sans-serif" }}>
+                Let's bring your booth to life
+              </div>
+              <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.8)', marginTop: '0.25rem', fontFamily: "'Figtree', sans-serif" }}>
+                Our team will help you with accurate mockups and your real graphics
+              </div>
+            </div>
+
+            {/* Contact options */}
+            <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+              <a href="mailto:info@backdrop.com" style={{
+                display: 'flex', alignItems: 'center', gap: '0.875rem',
+                padding: '0.875rem 1rem',
+                background: '#fafafa', borderRadius: '0.75rem',
+                textDecoration: 'none', color: '#1a1a1a',
+                fontFamily: "'Figtree', sans-serif", fontSize: '0.9375rem',
+                transition: 'background 0.15s',
+              }}
+                onMouseEnter={e => e.currentTarget.style.background='#f0e8d6'}
+                onMouseLeave={e => e.currentTarget.style.background='#fafafa'}
+              >
+                <div style={{
+                  width: '2.25rem', height: '2.25rem', borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #b48b31, #c9a040)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                  </svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.6875rem', color: '#999', fontWeight: 500 }}>Email us</div>
+                  <div style={{ fontWeight: 500 }}>info@backdrop.com</div>
+                </div>
+              </a>
+
+              <a href="tel:+18887652711" style={{
+                display: 'flex', alignItems: 'center', gap: '0.875rem',
+                padding: '0.875rem 1rem',
+                background: '#fafafa', borderRadius: '0.75rem',
+                textDecoration: 'none', color: '#1a1a1a',
+                fontFamily: "'Figtree', sans-serif", fontSize: '0.9375rem',
+                transition: 'background 0.15s',
+              }}
+                onMouseEnter={e => e.currentTarget.style.background='#f0e8d6'}
+                onMouseLeave={e => e.currentTarget.style.background='#fafafa'}
+              >
+                <div style={{
+                  width: '2.25rem', height: '2.25rem', borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #b48b31, #c9a040)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.24h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6.29 6.29l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.6875rem', color: '#999', fontWeight: 500 }}>Call us</div>
+                  <div style={{ fontWeight: 500 }}>(888) 765-2711</div>
+                </div>
+              </a>
+
+              <button onClick={() => setShowContact(false)} style={{
+                width: '100%', padding: '0.65rem',
+                background: 'transparent', color: '#999',
+                border: 'none', borderRadius: '0.75rem',
+                fontFamily: "'Figtree', sans-serif", fontWeight: 400, fontSize: '0.875rem',
+                cursor: 'pointer', marginTop: '0.25rem',
+              }}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         @keyframes loadingOverlayIn { from { opacity: 0; } to { opacity: 1; } }
