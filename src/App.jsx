@@ -945,6 +945,7 @@ export default function App() {
       {aiLoading && (
         <AIRenderLoading
           placeholderUrl={aiCapture}
+          projectName={projectName}
           onComplete={(result) => {
             setAiLoading(false);
             setAiResult(result);
