@@ -294,7 +294,8 @@ export default function AIRenderLoading({ onComplete, placeholderUrl }) {
           to   { clip-path: inset(0% 0 0 0);   transform: scale(1); }
         }
         @keyframes goldFlash {
-          0%   { opacity: 1; }
+          0%   { opacity: 0.25; }
+          40%  { opacity: 0.15; }
           100% { opacity: 0; }
         }
         @keyframes fadeSlideUp {
