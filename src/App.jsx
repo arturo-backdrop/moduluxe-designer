@@ -394,25 +394,34 @@ export default function App() {
           {/* Dark mask — top */}
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: '15%', clipPath: 'inset(0 0 calc(100% - (100% - 30%) / 2 * 1) 0)', pointerEvents: 'none' }} />
 
-          {/* SVG mask con recorte tipo viewfinder */}
-          <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <mask id="vfMask">
-                <rect width="100%" height="100%" fill="white"/>
-                {/* Viewfinder: 62% ancho, 78% alto, centrado verticalmente con offset arriba */}
-                <rect x="19%" y="5%" width="62%" height="78%" rx="16" fill="black"/>
-              </mask>
-            </defs>
-            {/* Overlay oscuro con hole */}
-            <rect width="100%" height="100%" fill="rgba(0,0,0,0.62)" mask="url(#vfMask)"/>
-            {/* Esquinas redondeadas estilo cámara */}
-            {[['19%','5%',1,1],['81%','5%',-1,1],['19%','83%',1,-1],['81%','83%',-1,-1]].map(([cx,cy,dx,dy],i) => (
-              <g key={i}>
-                <line x1={cx} y1={cy} x2={`calc(${cx} + ${dx*28}px)`} y2={cy} stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-                <line x1={cx} y1={cy} x2={cx} y2={`calc(${cy} + ${dy*28}px)`} stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-              </g>
-            ))}
-          </svg>
+          {/* SVG mask 4:3 viewfinder — calculado en JS para pixel-perfect */}
+          {(() => {
+            const vw = window.innerWidth, vh = window.innerHeight;
+            const frameW = Math.round(Math.min(vw * 0.72, vh * 0.72 * 4/3));
+            const frameH = Math.round(frameW * 3/4);
+            const fx = Math.round((vw - frameW) / 2);
+            const fy = Math.round((vh - frameH) / 2) - Math.round(vh * 0.04);
+            const c = 22; // corner line length
+            const r = 10; // border radius
+            return (
+              <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+                <defs>
+                  <mask id="vfMask">
+                    <rect width="100%" height="100%" fill="white"/>
+                    <rect x={fx} y={fy} width={frameW} height={frameH} rx={r} fill="black"/>
+                  </mask>
+                </defs>
+                <rect width="100%" height="100%" fill="rgba(0,0,0,0.62)" mask="url(#vfMask)"/>
+                {/* Esquinas */}
+                {[[fx,fy,1,1],[fx+frameW,fy,-1,1],[fx,fy+frameH,1,-1],[fx+frameW,fy+frameH,-1,-1]].map(([x,y,dx,dy],i)=>(
+                  <g key={i}>
+                    <line x1={x} y1={y} x2={x+dx*c} y2={y} stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                    <line x1={x} y1={y} x2={x} y2={y+dy*c} stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                  </g>
+                ))}
+              </svg>
+            );
+          })()}
 
           {/* Banner inferior */}
           <div style={{
@@ -455,12 +464,18 @@ export default function App() {
             <button onClick={() => {
               const canvas = document.querySelector('canvas');
               if (!canvas) return;
-              // Use canvas internal resolution (accounts for devicePixelRatio)
+              // 4:3 crop matching the viewfinder — use canvas internal resolution
+              const dpr = window.devicePixelRatio || 1;
               const vw = canvas.width, vh = canvas.height;
-              const x = Math.round(vw * 0.19);
-              const y = Math.round(vh * 0.05);
-              const w = Math.round(vw * 0.62);
-              const h = Math.round(vh * 0.78);
+              const cssW = vw / dpr, cssH = vh / dpr;
+              const frameW = Math.round(Math.min(cssW * 0.72, cssH * 0.72 * 4/3));
+              const frameH = Math.round(frameW * 3/4);
+              const fx = Math.round((cssW - frameW) / 2);
+              const fy = Math.round((cssH - frameH) / 2) - Math.round(cssH * 0.04);
+              const x = Math.round(fx * dpr);
+              const y = Math.round(fy * dpr);
+              const w = Math.round(frameW * dpr);
+              const h = Math.round(frameH * dpr);
               // Force render then read buffer on next frame
               viewportEngRef.current?.captureScreenshot?.();
               requestAnimationFrame(() => {
