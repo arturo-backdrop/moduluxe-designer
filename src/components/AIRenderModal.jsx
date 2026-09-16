@@ -105,25 +105,25 @@ export default function AIRenderModal({ captureDataUrl, onClose, onGenerate }) {
         width: 'min(36rem, 95vw)',
         maxHeight: '92vh',
         boxShadow: '0 1.5rem 5rem rgba(0,0,0,0.2)',
-        overflow: 'hidden',
-        display: 'flex', flexDirection: 'column',
+        overflowY: 'auto',
+        overflowX: 'hidden',
       }} onClick={e => e.stopPropagation()}>
 
         {/* Capture preview — 4:3 aspect ratio */}
         {captureDataUrl && (
-          <div style={{ width: '100%', aspectRatio: '4/3', maxHeight: '38vh', background: '#f0f0f0', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+          <div style={{ width: '100%', aspectRatio: '4/3', background: '#f0f0f0', position: 'relative', overflow: 'hidden' }}>
             <img src={captureDataUrl} alt="Booth capture"
-              style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             <div style={{
               position: 'absolute', inset: 0,
-              background: 'linear-gradient(to bottom, transparent 60%, white 100%)',
+              background: 'linear-gradient(to bottom, transparent 75%, white 100%)',
               pointerEvents: 'none',
             }} />
           </div>
         )}
 
         {/* Form */}
-        <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', overflowY: 'auto', flex: 1 }}>
+        <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
           {/* Title */}
           <div>
