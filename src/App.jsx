@@ -68,6 +68,7 @@ export default function App() {
   const [aiModalOpen,   setAiModalOpen]    = useState(false);
   const [aiLoading,     setAiLoading]      = useState(false);
   const [aiResult,      setAiResult]       = useState(null);
+  const [aiModalExiting, setAiModalExiting] = useState(false);
   const [history,        setHistory]        = useState([[]])
   const [historyIdx,     setHistoryIdx]     = useState(0);
   const historyRef    = useRef([[]]);
@@ -940,12 +941,17 @@ export default function App() {
       {aiModalOpen && (
         <AIRenderModal
           captureDataUrl={aiCapture}
+          exiting={aiModalExiting}
           onClose={() => setAiModalOpen(false)}
           onRecapture={() => { setAiModalOpen(false); setCaptureMode(true); }}
           onGenerate={(payload) => {
-            setAiModalOpen(false);
-            setAiLoading(true);
-            console.log('AI Render payload:', payload);
+            setAiModalExiting(true);
+            setTimeout(() => {
+              setAiModalExiting(false);
+              setAiModalOpen(false);
+              setAiLoading(true);
+              console.log('AI Render payload:', payload);
+            }, 280);
           }}
         />
       )}
