@@ -623,6 +623,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     }
 
     const onPointerDown = e => {
+      if (captureModeRef.current) return;
       // ── Right click: end wall chain ───────────────────────
       if (e.button === 2) {
         if (modeRef.current === 'draw') {
@@ -1384,6 +1385,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
     const onContextMenu = e => {
       e.preventDefault();
+      if (captureModeRef.current) return;
       // In draw mode, still allow right-click on existing walls/columns/doors
 
       // Check walls/columns/doors first (only in draw mode)
