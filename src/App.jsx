@@ -455,8 +455,8 @@ export default function App() {
             <button onClick={() => {
               const canvas = document.querySelector('canvas');
               if (!canvas) return;
-              const rect = canvas.getBoundingClientRect();
-              const vw = rect.width, vh = rect.height;
+              // Use canvas internal resolution (accounts for devicePixelRatio)
+              const vw = canvas.width, vh = canvas.height;
               const x = Math.round(vw * 0.19);
               const y = Math.round(vh * 0.05);
               const w = Math.round(vw * 0.62);
@@ -466,7 +466,8 @@ export default function App() {
               requestAnimationFrame(() => {
                 const tmp = document.createElement('canvas');
                 tmp.width = w; tmp.height = h;
-                tmp.getContext('2d').drawImage(canvas, x, y, w, h, 0, 0, w, h);
+                const ctx = tmp.getContext('2d');
+                ctx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
                 const img = tmp.toDataURL('image/png');
                 setAiCapture(img);
                 setCaptureMode(false);
