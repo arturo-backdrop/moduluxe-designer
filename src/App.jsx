@@ -13,7 +13,8 @@ import Header      from './components/Header.jsx';
 import Toolbar     from './components/Toolbar.jsx';
 import BottomBar   from './components/BottomBar.jsx';
 import QuotePanel     from './components/QuotePanel.jsx';
-import AIRenderModal  from './components/AIRenderModal.jsx';
+import AIRenderModal   from './components/AIRenderModal.jsx';
+import AIRenderLoading from './components/AIRenderLoading.jsx';
 import VideoWidget from './components/VideoWidget.jsx';
 
 const styles = {
@@ -65,6 +66,8 @@ export default function App() {
   const [captureMode,    setCaptureMode]    = useState(false);
   const [aiCapture,     setAiCapture]      = useState(null);  // base64 PNG
   const [aiModalOpen,   setAiModalOpen]    = useState(false);
+  const [aiLoading,     setAiLoading]      = useState(false);
+  const [aiResult,      setAiResult]       = useState(null);
   const [history,        setHistory]        = useState([[]])
   const [historyIdx,     setHistoryIdx]     = useState(0);
   const historyRef    = useRef([[]]);
@@ -918,6 +921,16 @@ export default function App() {
 
         {/* Tour disabled */}
 
+      {/* AI Render Loading */}
+      {aiLoading && (
+        <AIRenderLoading
+          onComplete={(result) => {
+            setAiLoading(false);
+            setAiResult(result);
+          }}
+        />
+      )}
+
       {/* AI Render Modal */}
       {aiModalOpen && (
         <AIRenderModal
@@ -925,7 +938,7 @@ export default function App() {
           onClose={() => setAiModalOpen(false)}
           onGenerate={(payload) => {
             setAiModalOpen(false);
-            // TODO: abrir loading screen y llamar al endpoint
+            setAiLoading(true);
             console.log('AI Render payload:', payload);
           }}
         />
