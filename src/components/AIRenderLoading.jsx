@@ -192,36 +192,77 @@ export default function AIRenderLoading({ onComplete, placeholderUrl }) {
               </div>
             )}
 
-            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {/* Title */}
-              <div>
-                <div style={{ fontWeight: 800, fontSize: '1.125rem', color: '#1a1a1a' }}>Your render is ready!</div>
-                <div style={{ fontSize: '0.8rem', color: '#aaa', marginTop: '0.2rem' }}>
-                  This AI render is a creative visualization — colors and final details may vary from the actual product.
+            <div style={{ padding: '1.5rem 1.5rem 1.75rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+              {/* Header row */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: '1.25rem', color: '#1a1a1a', lineHeight: 1.2 }}>
+                    Your render is ready!
+                  </div>
+                  <div style={{ fontSize: '0.8125rem', color: '#999', marginTop: '0.35rem', lineHeight: 1.5 }}>
+                    A creative visualization of your booth — colors and final details may vary.
+                  </div>
+                </div>
+                {/* Checkmark badge */}
+                <div style={{
+                  flexShrink: 0,
+                  width: '2.5rem', height: '2.5rem', borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #b48b31, #d4a842)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 4px 12px rgba(180,139,49,0.35)',
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
                 </div>
               </div>
 
-              {/* Actions */}
-              <div style={{ display: 'flex', gap: '0.625rem' }}>
-                <button onClick={() => onComplete?.({ imageUrl: resultUrl })}
-                  style={{
-                    flex: 1, padding: '0.7rem',
-                    background: '#b48b31', color: 'white', border: 'none',
-                    borderRadius: '0.75rem', fontFamily: "'Figtree', sans-serif",
-                    fontWeight: 500, fontSize: '0.875rem', cursor: 'pointer',
-                  }}>
-                  Download
-                </button>
+              {/* Divider */}
+              <div style={{ height: '1px', background: '#f0f0f0' }} />
+
+              {/* CTAs — equal weight, stacked */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
                 <button onClick={() => onComplete?.({ imageUrl: resultUrl, getInTouch: true })}
                   style={{
-                    flex: 1, padding: '0.7rem',
-                    background: '#f5f5f5', color: '#1a1a1a', border: 'none',
-                    borderRadius: '0.75rem', fontFamily: "'Figtree', sans-serif",
-                    fontWeight: 500, fontSize: '0.875rem', cursor: 'pointer',
-                  }}>
-                  Get in touch
+                    width: '100%', padding: '0.875rem',
+                    background: 'linear-gradient(135deg, #b48b31, #c9a040)',
+                    color: 'white', border: 'none',
+                    borderRadius: '0.875rem', fontFamily: "'Figtree', sans-serif",
+                    fontWeight: 600, fontSize: '0.9375rem', cursor: 'pointer',
+                    boxShadow: '0 4px 16px rgba(180,139,49,0.3)',
+                    transition: 'transform 0.15s, box-shadow 0.15s',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.transform='scale(1.01)'; e.currentTarget.style.boxShadow='0 6px 20px rgba(180,139,49,0.4)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='0 4px 16px rgba(180,139,49,0.3)'; }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  Talk to our team
+                </button>
+                <button onClick={() => onComplete?.({ imageUrl: resultUrl })}
+                  style={{
+                    width: '100%', padding: '0.875rem',
+                    background: 'white', color: '#1a1a1a',
+                    border: '1.5px solid #e8e8e8',
+                    borderRadius: '0.875rem', fontFamily: "'Figtree', sans-serif",
+                    fontWeight: 600, fontSize: '0.9375rem', cursor: 'pointer',
+                    transition: 'border-color 0.15s, background 0.15s',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor='#b48b31'; e.currentTarget.style.background='#fdf8ef'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor='#e8e8e8'; e.currentTarget.style.background='white'; }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  Download render
                 </button>
               </div>
+
             </div>
           </div>
         ) : (
