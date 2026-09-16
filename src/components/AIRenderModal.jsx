@@ -107,14 +107,15 @@ export default function AIRenderModal({ captureDataUrl, onClose, onGenerate }) {
         overflow: 'hidden',
       }} onClick={e => e.stopPropagation()}>
 
-        {/* Capture preview */}
+        {/* Capture preview — 4:3 aspect ratio */}
         {captureDataUrl && (
-          <div style={{ width: '100%', height: '11rem', overflow: 'hidden', position: 'relative' }}>
+          <div style={{ width: '100%', aspectRatio: '4/3', background: '#f0f0f0', position: 'relative', overflow: 'hidden' }}>
             <img src={captureDataUrl} alt="Booth capture"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
             <div style={{
               position: 'absolute', inset: 0,
-              background: 'linear-gradient(to bottom, transparent 50%, white 100%)',
+              background: 'linear-gradient(to bottom, transparent 60%, white 100%)',
+              pointerEvents: 'none',
             }} />
           </div>
         )}
