@@ -921,7 +921,10 @@ export default function App() {
 
         {/* Tour disabled */}
 
-      {/* AI Render Loading */}
+      </div>
+    </div>
+
+      {/* AI Render Loading — mounted at root level, above everything */}
       {aiLoading && (
         <AIRenderLoading
           onComplete={(result) => {
@@ -931,7 +934,7 @@ export default function App() {
         />
       )}
 
-      {/* AI Render Modal */}
+      {/* AI Render Modal — mounted at root level, above everything */}
       {aiModalOpen && (
         <AIRenderModal
           captureDataUrl={aiCapture}
@@ -943,9 +946,6 @@ export default function App() {
           }}
         />
       )}
-
-      </div>
-    </div>
   )
 }
 
