@@ -197,7 +197,7 @@ export default function AIRenderLoading({ onComplete, placeholderUrl }) {
               {/* Header row */}
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: '1.25rem', color: '#1a1a1a', lineHeight: 1.2 }}>
+                  <div style={{ fontWeight: 700, fontSize: '1.125rem', color: '#1a1a1a', lineHeight: 1.2 }}>
                     Your render is ready!
                   </div>
                   <div style={{ fontSize: '0.8125rem', color: '#999', marginTop: '0.35rem', lineHeight: 1.5 }}>
@@ -225,11 +225,11 @@ export default function AIRenderLoading({ onComplete, placeholderUrl }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
                 <button onClick={() => onComplete?.({ imageUrl: resultUrl, getInTouch: true })}
                   style={{
-                    width: '100%', padding: '0.875rem',
+                    width: '100%', padding: '0.65rem',
                     background: 'linear-gradient(135deg, #b48b31, #c9a040)',
                     color: 'white', border: 'none',
                     borderRadius: '0.875rem', fontFamily: "'Figtree', sans-serif",
-                    fontWeight: 600, fontSize: '0.9375rem', cursor: 'pointer',
+                    fontWeight: 400, fontSize: '0.875rem', cursor: 'pointer',
                     boxShadow: '0 4px 16px rgba(180,139,49,0.3)',
                     transition: 'transform 0.15s, box-shadow 0.15s',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
@@ -244,11 +244,11 @@ export default function AIRenderLoading({ onComplete, placeholderUrl }) {
                 </button>
                 <button onClick={() => onComplete?.({ imageUrl: resultUrl })}
                   style={{
-                    width: '100%', padding: '0.875rem',
+                    width: '100%', padding: '0.65rem',
                     background: 'white', color: '#1a1a1a',
                     border: '1.5px solid #e8e8e8',
                     borderRadius: '0.875rem', fontFamily: "'Figtree', sans-serif",
-                    fontWeight: 600, fontSize: '0.9375rem', cursor: 'pointer',
+                    fontWeight: 400, fontSize: '0.875rem', cursor: 'pointer',
                     transition: 'border-color 0.15s, background 0.15s',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
                   }}
