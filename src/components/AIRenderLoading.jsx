@@ -251,7 +251,7 @@ export default function AIRenderLoading({ onComplete, placeholderUrl, projectNam
                       const url = URL.createObjectURL(blob);
                       const a = document.createElement('a');
                       const slug = projectName.trim().replace(/\s+/g, '-') || 'AI-Render';
-                      a.href = url; a.download = `${slug}-AI-Render.png`;
+                      a.href = url; a.download = `${slug}-Render.png`;
                       a.click(); URL.revokeObjectURL(url);
                     } catch {
                       window.open(resultUrl, '_blank');
