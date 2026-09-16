@@ -928,6 +928,7 @@ export default function App() {
       {/* AI Render Loading — mounted at root level, above everything */}
       {aiLoading && (
         <AIRenderLoading
+          placeholderUrl={aiCapture}
           onComplete={(result) => {
             setAiLoading(false);
             setAiResult(result);
