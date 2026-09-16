@@ -2003,14 +2003,9 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       itemGroup, spawnContainer, pendingPositions, project3D, camera, controls,
       selectedUidRef: { current: null },
       clearSelection: () => {
-        // Clear the selected uid ref
-        engRef.current.selectedUidRef.current = null;
-        // Reset all highlight materials in the scene
-        itemGroup.traverse(obj => {
-          if (obj.isMesh && obj.userData._origMat) {
-            obj.material = obj.userData._origMat;
-          }
-        });
+        setGroupOutline(selectedUids, false);
+        selectedUid = null; selectedUids = [];
+        if (engRef.current) engRef.current.selectedUidRef.current = null;
       },
       deleteContainer, rotateObject, applyColor, duplicateObject, applyArray,
       toggleMeshVisibility, applySocket, applySocketToUids,
