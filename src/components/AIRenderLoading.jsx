@@ -55,13 +55,14 @@ export default function AIRenderLoading({ onComplete }) {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     let raf;
+    const dpr = window.devicePixelRatio || 1;
     const resize = () => {
       const w = canvas.offsetWidth;
       const h = canvas.offsetHeight;
       if (w > 0 && h > 0) {
-        canvas.width  = w;
-        canvas.height = h;
-        // Re-center mouse on resize
+        canvas.width  = w * dpr;
+        canvas.height = h * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         mouseRef.current = { x: 0.5, y: 0.5 };
       }
     };
@@ -71,7 +72,7 @@ export default function AIRenderLoading({ onComplete }) {
     ro.observe(canvas);
 
     const draw = () => {
-      const W = canvas.width, H = canvas.height;
+      const W = canvas.offsetWidth, H = canvas.offsetHeight;
       ctx.clearRect(0, 0, W, H);
       const cols = 18, rows = 12;
       const mx = mouseRef.current.x * W;
