@@ -11,16 +11,16 @@ const PHASES = [
   'Almost ready...',
 ];
 
-// Simulated duration in ms (change to real timeout when backend is ready)
 const SIMULATE_MS = 6000;
 
 export default function AIRenderLoading({ onComplete }) {
-  const canvasRef      = useRef(null);
-  const mouseRef       = useRef({ x: 0.5, y: 0.5 });
-  const animFrameRef   = useRef(null);
+  const canvasRef    = useRef(null);
+  const mouseRef     = useRef({ x: 0.5, y: 0.5 });
   const [phase, setPhase]       = useState(0);
   const [progress, setProgress] = useState(0);
   const [ripples, setRipples]   = useState([]);
+  const [done, setDone]         = useState(false);
+  const [resultUrl, setResultUrl] = useState(null); // set by real backend later
 
   // Phase cycling
   useEffect(() => {
@@ -30,45 +30,46 @@ export default function AIRenderLoading({ onComplete }) {
     return () => clearInterval(interval);
   }, []);
 
-  // Progress bar
+  // Progress + completion
   useEffect(() => {
     const start = Date.now();
+    let raf;
     const tick = () => {
-      const elapsed = Date.now() - start;
-      const p = Math.min(elapsed / SIMULATE_MS, 1);
+      const p = Math.min((Date.now() - start) / SIMULATE_MS, 1);
       setProgress(p);
       if (p < 1) {
-        animFrameRef.current = requestAnimationFrame(tick);
+        raf = requestAnimationFrame(tick);
       } else {
-        setTimeout(() => onComplete?.({ imageUrl: null, simulated: true }), 400);
+        // Simulate a result image (replace with real URL from backend)
+        setResultUrl(null); // null = simulated, no real image yet
+        setDone(true);
       }
     };
-    animFrameRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(animFrameRef.current);
-  }, [onComplete]);
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
-  // Interactive grid canvas
+  // Interactive grid on canvas
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     let raf;
-
     const resize = () => {
       canvas.width  = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
     };
     resize();
-    window.addEventListener('resize', resize);
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
 
     const draw = () => {
       const W = canvas.width, H = canvas.height;
       ctx.clearRect(0, 0, W, H);
-
-      const cols = 24, rows = 16;
+      const cols = 18, rows = 12;
       const mx = mouseRef.current.x * W;
       const my = mouseRef.current.y * H;
-      const radius = Math.min(W, H) * 0.35;
+      const radius = Math.min(W, H) * 0.5;
 
       for (let r = 0; r <= rows; r++) {
         for (let c = 0; c <= cols; c++) {
@@ -76,53 +77,41 @@ export default function AIRenderLoading({ onComplete }) {
           const by = (r / rows) * H;
           const dist = Math.hypot(bx - mx, by - my);
           const pull = Math.max(0, 1 - dist / radius);
-          const x = bx + (mx - bx) * pull * 0.18;
-          const y = by + (my - by) * pull * 0.18;
-          const alpha = 0.06 + pull * 0.18;
+          const x = bx + (mx - bx) * pull * 0.2;
+          const y = by + (my - by) * pull * 0.2;
+          const alpha = 0.07 + pull * 0.2;
 
-          // dots at intersections
           ctx.beginPath();
-          ctx.arc(x, y, 1.5 + pull * 2.5, 0, Math.PI * 2);
+          ctx.arc(x, y, 1.2 + pull * 2, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(180,139,49,${alpha})`;
           ctx.fill();
 
-          // horizontal lines
           if (c < cols) {
-            const bx2 = ((c+1) / cols) * W;
-            const dist2 = Math.hypot(bx2 - mx, by - my);
-            const pull2 = Math.max(0, 1 - dist2 / radius);
-            const x2 = bx2 + (mx - bx2) * pull2 * 0.18;
-            const y2 = by  + (my - by)  * pull2 * 0.18;
-            ctx.beginPath();
-            ctx.moveTo(x, y); ctx.lineTo(x2, y2);
-            ctx.strokeStyle = `rgba(180,139,49,${(alpha + 0.06 + pull2 * 0.18) / 2})`;
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
+            const bx2 = ((c+1)/cols)*W;
+            const d2 = Math.hypot(bx2-mx, by-my);
+            const p2 = Math.max(0, 1 - d2/radius);
+            const x2 = bx2 + (mx-bx2)*p2*0.2;
+            const y2 = by  + (my-by) *p2*0.2;
+            ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x2,y2);
+            ctx.strokeStyle = `rgba(180,139,49,${(alpha+0.07+p2*0.2)/2})`;
+            ctx.lineWidth = 0.5; ctx.stroke();
           }
-          // vertical lines
           if (r < rows) {
-            const bx2 = (c / cols) * W;
-            const by2 = ((r+1) / rows) * H;
-            const dist2 = Math.hypot(bx2 - mx, by2 - my);
-            const pull2 = Math.max(0, 1 - dist2 / radius);
-            const x2 = bx2 + (mx - bx2) * pull2 * 0.18;
-            const y2 = by2 + (my - by2) * pull2 * 0.18;
-            ctx.beginPath();
-            ctx.moveTo(x, y); ctx.lineTo(x2, y2);
-            ctx.strokeStyle = `rgba(180,139,49,${(alpha + 0.06 + pull2 * 0.18) / 2})`;
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
+            const by2 = ((r+1)/rows)*H;
+            const d2 = Math.hypot(bx-mx, by2-my);
+            const p2 = Math.max(0, 1 - d2/radius);
+            const x2 = bx + (mx-bx)*p2*0.2;
+            const y2 = by2+ (my-by2)*p2*0.2;
+            ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x2,y2);
+            ctx.strokeStyle = `rgba(180,139,49,${(alpha+0.07+p2*0.2)/2})`;
+            ctx.lineWidth = 0.5; ctx.stroke();
           }
         }
       }
       raf = requestAnimationFrame(draw);
     };
     draw();
-
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener('resize', resize);
-    };
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); };
   }, []);
 
   const handleMouseMove = e => {
@@ -135,92 +124,128 @@ export default function AIRenderLoading({ onComplete }) {
 
   const handleClick = e => {
     const r = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - r.left;
-    const y = e.clientY - r.top;
     const id = Date.now();
-    setRipples(prev => [...prev, { id, x, y }]);
-    setTimeout(() => setRipples(prev => prev.filter(r => r.id !== id)), 900);
+    setRipples(prev => [...prev, { id, x: e.clientX - r.left, y: e.clientY - r.top }]);
+    setTimeout(() => setRipples(prev => prev.filter(p => p.id !== id)), 900);
   };
 
   return (
-    <div
-      onMouseMove={handleMouseMove}
-      onClick={handleClick}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 200,
-        background: 'white',
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        overflow: 'hidden', cursor: 'crosshair',
-        fontFamily: "'Figtree', sans-serif",
-      }}
-    >
-      {/* Interactive grid */}
-      <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
-
-      {/* Ripples */}
-      {ripples.map(({ id, x, y }) => (
-        <div key={id} style={{
-          position: 'absolute', left: x, top: y,
-          width: 0, height: 0, borderRadius: '50%',
-          border: '2px solid rgba(180,139,49,0.6)',
-          transform: 'translate(-50%,-50%)',
-          animation: 'ripple 0.9s ease-out forwards',
-          pointerEvents: 'none',
-        }} />
-      ))}
-
-      {/* Center content */}
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 100,
+      background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '1rem',
+    }}>
       <div style={{
-        position: 'relative', zIndex: 1,
+        background: 'white', borderRadius: '1.25rem',
+        width: 'min(36rem, 95vw)',
+        boxShadow: '0 1.5rem 5rem rgba(0,0,0,0.2)',
+        overflow: 'hidden',
         display: 'flex', flexDirection: 'column',
-        alignItems: 'center', gap: '1.5rem',
-        textAlign: 'center',
       }}>
-        {/* Spinner frame */}
-        <div style={{
-          width: '5rem', height: '5rem',
-          borderRadius: '50%',
-          border: '2px solid #f0e8d6',
-          borderTop: '2px solid #b48b31',
-          animation: 'spin 1.2s linear infinite',
-        }} />
 
-        {/* Phase text */}
-        <div style={{ minHeight: '2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
-          <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#b48b31', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-            AI Render
+        {done ? (
+          /* ── Result state ── */
+          <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem', textAlign: 'center' }}>
+            <div style={{
+              width: '3.5rem', height: '3.5rem', borderRadius: '50%',
+              background: '#f0faf0', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '1.125rem', color: '#1a1a1a' }}>Your render is ready!</div>
+              <div style={{ fontSize: '0.85rem', color: '#aaa', marginTop: '0.3rem' }}>
+                {resultUrl ? 'Your AI render has been generated.' : 'Simulation complete — connect the backend to generate real renders.'}
+              </div>
+            </div>
+            {resultUrl && (
+              <img src={resultUrl} alt="AI Render"
+                style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover', borderRadius: '0.75rem' }} />
+            )}
+            <div style={{ display: 'flex', gap: '0.625rem', width: '100%' }}>
+              <button
+                onClick={() => onComplete?.({ imageUrl: resultUrl })}
+                style={{
+                  flex: 1, padding: '0.7rem',
+                  background: '#b48b31', color: 'white',
+                  border: 'none', borderRadius: '0.75rem',
+                  fontFamily: "'Figtree', sans-serif", fontWeight: 500, fontSize: '0.875rem',
+                  cursor: 'pointer',
+                }}>
+                {resultUrl ? 'View render' : 'Close'}
+              </button>
+            </div>
           </div>
-          <div key={phase} style={{
-            fontSize: '1rem', color: '#555', fontWeight: 400,
-            animation: 'fadeSlideIn 0.5s ease-out',
-          }}>
-            {PHASES[phase]}
-          </div>
-        </div>
-      </div>
+        ) : (
+          /* ── Loading state ── */
+          <>
+            {/* Interactive grid */}
+            <div
+              onMouseMove={handleMouseMove}
+              onClick={handleClick}
+              style={{ position: 'relative', height: '14rem', cursor: 'crosshair', overflow: 'hidden', background: 'white' }}
+            >
+              <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
+              {ripples.map(({ id, x, y }) => (
+                <div key={id} style={{
+                  position: 'absolute', left: x, top: y,
+                  width: 0, height: 0, borderRadius: '50%',
+                  border: '1.5px solid rgba(180,139,49,0.5)',
+                  transform: 'translate(-50%,-50%)',
+                  animation: 'aiRipple 0.9s ease-out forwards',
+                  pointerEvents: 'none',
+                }} />
+              ))}
+              {/* Spinner centrado */}
+              <div style={{
+                position: 'absolute', inset: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <div style={{
+                  width: '3.5rem', height: '3.5rem', borderRadius: '50%',
+                  border: '2px solid #f0e8d6',
+                  borderTop: '2px solid #b48b31',
+                  animation: 'aiSpin 1.2s linear infinite',
+                }} />
+              </div>
+            </div>
 
-      {/* Progress bar */}
-      <div style={{
-        position: 'absolute', bottom: '2.5rem', left: '50%', transform: 'translateX(-50%)',
-        width: 'min(28rem, 80vw)',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem',
-        zIndex: 1,
-      }}>
-        <div style={{ width: '100%', height: '2px', background: '#f0e8d6', borderRadius: '1px', overflow: 'hidden' }}>
-          <div style={{
-            height: '100%', background: '#b48b31', borderRadius: '1px',
-            width: `${progress * 100}%`,
-            transition: 'width 0.3s ease',
-          }} />
-        </div>
-        <div style={{ fontSize: '0.75rem', color: '#ccc' }}>This may take a few minutes</div>
+            {/* Text + progress */}
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#b48b31', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.4rem' }}>
+                  AI Render
+                </div>
+                <div key={phase} style={{
+                  fontSize: '0.9375rem', color: '#555', fontWeight: 400,
+                  animation: 'aiFadeIn 0.5s ease-out',
+                }}>
+                  {PHASES[phase]}
+                </div>
+              </div>
+
+              {/* Progress bar */}
+              <div style={{ width: '100%', height: '2px', background: '#f0e8d6', borderRadius: '1px', overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%', background: '#b48b31', borderRadius: '1px',
+                  width: `${progress * 100}%`, transition: 'width 0.3s ease',
+                }} />
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#ccc', textAlign: 'center' }}>
+                This may take a few minutes
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes ripple { to { width: 200px; height: 200px; opacity: 0; } }
-        @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes aiSpin    { to { transform: rotate(360deg); } }
+        @keyframes aiRipple  { to { width: 160px; height: 160px; opacity: 0; } }
+        @keyframes aiFadeIn  { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
     </div>
   );
