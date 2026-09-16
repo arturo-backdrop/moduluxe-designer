@@ -61,7 +61,7 @@ function UploadButton({ label, accept, file, onChange, optional }) {
   );
 }
 
-export default function AIRenderModal({ captureDataUrl, onClose, onGenerate }) {
+export default function AIRenderModal({ captureDataUrl, onClose, onGenerate, onRecapture }) {
   const [form, setForm] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -111,6 +111,20 @@ export default function AIRenderModal({ captureDataUrl, onClose, onGenerate }) {
         {/* Capture preview — 4:3 aspect ratio */}
         {captureDataUrl && (
           <div style={{ width: '100%', aspectRatio: '4/3', background: '#f0f0f0', position: 'relative', overflow: 'hidden' }}>
+            {/* Re-capture button */}
+            <button onClick={onRecapture} style={{
+              position: 'absolute', top: '0.75rem', right: '0.75rem', zIndex: 2,
+              background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)',
+              color: 'white', border: 'none', borderRadius: '0.625rem',
+              padding: '0.35rem 0.75rem', fontSize: '0.75rem', fontWeight: 500,
+              fontFamily: "'Figtree', sans-serif", cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: '0.35rem',
+            }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.63"/>
+              </svg>
+              Re-capture
+            </button>
             <img src={captureDataUrl} alt="Booth capture"
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             <div style={{
