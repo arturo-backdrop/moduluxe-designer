@@ -134,7 +134,7 @@ export default function AIRenderLoading({ onComplete }) {
       position: 'fixed', inset: 0, zIndex: 100,
       background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '1rem',
+      padding: '1rem', pointerEvents: 'all',
     }}>
       <div style={{
         background: 'white', borderRadius: '1.25rem',
