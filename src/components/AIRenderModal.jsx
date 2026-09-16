@@ -74,7 +74,6 @@ export default function AIRenderModal({ captureDataUrl, onClose, onGenerate }) {
     }
   });
   const [logo, setLogo]           = useState(null);
-  const [graphic, setGraphic]     = useState(null);
   const [refImage, setRefImage]   = useState(null);
   const [brandMode, setBrandMode] = useState('colors'); // 'colors' | 'reference'
 
@@ -192,12 +191,8 @@ export default function AIRenderModal({ captureDataUrl, onClose, onGenerate }) {
           </div>
 
           {/* Uploads */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <UploadButton label="Company logo" accept="image/png,image/webp,image/svg+xml"
-              file={logo} onChange={setLogo} />
-            <UploadButton label="Panel graphic" accept="image/png,image/webp,image/jpeg"
-              file={graphic} onChange={setGraphic} optional />
-          </div>
+          <UploadButton label="Company logo" accept="image/png,image/webp,image/svg+xml"
+            file={logo} onChange={setLogo} />
 
           {/* Footer */}
           <div style={{ display: 'flex', gap: '0.625rem', marginTop: '0.25rem' }}>
@@ -205,7 +200,7 @@ export default function AIRenderModal({ captureDataUrl, onClose, onGenerate }) {
               Cancel
             </button>
             <button
-              onClick={() => canSubmit && onGenerate({ form, logo, graphic, refImage, brandMode, captureDataUrl })}
+              onClick={() => canSubmit && onGenerate({ form, logo, refImage, brandMode, captureDataUrl })}
               disabled={!canSubmit}
               style={{ ...btnBase, flex: 1, padding: '0.7rem',
                 background: canSubmit ? '#b48b31' : '#e0e0e0',
