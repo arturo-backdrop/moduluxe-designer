@@ -13,7 +13,7 @@ const PHASES = [
 
 const SIMULATE_MS = 6000;
 
-export default function AIRenderLoading({ onComplete }) {
+export default function AIRenderLoading({ onComplete, placeholderUrl }) {
   const canvasRef    = useRef(null);
   const mouseRef     = useRef({ x: 0.5, y: 0.5 });
   const [phase, setPhase]       = useState(0);
@@ -40,8 +40,8 @@ export default function AIRenderLoading({ onComplete }) {
       if (p < 1) {
         raf = requestAnimationFrame(tick);
       } else {
-        // Simulate a result image (replace with real URL from backend)
-        setResultUrl(null); // null = simulated, no real image yet
+        // Simulate: use booth capture as placeholder until real backend is ready
+        setResultUrl(placeholderUrl || null);
         setDone(true);
       }
     };
@@ -156,37 +156,53 @@ export default function AIRenderLoading({ onComplete }) {
 
         {done ? (
           /* ── Result state ── */
-          <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem', textAlign: 'center' }}>
-            <div style={{
-              width: '3.5rem', height: '3.5rem', borderRadius: '50%',
-              background: '#f0faf0', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: '1.125rem', color: '#1a1a1a' }}>Your render is ready!</div>
-              <div style={{ fontSize: '0.85rem', color: '#aaa', marginTop: '0.3rem' }}>
-                {resultUrl ? 'Your AI render has been generated.' : 'Simulation complete — connect the backend to generate real renders.'}
-              </div>
-            </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {/* Result image */}
             {resultUrl && (
-              <img src={resultUrl} alt="AI Render"
-                style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover', borderRadius: '0.75rem' }} />
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', overflow: 'hidden' }}>
+                <img src={resultUrl} alt="AI Render"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                {/* Simulated badge */}
+                <div style={{
+                  position: 'absolute', top: '0.75rem', left: '0.75rem',
+                  background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)',
+                  color: 'white', borderRadius: '0.5rem',
+                  padding: '0.25rem 0.625rem', fontSize: '0.6875rem', fontWeight: 500,
+                  fontFamily: "'Figtree', sans-serif",
+                }}>Simulated preview</div>
+              </div>
             )}
-            <div style={{ display: 'flex', gap: '0.625rem', width: '100%' }}>
-              <button
-                onClick={() => onComplete?.({ imageUrl: resultUrl })}
-                style={{
-                  flex: 1, padding: '0.7rem',
-                  background: '#b48b31', color: 'white',
-                  border: 'none', borderRadius: '0.75rem',
-                  fontFamily: "'Figtree', sans-serif", fontWeight: 500, fontSize: '0.875rem',
-                  cursor: 'pointer',
-                }}>
-                {resultUrl ? 'View render' : 'Close'}
-              </button>
+
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* Title */}
+              <div>
+                <div style={{ fontWeight: 800, fontSize: '1.125rem', color: '#1a1a1a' }}>Your render is ready!</div>
+                <div style={{ fontSize: '0.8rem', color: '#aaa', marginTop: '0.2rem' }}>
+                  This AI render is a creative visualization — colors and final details may vary from the actual product.
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: '0.625rem' }}>
+                <button onClick={() => onComplete?.({ imageUrl: resultUrl })}
+                  style={{
+                    flex: 1, padding: '0.7rem',
+                    background: '#b48b31', color: 'white', border: 'none',
+                    borderRadius: '0.75rem', fontFamily: "'Figtree', sans-serif",
+                    fontWeight: 500, fontSize: '0.875rem', cursor: 'pointer',
+                  }}>
+                  Download
+                </button>
+                <button onClick={() => onComplete?.({ imageUrl: resultUrl, getInTouch: true })}
+                  style={{
+                    flex: 1, padding: '0.7rem',
+                    background: '#f5f5f5', color: '#1a1a1a', border: 'none',
+                    borderRadius: '0.75rem', fontFamily: "'Figtree', sans-serif",
+                    fontWeight: 500, fontSize: '0.875rem', cursor: 'pointer',
+                  }}>
+                  Get in touch
+                </button>
+              </div>
             </div>
           </div>
         ) : (
