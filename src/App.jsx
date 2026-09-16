@@ -461,15 +461,17 @@ export default function App() {
               const y = Math.round(vh * 0.05);
               const w = Math.round(vw * 0.62);
               const h = Math.round(vh * 0.78);
-              const tmp = document.createElement('canvas');
-              tmp.width = w; tmp.height = h;
-              // Force a render first
+              // Force render then read buffer on next frame
               viewportEngRef.current?.captureScreenshot?.();
-              tmp.getContext('2d').drawImage(canvas, x, y, w, h, 0, 0, w, h);
-              const img = tmp.toDataURL('image/png');
-              setAiCapture(img);
-              setCaptureMode(false);
-              setAiModalOpen(true);
+              requestAnimationFrame(() => {
+                const tmp = document.createElement('canvas');
+                tmp.width = w; tmp.height = h;
+                tmp.getContext('2d').drawImage(canvas, x, y, w, h, 0, 0, w, h);
+                const img = tmp.toDataURL('image/png');
+                setAiCapture(img);
+                setCaptureMode(false);
+                setAiModalOpen(true);
+              });
             }} style={{
               background: '#b48b31', color: 'white',
               border: 'none',
