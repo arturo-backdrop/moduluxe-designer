@@ -34,6 +34,12 @@ function ColorSwatch({ label, value, onChange, optional }) {
         from { opacity: 0; transform: scale(0.94) translateY(12px); }
         to   { opacity: 1; transform: scale(1)    translateY(0); }
       }
+      @keyframes modalScaleOut {
+        from { opacity: 1; transform: scale(1)    translateY(0); }
+        to   { opacity: 0; transform: scale(0.94) translateY(8px); }
+      }
+      @keyframes modalOverlayIn  { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes modalOverlayOut { from { opacity: 1; } to { opacity: 0; } }
     `}</style>
     </div>
   );
@@ -68,12 +74,18 @@ function UploadButton({ label, accept, file, onChange, optional }) {
         from { opacity: 0; transform: scale(0.94) translateY(12px); }
         to   { opacity: 1; transform: scale(1)    translateY(0); }
       }
+      @keyframes modalScaleOut {
+        from { opacity: 1; transform: scale(1)    translateY(0); }
+        to   { opacity: 0; transform: scale(0.94) translateY(8px); }
+      }
+      @keyframes modalOverlayIn  { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes modalOverlayOut { from { opacity: 1; } to { opacity: 0; } }
     `}</style>
     </div>
   );
 }
 
-export default function AIRenderModal({ captureDataUrl, onClose, onGenerate, onRecapture }) {
+export default function AIRenderModal({ captureDataUrl, onClose, onGenerate, onRecapture, exiting = false }) {
   const [form, setForm] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -110,6 +122,7 @@ export default function AIRenderModal({ captureDataUrl, onClose, onGenerate, onR
       background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '1rem', pointerEvents: 'all',
+      animation: exiting ? 'modalOverlayOut 0.28s ease forwards' : 'modalOverlayIn 0.3s ease',
     }} onClick={onClose}>
       <div style={{
         background: 'white', borderRadius: '1.25rem',
@@ -118,7 +131,9 @@ export default function AIRenderModal({ captureDataUrl, onClose, onGenerate, onR
         boxShadow: '0 1.5rem 5rem rgba(0,0,0,0.2)',
         overflowY: 'auto',
         overflowX: 'hidden',
-        animation: 'modalScaleIn 0.35s cubic-bezier(0.34,1.2,0.64,1)',
+        animation: exiting
+          ? 'modalScaleOut 0.28s cubic-bezier(0.4,0,1,1) forwards'
+          : 'modalScaleIn 0.35s cubic-bezier(0.34,1.2,0.64,1)',
       }} onClick={e => e.stopPropagation()}>
 
         {/* Capture preview — 4:3 aspect ratio */}
@@ -245,6 +260,12 @@ export default function AIRenderModal({ captureDataUrl, onClose, onGenerate, onR
         from { opacity: 0; transform: scale(0.94) translateY(12px); }
         to   { opacity: 1; transform: scale(1)    translateY(0); }
       }
+      @keyframes modalScaleOut {
+        from { opacity: 1; transform: scale(1)    translateY(0); }
+        to   { opacity: 0; transform: scale(0.94) translateY(8px); }
+      }
+      @keyframes modalOverlayIn  { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes modalOverlayOut { from { opacity: 1; } to { opacity: 0; } }
     `}</style>
     </div>
   );
