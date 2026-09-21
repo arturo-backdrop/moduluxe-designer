@@ -33,7 +33,8 @@ const S = {
 };
 
 // ── Outline (view-space normal offset) ───────────────────────
-const OUTLINE_COLOR     = 0xb48b31;
+const OUTLINE_COLOR     = 0xffffff;
+const HOVER_DOT_COLOR   = 0xb48b31;
 const OUTLINE_THICKNESS = 0.004;
 const OUTLINE_XRAY_OPA  = 0.35;
 
@@ -260,7 +261,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     scene.add(grid);
 
     // Hover dot
-    const dotMat = new THREE.MeshBasicMaterial({ color: OUTLINE_COLOR, depthTest: false });
+    const dotMat = new THREE.MeshBasicMaterial({ color: HOVER_DOT_COLOR, depthTest: false });
     const dot    = new THREE.Mesh(new THREE.SphereGeometry(0.08,16,16), dotMat);
     dot.renderOrder=10; dot.visible=false; scene.add(dot);
     let dotBaseY = 0;
