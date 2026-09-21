@@ -12,44 +12,58 @@ function buildLineItems(sceneItems, catalog) {
   });
   const modelGroups = {};
   items.forEach(item => {
-    // Array group: count original + all its clones
     const arrayCount = item.groupId
       ? sceneItems.filter(i => i.groupId === item.groupId).length
       : 1;
-    // isPresetGroup items are individual — don't multiply by group size
     const groupSize = item.isPresetGroup ? 1 : arrayCount;
     if (!modelGroups[item.modelId]) {
-      modelGroups[item.modelId] = { item, count: 0 };
+      modelGroups[item.modelId] = { item, count: 0, allItems: [] };
     }
     modelGroups[item.modelId].count += groupSize;
+    // Collect all individual items for accurate socket counting
+    for (let n = 0; n < groupSize; n++) {
+      modelGroups[item.modelId].allItems.push(item);
+    }
   });
-  return Object.values(modelGroups).map(({ item, count }) => {
+  return Object.values(modelGroups).map(({ item, count, allItems }) => {
     const def = catalog?.[item.modelId];
     const unitPrice = def?.price || 0;
     const accs = [];
-    // Deduplicate sockets by name for counting (manifest may have duplicates like 4x socket_lamp)
     const seenSocketNames = new Set();
     (def?.sockets || []).forEach(s => {
       if (seenSocketNames.has(s.name)) return;
       seenSocketNames.add(s.name);
       const accPrice = catalog?.__accessories?.[s.accessoryFile]?.price || 0;
       if (s.behavior === 'fixed') {
-        // Count all states saved as socket_name, socket_name_0, socket_name_1, etc.
-        const directState = item.socketStates?.[s.name];
-        const indexedStates = Object.entries(item.socketStates || {})
-          .filter(([k]) => k === s.name || k.startsWith(s.name + '_'))
-          .map(([, v]) => v);
-        const onCount = indexedStates.filter(v => v?.on).length || (directState?.on ? 1 : 0);
-        if (onCount > 0)
-          accs.push({ label: s.label || s.name, qty: onCount * count, unitPrice: accPrice, total: accPrice * onCount * count });
+        // Sum onCount across ALL individual items (fixes preset groups)
+        let totalOn = 0;
+        allItems.forEach(it => {
+          const directState = it.socketStates?.[s.name];
+          const indexedStates = Object.entries(it.socketStates || {})
+            .filter(([k]) => k === s.name || k.startsWith(s.name + '_'))
+            .map(([, v]) => v);
+          totalOn += indexedStates.filter(v => v?.on).length || (directState?.on ? 1 : 0);
+        });
+        if (totalOn > 0)
+          accs.push({ label: s.label || s.name, qty: totalOn, unitPrice: accPrice, total: accPrice * totalOn });
       } else if (s.behavior === 'distribute') {
-        const state = item.socketStates?.[s.name];
-        if (state?.count > 0)
-          accs.push({ label: s.label || s.name, qty: state.count * count, unitPrice: accPrice, total: accPrice * state.count * count });
+        // Sum shelf counts across all items
+        let totalCount = 0;
+        allItems.forEach(it => {
+          const state = it.socketStates?.[s.name];
+          if (state?.count > 0) totalCount += state.count;
+        });
+        if (totalCount > 0)
+          accs.push({ label: s.label || s.name, qty: totalCount, unitPrice: accPrice, total: accPrice * totalCount });
       } else if (s.behavior === 'positions') {
-        const state = item.socketStates?.[s.name];
-        if (state?.positionIndex >= 0)
-          accs.push({ label: s.label || s.name, qty: count, unitPrice: accPrice, total: accPrice * count });
+        // Count items that have a position set
+        let totalPos = 0;
+        allItems.forEach(it => {
+          const state = it.socketStates?.[s.name];
+          if (state?.positionIndex >= 0) totalPos++;
+        });
+        if (totalPos > 0)
+          accs.push({ label: s.label || s.name, qty: totalPos, unitPrice: accPrice, total: accPrice * totalPos });
       }
     });
     return { name: def?.name || item.modelId, count, unitPrice, total: unitPrice * count, accs };
