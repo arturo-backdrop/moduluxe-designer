@@ -928,6 +928,12 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         const c   = getHitContainer(e.clientX, e.clientY);
         const uid = c?.userData.uid || null;
         if (uid !== hoveredUid) {
+          // Dispatch hover event for tooltip
+          if (uid) {
+            window.dispatchEvent(new CustomEvent('viewport:hover', { detail: { x: e.clientX, y: e.clientY } }));
+          } else {
+            window.dispatchEvent(new CustomEvent('viewport:hoverout'));
+          }
           // Clear old hover outline (only if not selected)
           if (hoveredUid) {
             const hoverGroup = getGroupUids(hoveredUid);
