@@ -82,7 +82,7 @@ export default function App() {
     let timer = null;
     const onHover = e => {
       clearTimeout(timer);
-      timer = setTimeout(() => setHoverTooltip({ x: e.detail.x, y: e.detail.y }), 500);
+      timer = setTimeout(() => setHoverTooltip({ x: e.detail.x, y: e.detail.y }), 3000);
     };
     const onMove = e => {
       setHoverTooltip(prev => prev ? { x: e.detail.x, y: e.detail.y } : null);
@@ -1014,12 +1014,12 @@ export default function App() {
           backdropFilter: 'blur(6px)',
           color: 'white',
           borderRadius: '0.5rem',
-          padding: '0.3rem 0.65rem',
-          fontSize: '0.75rem',
+          padding: '0.2rem 0.5rem',
+          fontSize: '0.6875rem',
           fontFamily: "'Figtree', sans-serif",
           fontWeight: 400,
           pointerEvents: 'none',
-          display: 'flex', alignItems: 'center', gap: '0.4rem',
+          display: 'flex', alignItems: 'center', gap: '0.3rem',
           boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
           whiteSpace: 'nowrap',
           animation: 'tooltipIn 0.15s ease',
