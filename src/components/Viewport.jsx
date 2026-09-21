@@ -2082,6 +2082,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       },
     };
     if (externalEngRef) externalEngRef.current = engRef.current;
+    handleGroup.visible = modeRef.current === 'draw';
 
     // ── Zoom from toolbar ──────────────────────────────────────
     const onZoom = e => {
