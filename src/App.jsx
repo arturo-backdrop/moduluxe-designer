@@ -334,7 +334,13 @@ export default function App() {
           socketNameCount[baseName] = idx + 1;
           const stateKey = isDup ? baseName + '_' + idx : baseName;
           const state = item.socketStates[stateKey] || item.socketStates[baseName];
-          if (!state?.on) return;
+          // Check if socket has any active state (fixed=on, distribute=count>0, positions=positionIndex>=0)
+          const behavior = s.behavior || 'fixed';
+          const isActive = behavior === 'fixed' ? state?.on
+                         : behavior === 'distribute' ? (state?.count > 0)
+                         : behavior === 'positions' ? (state?.positionIndex >= 0)
+                         : false;
+          if (!isActive) return;
           const myPositions = isDup ? (allPositions[idx] ? [allPositions[idx]] : []) : allPositions;
           viewportEngRef.current?.applySocketToUids([item.uid], stateKey, state, { ...s, socketPositions: myPositions });
         });
