@@ -88,14 +88,17 @@ export default function App() {
       setHoverTooltip(prev => prev ? { x: e.detail.x, y: e.detail.y } : null);
     };
     const onOut = () => { clearTimeout(timer); setHoverTooltip(null); };
+    const onClick = () => { clearTimeout(timer); setHoverTooltip(null); };
     window.addEventListener('viewport:hover', onHover);
     window.addEventListener('viewport:hovermove', onMove);
     window.addEventListener('viewport:hoverout', onOut);
+    window.addEventListener('viewport:click', onClick);
     return () => {
       clearTimeout(timer);
       window.removeEventListener('viewport:hover', onHover);
       window.removeEventListener('viewport:hovermove', onMove);
       window.removeEventListener('viewport:hoverout', onOut);
+      window.removeEventListener('viewport:click', onClick);
     };
   }, []);
 
