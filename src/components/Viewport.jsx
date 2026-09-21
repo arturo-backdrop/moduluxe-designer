@@ -33,7 +33,7 @@ const S = {
 };
 
 // ── Outline (view-space normal offset) ───────────────────────
-const OUTLINE_COLOR     = 0xffffff;
+const OUTLINE_COLOR     = 0xb48b31;
 const OUTLINE_THICKNESS = 0.004;
 const OUTLINE_XRAY_OPA  = 0.35;
 
