@@ -2023,7 +2023,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           if (toggleStates[obj.name] !== undefined) obj.visible = toggleStates[obj.name];
         });
       },
-      syncWallItem, removeWallItem, rebuildHandles, wallMeshMap,
+      syncWallItem, removeWallItem, rebuildHandles, wallMeshMap, handleGroup,
       getRotation: (uid) => {
         const obj = itemGroup.children.find(x => x.userData.uid === uid);
         return obj ? obj.rotation.y : 0;
