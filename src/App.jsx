@@ -1002,6 +1002,35 @@ export default function App() {
           }}
         />
       )}
+
+      {/* Hover tooltip */}
+      {hoverTooltip && !captureMode && (
+        <div style={{
+          position: 'fixed',
+          left: hoverTooltip.x + 14,
+          top: hoverTooltip.y - 36,
+          zIndex: 9999,
+          background: 'rgba(20,20,20,0.82)',
+          backdropFilter: 'blur(6px)',
+          color: 'white',
+          borderRadius: '0.5rem',
+          padding: '0.3rem 0.65rem',
+          fontSize: '0.75rem',
+          fontFamily: "'Figtree', sans-serif",
+          fontWeight: 400,
+          pointerEvents: 'none',
+          display: 'flex', alignItems: 'center', gap: '0.4rem',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+          whiteSpace: 'nowrap',
+          animation: 'tooltipIn 0.15s ease',
+        }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5" strokeLinecap="round">
+            <path d="M4 4l6 18 3-7 7-3z"/>
+          </svg>
+          Right click for settings
+        </div>
+      )}
+      <style>{`@keyframes tooltipIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }`}</style>
     </>
   )
 }
