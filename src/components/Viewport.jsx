@@ -150,6 +150,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     if (c) c.style.cursor = mode === 'draw' ? 'crosshair' : 'default';
     // Always re-enable orbit when mode changes
     if (engRef.current?.controls) engRef.current.controls.enabled = true;
+    // Hide wall handles when switching to place mode
+    if (engRef.current?.handleGroup) engRef.current.handleGroup.visible = (mode === 'draw');
   }, [mode]);
   useEffect(() => { activeToolRef.current = activeTool; }, [activeTool]);
   useEffect(() => { onToolChangeRef.current = onToolChange; }, [onToolChange]);
