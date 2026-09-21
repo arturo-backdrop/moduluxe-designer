@@ -627,6 +627,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
     const onPointerDown = e => {
       if (captureModeRef.current) return;
+      window.dispatchEvent(new CustomEvent('viewport:click'));
       // ── Right click: end wall chain ───────────────────────
       if (e.button === 2) {
         if (modeRef.current === 'draw') {
