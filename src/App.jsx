@@ -64,6 +64,7 @@ export default function App() {
   const radialMenuWrapperRef = useRef(null);
   const viewportEngRef       = useRef(null);
   const [captureMode,    setCaptureMode]    = useState(false);
+  const [hoverTooltip,  setHoverTooltip]   = useState(null); // {x,y} | null
   const [aiCapture,     setAiCapture]      = useState(null);  // base64 PNG
   const [aiModalOpen,   setAiModalOpen]    = useState(false);
   const [aiLoading,     setAiLoading]      = useState(false);
@@ -75,6 +76,28 @@ export default function App() {
   const historyIdxRef = useRef(0);
   const pushTimerRef  = useRef(null);
   // refs updated synchronously in pushHistory/undo/redo
+
+  // Hover tooltip for right-click hint
+  useEffect(() => {
+    let timer = null;
+    const onHover = e => {
+      clearTimeout(timer);
+      timer = setTimeout(() => setHoverTooltip({ x: e.detail.x, y: e.detail.y }), 500);
+    };
+    const onMove = e => {
+      setHoverTooltip(prev => prev ? { x: e.detail.x, y: e.detail.y } : null);
+    };
+    const onOut = () => { clearTimeout(timer); setHoverTooltip(null); };
+    window.addEventListener('viewport:hover', onHover);
+    window.addEventListener('viewport:hovermove', onMove);
+    window.addEventListener('viewport:hoverout', onOut);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('viewport:hover', onHover);
+      window.removeEventListener('viewport:hovermove', onMove);
+      window.removeEventListener('viewport:hoverout', onOut);
+    };
+  }, []);
 
   // Load catalog + prefetch all GLBs
   useEffect(() => {
