@@ -82,7 +82,7 @@ export default function App() {
     let timer = null;
     const onHover = e => {
       clearTimeout(timer);
-      timer = setTimeout(() => setHoverTooltip({ x: e.detail.x, y: e.detail.y }), 3000);
+      timer = setTimeout(() => setHoverTooltip({ x: e.detail.x, y: e.detail.y }), 1000);
     };
     const onMove = e => {
       setHoverTooltip(prev => prev ? { x: e.detail.x, y: e.detail.y } : null);
