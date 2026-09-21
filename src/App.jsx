@@ -155,10 +155,19 @@ export default function App() {
         // UI ready immediately — GLBs load in background
         setCatalogReady(true);
 
-        const withFile = items
-          .filter(i => i.file && i.type !== 'preset')
-          .slice()
-          .sort((a, b) => (b.load_priority || 0) - (a.load_priority || 0));
+        // Collect accessory GLBs from sockets
+        const accFiles = new Set();
+        items.forEach(item => {
+          (item.sockets || []).forEach(s => {
+            if (s.accessoryFile) accFiles.add(s.accessoryFile);
+          });
+        });
+        const accItems = [...accFiles].map(f => ({ file: f, load_priority: 0 }));
+
+        const withFile = [
+          ...items.filter(i => i.file && i.type !== 'preset').sort((a, b) => (b.load_priority || 0) - (a.load_priority || 0)),
+          ...accItems,
+        ];
 
         let loaded = 0;
         setLoadProgress({ loaded: 0, total: withFile.length });
