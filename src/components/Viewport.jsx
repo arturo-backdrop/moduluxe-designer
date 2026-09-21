@@ -1239,6 +1239,9 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
 
         // After drag — just keep selection, radial opens on right click
         canvas.style.cursor = hoveredUid ? 'grab' : 'default';
+      if (hoveredUid) {
+        window.dispatchEvent(new CustomEvent('viewport:hovermove', { detail: { x: e.clientX, y: e.clientY } }));
+      }
       }
       draggingUid = null; dragArmed = false; dragOffsets = {};
     };
