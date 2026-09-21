@@ -33,6 +33,7 @@ const DEFAULT_STATE = {
 
 export default function App() {
   const [catalogReady,   setCatalogReady]   = useState(false);
+  const [glbsReady,      setGlbsReady]      = useState(false);
   const [loadProgress,   setLoadProgress]   = useState({ loaded: 0, total: 0 });
   const [onboardingDone, setOnboardingDone] = useState(false);
   const [catalog,        setCatalog]        = useState({});
@@ -172,6 +173,7 @@ export default function App() {
             .finally(() => {
               loaded++;
               setLoadProgress({ loaded, total: withFile.length });
+              if (loaded === withFile.length) setGlbsReady(true);
               next();
             });
         }
@@ -196,13 +198,13 @@ export default function App() {
   const restoredRef = useRef(false);
   const restoreItemStatesRef = useRef(null);
   useEffect(() => {
-    if (!catalogReady || restoredRef.current) return;
+    if (!catalogReady || !glbsReady || restoredRef.current) return;
     restoredRef.current = true;
     const saved = loadSavedProject();
     if (saved?.sceneItems?.length) {
-      setTimeout(() => restoreItemStatesRef.current?.(saved.sceneItems), 300);
+      setTimeout(() => restoreItemStatesRef.current?.(saved.sceneItems), 100);
     }
-  }, [catalogReady]);
+  }, [catalogReady, glbsReady]);
 
   useAutoSave({ projectName, floorSize, activePreset, sceneItems });
 
