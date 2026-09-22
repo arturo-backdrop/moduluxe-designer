@@ -86,8 +86,8 @@ function buildButtons(sockets=[], itemType=null, paintable=true) {
 function angleDiff(a,b) { let d=((b-a)+180)%360-180; return d<-180?d+360:d; }
 
 const PRESET_COLORS = [
-  '#3a6ea5','#e8e0d0','#2d2d2d','#ffffff','#c4622d',
-  '#4a7c5e','#8b4a6b','#d4a843','#6b6b6b','#1a3a5c',
+  '#2e6db8','#f5f0e8','#1a1a1a','#ffffff','#d45a20',
+  '#2e7a52','#8b2e6b','#e0a020','#555555','#0f2d52',
 ];
 
 function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentColor='#3a6ea5', currentRotY=0, arrayState={count:1,spacing:0}, units='ft', wallProps=null) {
