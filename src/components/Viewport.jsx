@@ -1761,27 +1761,29 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
             container.add(halo);
           });
 
-          // ── Floor glow plane — always at Y=0, centered on container ──
-          const floorMat = new THREE.ShaderMaterial({
-            vertexShader: EMISSIVE_VERT,
-            fragmentShader: EMISSIVE_FRAG,
-            uniforms: {
-              uColor:   { value: emColor.clone() },
-              uFalloff: { value: EM_FLOOR_FALLOFF },
-              uOpacity: { value: EM_FLOOR_OPACITY },
-            },
-            transparent: true,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
+          // ── Floor glow plane(s) — at Y=0.01 below each glow point ──
+          glowPoints.forEach(gp => {
+            const floorMat = new THREE.ShaderMaterial({
+              vertexShader: EMISSIVE_VERT,
+              fragmentShader: EMISSIVE_FRAG,
+              uniforms: {
+                uColor:   { value: emColor.clone() },
+                uFalloff: { value: EM_FLOOR_FALLOFF },
+                uOpacity: { value: EM_FLOOR_OPACITY },
+              },
+              transparent: true,
+              blending: THREE.AdditiveBlending,
+              depthWrite: false,
+            });
+            const floorGlow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), floorMat);
+            floorGlow.rotation.x = -Math.PI / 2;
+            floorGlow.position.set(gp.x, 0.01, gp.z);
+            floorGlow.scale.set(w * EM_FLOOR_SCALE, w * EM_FLOOR_SCALE, 1);
+            floorGlow.userData.isEmissivePlane = true;
+            floorGlow.userData.isMeta = true;
+            floorGlow.renderOrder = 2;
+            container.add(floorGlow);
           });
-          const floorGlow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), floorMat);
-          floorGlow.rotation.x = -Math.PI / 2;
-          floorGlow.position.set(0, 0.01, 0);
-          floorGlow.scale.set(w * EM_FLOOR_SCALE, w * EM_FLOOR_SCALE, 1);
-          floorGlow.userData.isEmissivePlane = true;
-          floorGlow.userData.isMeta = true;
-          floorGlow.renderOrder = 2;
-          container.add(floorGlow);
         });
       });
     }
