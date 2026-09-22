@@ -1753,7 +1753,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           halo.renderOrder = 1;
           container.add(halo);
 
-          // ── Floor glow plane ──────────────────────────
+          // ── Floor glow plane — always at Y=0, centered on container ──
           const floorMat = new THREE.ShaderMaterial({
             vertexShader: EMISSIVE_VERT,
             fragmentShader: EMISSIVE_FRAG,
@@ -1768,9 +1768,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           });
           const floorGlow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), floorMat);
           floorGlow.rotation.x = -Math.PI / 2;
-          // Position at floor level, slightly in front of panel
-          floorGlow.position.set(localPos.x, -localPos.y + 0.01, localPos.z + w * 0.5);
-          floorGlow.scale.set(w * EM_FLOOR_SCALE, h * EM_FLOOR_SCALE * 0.6, 1);
+          floorGlow.position.set(0, 0.01, 0);
+          floorGlow.scale.set(w * EM_FLOOR_SCALE, w * EM_FLOOR_SCALE, 1);
           floorGlow.userData.isEmissivePlane = true;
           floorGlow.userData.isMeta = true;
           floorGlow.renderOrder = 2;
