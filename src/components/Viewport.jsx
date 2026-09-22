@@ -112,9 +112,9 @@ const EMISSIVE_FRAG = `uniform vec3 uColor; uniform float uFalloff; uniform floa
 // Emissive config
 const EM_INTENSITY = 8.0;
 const EM_HALO_OPACITY = 0.990;
-const EM_HALO_FALLOFF = 3.10;
-const EM_HALO_SCALE   = 1.40;
-const EM_FLOOR_OPACITY = 0.45;
+const EM_HALO_FALLOFF = 2.0;
+const EM_HALO_SCALE   = 2.5;
+const EM_FLOOR_OPACITY = 0.25;
 const EM_FLOOR_FALLOFF = 1.5;
 const EM_FLOOR_SCALE   = 3.0;
 
