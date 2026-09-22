@@ -1717,15 +1717,18 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           m.emissiveIntensity = EM_INTENSITY;
           m.needsUpdate = true;
 
-          // Get world bounding box for plane sizing
-          child.geometry.computeBoundingBox();
-          const bb = child.geometry.boundingBox;
-          const w = (bb.max.x - bb.min.x) * child.scale.x;
-          const h = (bb.max.y - bb.min.y) * child.scale.y;
+          // Force matrix update before reading bounds
+          child.updateWorldMatrix(true, false);
+          
+          // Use world-space bounding box for accurate sizing
+          const worldBox = new THREE.Box3().setFromObject(child);
+          const w = worldBox.max.x - worldBox.min.x;
+          const h = worldBox.max.y - worldBox.min.y;
 
-          // Get local position of the mesh relative to container
-          const localPos = new THREE.Vector3();
-          child.getWorldPosition(localPos);
+          // Get local position of the mesh center relative to container
+          const worldCenter = new THREE.Vector3();
+          worldBox.getCenter(worldCenter);
+          const localPos = worldCenter.clone();
           container.worldToLocal(localPos);
 
           // ── Halo plane ────────────────────────────────
