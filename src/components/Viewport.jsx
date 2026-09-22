@@ -986,7 +986,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       function getObjBoundsLocal(obj) {
         const b = new THREE.Box3();
         obj.traverse(child => {
-          if (child.isMesh && child.visible) {
+          if (child.isMesh && child.visible && !child.userData.isEmissivePlane) {
             // Check all ancestors are visible too
             let visible = true, cur = child;
             while (cur && cur !== obj) { if (!cur.visible) { visible = false; break; } cur = cur.parent; }
