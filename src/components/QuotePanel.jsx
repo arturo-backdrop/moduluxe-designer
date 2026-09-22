@@ -219,7 +219,7 @@ export default function QuotePanel({ config, sceneItems, catalog, onAIRender }) 
           {total > 0 && <div className={styles.rentText}>Or rent for {formatPrice(Math.round(total / 3))}</div>}
         </div>
         <button className={styles.quoteBtn} onClick={() => setOpen(true)} disabled={count === 0}>
-          Get quote
+          Get list
         </button>
         {config.phone && (
           <div className={styles.phoneRow}>
