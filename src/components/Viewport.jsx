@@ -1546,6 +1546,9 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         if (root.userData.snapPoints?.length) {
           container.userData.snapPoints = root.userData.snapPoints;
         }
+        if (root.userData.emissiveGlowPoints?.length) {
+          container.userData.emissiveGlowPoints = root.userData.emissiveGlowPoints;
+        }
         if (root.userData.toggleMeshes?.length) {
           container.userData.toggleMeshes = root.userData.toggleMeshes;
         }
@@ -1731,27 +1734,32 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           const localPos = worldCenter.clone();
           container.worldToLocal(localPos);
 
-          // ── Halo plane ────────────────────────────────
-          const haloMat = new THREE.ShaderMaterial({
-            vertexShader: EMISSIVE_VERT,
-            fragmentShader: EMISSIVE_FRAG,
-            uniforms: {
-              uColor:   { value: emColor.clone() },
-              uFalloff: { value: EM_HALO_FALLOFF },
-              uOpacity: { value: EM_HALO_OPACITY },
-            },
-            transparent: true,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
+          // ── Halo plane(s) — use emissive_glow empties if present ──
+          const glowPoints = container.userData.emissiveGlowPoints?.length
+            ? container.userData.emissiveGlowPoints
+            : [{ x: localPos.x, y: localPos.y, z: localPos.z }];
+
+          glowPoints.forEach(gp => {
+            const haloMat = new THREE.ShaderMaterial({
+              vertexShader: EMISSIVE_VERT,
+              fragmentShader: EMISSIVE_FRAG,
+              uniforms: {
+                uColor:   { value: emColor.clone() },
+                uFalloff: { value: EM_HALO_FALLOFF },
+                uOpacity: { value: EM_HALO_OPACITY },
+              },
+              transparent: true,
+              blending: THREE.AdditiveBlending,
+              depthWrite: false,
+            });
+            const halo = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), haloMat);
+            halo.position.set(gp.x, gp.y, gp.z + 0.01);
+            halo.scale.set(w * EM_HALO_SCALE * 1.5, h * EM_HALO_SCALE * 1.2, 1);
+            halo.userData.isEmissivePlane = true;
+            halo.userData.isMeta = true;
+            halo.renderOrder = 1;
+            container.add(halo);
           });
-          const halo = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), haloMat);
-          halo.position.copy(localPos);
-          halo.position.z += 0.01;
-          halo.scale.set(w * EM_HALO_SCALE * 1.5, h * EM_HALO_SCALE * 1.2, 1);
-          halo.userData.isEmissivePlane = true;
-          halo.userData.isMeta = true;
-          halo.renderOrder = 1;
-          container.add(halo);
 
           // ── Floor glow plane — always at Y=0, centered on container ──
           const floorMat = new THREE.ShaderMaterial({
