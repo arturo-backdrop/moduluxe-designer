@@ -1740,7 +1740,6 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
             transparent: true,
             blending: THREE.AdditiveBlending,
             depthWrite: false,
-            renderOrder: 1,
           });
           const halo = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), haloMat);
           halo.position.copy(localPos);
