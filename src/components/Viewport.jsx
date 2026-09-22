@@ -110,13 +110,13 @@ const EMISSIVE_FRAG = `uniform vec3 uColor; uniform float uFalloff; uniform floa
   float a=pow(clamp(1.0-dist,0.0,1.0),uFalloff); gl_FragColor=vec4(uColor,a*uOpacity); }`;
 
 // Emissive config
-const EM_INTENSITY = 8.0;
-const EM_HALO_OPACITY = 0.990;
-const EM_HALO_FALLOFF = 2.0;
-const EM_HALO_SCALE   = 2.5;
-const EM_FLOOR_OPACITY = 0.25;
+const EM_INTENSITY = 4.0;
+const EM_HALO_OPACITY = 0.35;
+const EM_HALO_FALLOFF = 2.5;
+const EM_HALO_SCALE   = 1.6;
+const EM_FLOOR_OPACITY = 0.15;
 const EM_FLOOR_FALLOFF = 1.5;
-const EM_FLOOR_SCALE   = 3.0;
+const EM_FLOOR_SCALE   = 2.5;
 
 function applyPaintColor(root, color) {
   const paintColor = new THREE.Color(color || '#3a6ea5');
