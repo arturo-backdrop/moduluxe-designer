@@ -1559,6 +1559,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         const saved = itemsRef.current.find(i=>i.uid===uid);
         if (saved?.rotY) container.rotation.y = saved.rotY;
         if (saved?.color) applyColor(uid, saved.color);
+        // Apply emissive even without a user color (uses default white)
+        else applyEmissiveToContainer(container, '#ffffff');
         // Restore toggle mesh states
         if (saved?.toggleStates) {
           Object.entries(saved.toggleStates).forEach(([meshName, visible]) => {
