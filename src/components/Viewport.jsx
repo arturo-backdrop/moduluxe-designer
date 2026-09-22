@@ -100,7 +100,23 @@ function setOutlineVisible(container, v) {
 }
 
 // ── Paint color system ────────────────────────────────────────
-const PAINT_MAT = 'paint_color';
+const PAINT_MAT    = 'paint_color';
+const EMISSIVE_MAT = 'emissive_color';
+
+// ── Emissive shaders ─────────────────────────────────────
+const EMISSIVE_VERT = `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`;
+const EMISSIVE_FRAG = `uniform vec3 uColor; uniform float uFalloff; uniform float uOpacity; varying vec2 vUv;
+  void main(){ vec2 d=(vUv-0.5)*2.0; d.y*=0.75; float dist=length(d);
+  float a=pow(clamp(1.0-dist,0.0,1.0),uFalloff); gl_FragColor=vec4(uColor,a*uOpacity); }`;
+
+// Emissive config
+const EM_INTENSITY = 0.60;
+const EM_HALO_OPACITY = 0.990;
+const EM_HALO_FALLOFF = 3.10;
+const EM_HALO_SCALE   = 1.40;
+const EM_FLOOR_OPACITY = 0.210;
+const EM_FLOOR_FALLOFF = 1.5;
+const EM_FLOOR_SCALE   = 3.0;
 
 function applyPaintColor(root, color) {
   const paintColor = new THREE.Color(color || '#3a6ea5');
@@ -1670,6 +1686,89 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           child.material = child.material.clone();
           child.material.color.set(paintColor);
         }
+      });
+      // Apply emissive glow if model has emissive_color material
+      applyEmissiveToContainer(c, paintColor);
+    }
+
+    // ── Emissive glow ────────────────────────────────────────
+    function applyEmissiveToContainer(container, hexColor) {
+      // Remove previous emissive planes
+      const toRemove = [];
+      container.traverse(obj => { if (obj.userData.isEmissivePlane) toRemove.push(obj); });
+      toRemove.forEach(obj => { if (obj.parent) obj.parent.remove(obj); });
+
+      if (!hexColor) return;
+
+      const emColor = new THREE.Color(hexColor);
+
+      // Find emissive meshes
+      container.traverse(child => {
+        if (!child.isMesh) return;
+        const mats = Array.isArray(child.material) ? child.material : [child.material];
+        mats.forEach(m => {
+          if (m.name !== EMISSIVE_MAT) return;
+
+          // Apply emissive to the material
+          m.emissive = emColor.clone();
+          m.emissiveIntensity = EM_INTENSITY;
+          m.needsUpdate = true;
+
+          // Get world bounding box for plane sizing
+          child.geometry.computeBoundingBox();
+          const bb = child.geometry.boundingBox;
+          const w = (bb.max.x - bb.min.x) * child.scale.x;
+          const h = (bb.max.y - bb.min.y) * child.scale.y;
+
+          // Get local position of the mesh relative to container
+          const localPos = new THREE.Vector3();
+          child.getWorldPosition(localPos);
+          container.worldToLocal(localPos);
+
+          // ── Halo plane ────────────────────────────────
+          const haloMat = new THREE.ShaderMaterial({
+            vertexShader: EMISSIVE_VERT,
+            fragmentShader: EMISSIVE_FRAG,
+            uniforms: {
+              uColor:   { value: emColor.clone() },
+              uFalloff: { value: EM_HALO_FALLOFF },
+              uOpacity: { value: EM_HALO_OPACITY },
+            },
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            renderOrder: 1,
+          });
+          const halo = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), haloMat);
+          halo.position.copy(localPos);
+          halo.position.z += 0.01;
+          halo.scale.set(w * EM_HALO_SCALE * 1.5, h * EM_HALO_SCALE * 1.2, 1);
+          halo.userData.isEmissivePlane = true;
+          halo.renderOrder = 1;
+          container.add(halo);
+
+          // ── Floor glow plane ──────────────────────────
+          const floorMat = new THREE.ShaderMaterial({
+            vertexShader: EMISSIVE_VERT,
+            fragmentShader: EMISSIVE_FRAG,
+            uniforms: {
+              uColor:   { value: emColor.clone() },
+              uFalloff: { value: EM_FLOOR_FALLOFF },
+              uOpacity: { value: EM_FLOOR_OPACITY },
+            },
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+          });
+          const floorGlow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), floorMat);
+          floorGlow.rotation.x = -Math.PI / 2;
+          // Position at floor level, slightly in front of panel
+          floorGlow.position.set(localPos.x, -localPos.y + 0.01, localPos.z + w * 0.5);
+          floorGlow.scale.set(w * EM_FLOOR_SCALE, h * EM_FLOOR_SCALE * 0.6, 1);
+          floorGlow.userData.isEmissivePlane = true;
+          floorGlow.renderOrder = 2;
+          container.add(floorGlow);
+        });
       });
     }
 
