@@ -1559,8 +1559,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         const saved = itemsRef.current.find(i=>i.uid===uid);
         if (saved?.rotY) container.rotation.y = saved.rotY;
         if (saved?.color) applyColor(uid, saved.color);
-        // Apply emissive even without a user color (uses default white)
-        else applyEmissiveToContainer(container, '#ffffff');
+        // Apply emissive even without a user color (uses color from item or white)
+        else applyEmissiveToContainer(container, saved?.color || '#ffffff');
         // Restore toggle mesh states
         if (saved?.toggleStates) {
           Object.entries(saved.toggleStates).forEach(([meshName, visible]) => {
@@ -1673,7 +1673,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         mats.forEach(m => { if (m.name === 'paint_color') hasPaintMat = true; });
       });
       // Apply emissive glow regardless of paint_color
-      applyEmissiveToContainer(c, paintColor);
+      applyEmissiveToContainer(c, '#' + paintColor.getHexString());
 
       // If no paint_color material found, don't recolor anything
       if (!hasPaintMat) return;
@@ -1747,6 +1747,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           halo.position.z += 0.01;
           halo.scale.set(w * EM_HALO_SCALE * 1.5, h * EM_HALO_SCALE * 1.2, 1);
           halo.userData.isEmissivePlane = true;
+          halo.userData.isMeta = true;
           halo.renderOrder = 1;
           container.add(halo);
 
@@ -1769,6 +1770,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           floorGlow.position.set(localPos.x, -localPos.y + 0.01, localPos.z + w * 0.5);
           floorGlow.scale.set(w * EM_FLOOR_SCALE, h * EM_FLOOR_SCALE * 0.6, 1);
           floorGlow.userData.isEmissivePlane = true;
+          floorGlow.userData.isMeta = true;
           floorGlow.renderOrder = 2;
           container.add(floorGlow);
         });
