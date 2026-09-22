@@ -110,7 +110,7 @@ const EMISSIVE_FRAG = `uniform vec3 uColor; uniform float uFalloff; uniform floa
   float a=pow(clamp(1.0-dist,0.0,1.0),uFalloff); gl_FragColor=vec4(uColor,a*uOpacity); }`;
 
 // Emissive config
-const EM_INTENSITY = 3.5;
+const EM_INTENSITY = 8.0;
 const EM_HALO_OPACITY = 0.990;
 const EM_HALO_FALLOFF = 3.10;
 const EM_HALO_SCALE   = 1.40;
