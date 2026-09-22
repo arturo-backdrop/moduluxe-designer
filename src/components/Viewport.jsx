@@ -1670,6 +1670,9 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         const mats = Array.isArray(child.material) ? child.material : [child.material];
         mats.forEach(m => { if (m.name === 'paint_color') hasPaintMat = true; });
       });
+      // Apply emissive glow regardless of paint_color
+      applyEmissiveToContainer(c, paintColor);
+
       // If no paint_color material found, don't recolor anything
       if (!hasPaintMat) return;
       c.traverse(child => {
@@ -1687,8 +1690,6 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           child.material.color.set(paintColor);
         }
       });
-      // Apply emissive glow if model has emissive_color material
-      applyEmissiveToContainer(c, paintColor);
     }
 
     // ── Emissive glow ────────────────────────────────────────
