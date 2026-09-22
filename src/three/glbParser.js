@@ -286,6 +286,8 @@ async function buildScene(json, bin) {
 
   // Auto-detect snap_ Empties from GLB JSON — store X,Z for snap system
   const snapPoints = [];
+  // Auto-detect emissive_glow Empties — store X,Y,Z for halo positioning
+  const emissiveGlowPoints = [];
   try {
     if (json && json.nodes) {
       const rootQuat = { x:0, y:0, z:0, w:1 };
@@ -299,6 +301,9 @@ async function buildScene(json, bin) {
         if (nd.name && nd.name.startsWith('snap_')) {
           snapPoints.push({ name: nd.name, x: wPos.x, z: wPos.z });
         }
+        if (nd.name && nd.name.startsWith('emissive_glow')) {
+          emissiveGlowPoints.push({ x: wPos.x, y: wPos.y, z: wPos.z });
+        }
         (nd.children || []).forEach(ci => visitForSnap(ci, wPos, wQuat));
       }
       (json.scenes?.[0]?.nodes || []).forEach(ni => visitForSnap(ni, rootPos, rootQuat));
@@ -306,6 +311,7 @@ async function buildScene(json, bin) {
   } catch(e) {
     console.warn('snapPoints parse error:', e);
   }
+  root.userData.emissiveGlowPoints = emissiveGlowPoints;
   root.userData.snapPoints = snapPoints;
 
   return root;
