@@ -1559,8 +1559,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         const saved = itemsRef.current.find(i=>i.uid===uid);
         if (saved?.rotY) container.rotation.y = saved.rotY;
         if (saved?.color) applyColor(uid, saved.color);
-        // Apply emissive even without a user color (uses color from item or white)
-        else applyEmissiveToContainer(container, saved?.color || '#ffffff');
+        // Apply emissive after next frame so world matrices are ready
+        else requestAnimationFrame(() => applyEmissiveToContainer(container, saved?.color || '#ffffff'));
         // Restore toggle mesh states
         if (saved?.toggleStates) {
           Object.entries(saved.toggleStates).forEach(([meshName, visible]) => {
@@ -1672,8 +1672,8 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         const mats = Array.isArray(child.material) ? child.material : [child.material];
         mats.forEach(m => { if (m.name === 'paint_color') hasPaintMat = true; });
       });
-      // Apply emissive glow regardless of paint_color
-      applyEmissiveToContainer(c, '#' + paintColor.getHexString());
+      // Apply emissive after next frame so world matrices are ready
+      requestAnimationFrame(() => applyEmissiveToContainer(c, '#' + paintColor.getHexString()));
 
       // If no paint_color material found, don't recolor anything
       if (!hasPaintMat) return;
