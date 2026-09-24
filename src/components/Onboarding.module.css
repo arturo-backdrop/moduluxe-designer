@@ -287,7 +287,8 @@
   background: #f5f0e8;
   border-left: 3px solid #b48b31;
   border-radius: 0 6px 6px 0;
-  display: inline-block;
+  display: block;
+  width: 100%;
 }
 .presetSizeGroupGrid {
   display: grid;
