@@ -174,7 +174,7 @@ export default function Onboarding({ config, presets: manifestPresets = [], onCo
                   <img src={TheOnyxThumb} alt="Preset" className={styles.modeCardBg} />
                   <div className={styles.modeCardOverlay} />
                   <div className={styles.modeCardText}>
-                    <div className={styles.modeLabel}>Start with a preset</div>
+                    <div className={styles.modeLabel}>Start With a Preset</div>
                     <div className={styles.modeDesc}>Choose a pre-configured layout ready to customize</div>
                   </div>
                 </div>
@@ -182,10 +182,10 @@ export default function Onboarding({ config, presets: manifestPresets = [], onCo
 
               <div className={styles.modeCard} onClick={() => chooseMode('scratch')}>
                 <div className={styles.modeImageCard}>
-                  <img src={StartScratchThumb} alt="Start from scratch" className={styles.modeCardBg} />
+                  <img src={StartScratchThumb} alt="Start From Scratch" className={styles.modeCardBg} />
                   <div className={styles.modeCardOverlay} />
                   <div className={styles.modeCardText}>
-                    <div className={styles.modeLabel}>Start from scratch</div>
+                    <div className={styles.modeLabel}>Start From Scratch</div>
                     <div className={styles.modeDesc}>Set your floor size and build your own layout</div>
                   </div>
                 </div>
@@ -221,7 +221,7 @@ export default function Onboarding({ config, presets: manifestPresets = [], onCo
             </button>
 
             <button className={styles.btnSkip} onClick={() => transition(() => { setMode('scratch'); setStep(2); })}>
-              Start from scratch instead
+              Start From Scratch instead
             </button>
           </>
         )}
