@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import TheOnyxThumb from '../assets/TheOnyx_Thumbnail.png';
+import TheOnyxThumb      from '../assets/TheOnyx_Thumbnail.png';
+import StartScratchThumb from '../assets/Start_From_Scratch.png';
 import styles from './Onboarding.module.css';
 
 // ── Floor size SVG preview ────────────────────────────────────
@@ -169,14 +170,28 @@ export default function Onboarding({ config, presets: manifestPresets = [], onCo
 
             <div className={styles.modeGrid}>
               <div className={styles.modeCard} onClick={() => chooseMode('preset')}>
-                <div className={styles.modeIcon}>
-                  <img src={TheOnyxThumb} alt="Preset" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '6px' }} />
+                <div className={styles.modeImageCard}>
+                  <img src={TheOnyxThumb} alt="Preset" className={styles.modeCardBg} />
+                  <div className={styles.modeCardOverlay} />
+                  <div className={styles.modeCardText}>
+                    <div className={styles.modeLabel}>Start with a preset</div>
+                    <div className={styles.modeDesc}>Choose a pre-configured layout ready to customize</div>
+                  </div>
                 </div>
-                <div className={styles.modeLabel}>Start with a preset</div>
-                <div className={styles.modeDesc}>Choose a pre-configured layout ready to customize</div>
               </div>
 
               <div className={styles.modeCard} onClick={() => chooseMode('scratch')}>
+                <div className={styles.modeImageCard}>
+                  <img src={StartScratchThumb} alt="Start from scratch" className={styles.modeCardBg} />
+                  <div className={styles.modeCardOverlay} />
+                  <div className={styles.modeCardText}>
+                    <div className={styles.modeLabel}>Start from scratch</div>
+                    <div className={styles.modeDesc}>Set your floor size and build your own layout</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.modeCard} onClick={() => chooseMode('scratch')} style={{display:'none'}}>
                 <div className={styles.modeIcon}>
                   <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#b48b31" strokeWidth="1.5" strokeLinecap="round">
                     <rect x="3" y="3" width="18" height="18" rx="2"/>
