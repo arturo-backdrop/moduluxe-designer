@@ -31,7 +31,7 @@ export const DEPLOY = {
   // ── Video Widget ─────────────────────────────────────────────
   // YouTube video shown in the bottom right panel.
   // Leave null to hide the video widget entirely.
-  youtubeId:     'fQNPDMpov2M',
+  youtubeId:     'JbzEVY4nR-o',
   videoTitle:    'NY Toy Fair TSB Awards',
   videoDuration: '1:59',
 
