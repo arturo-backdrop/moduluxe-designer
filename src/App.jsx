@@ -3,6 +3,7 @@ import { CONFIG } from './config.js';
 import { useAutoSave, loadSavedProject, clearSavedProject } from './hooks/useAutoSave.js';
 import { loadModel } from './three/glbParser.js';
 import { toDisplay, fromDisplay } from './units.js';
+import { normalizeManifest } from './manifest.js';
 
 import Onboarding  from './components/Onboarding.jsx';
 import Tour, { useTour } from './components/Tour.jsx';
@@ -110,7 +111,7 @@ export default function App() {
     fetch(CONFIG.manifestUrl)
       .then(r => r.json())
       .then(async data => {
-        const items = Array.isArray(data) ? data : (data.models || []);
+        const items = normalizeManifest(data);
         const map = {};
         const accMap = {};
         const manifestPresets = [];

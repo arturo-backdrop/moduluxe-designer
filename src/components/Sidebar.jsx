@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styles from './Sidebar.module.css';
 import { toDisplay } from '../units.js';
+import { normalizeManifest } from '../manifest.js';
 
 const CATEGORY_ICONS = {
   'Panels':     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/></svg>,
@@ -173,7 +174,7 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
     fetch(config.manifestUrl)
       .then(r => r.json())
       .then(data => {
-        const items = Array.isArray(data) ? data : (data.models || []);
+        const items = normalizeManifest(data);
         const grouped = {};
         items.forEach(item => {
           if (item.type === 'preset') return;

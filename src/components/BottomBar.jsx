@@ -59,6 +59,7 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel }
 
   const accessoryPills = React.useMemo(() => {
     const accMap = new Map();
+    const thumbMap = new Map();
     sceneItems.forEach(item => {
       if (WALL_TYPES.has(item.type) || item.isArrayClone || !item.socketStates) return;
       const def = catalog?.[item.modelId];
@@ -85,10 +86,11 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel }
         if (qty > 0) {
           const label = s.label || s.name;
           accMap.set(label, (accMap.get(label) || 0) + qty * groupSize);
+          if (s.thumbnail && !thumbMap.has(label)) thumbMap.set(label, s.thumbnail);
         }
       });
     });
-    return Array.from(accMap.entries()).map(([label, count]) => ({ label, count }));
+    return Array.from(accMap.entries()).map(([label, count]) => ({ label, count, thumbnail: thumbMap.get(label) || null }));
   }, [sceneItems, catalog]);
 
   useEffect(() => {
@@ -120,15 +122,17 @@ export default function BottomBar({ config, sceneItems, catalog, onSelectModel }
                 onClick={() => handleSelect(item.modelId)}
               />
             ))}
-            {accessoryPills.map(({ label, count }) => (
+            {accessoryPills.map(({ label, count, thumbnail }) => (
               <div key={label} className={styles.productCard} style={{ opacity: 0.85 }}>
-                <div className={styles.cardThumb}>
+                {thumbnail
+                  ? <img src={thumbnail} alt={label} className={styles.cardThumbImg} />
+                  : <div className={styles.cardThumb}>
                   <svg width="18" height="26" viewBox="0 0 18 26" fill="none">
                     <rect x="1" y="1" width="16" height="24" rx="3" stroke="#b48b31" strokeWidth="1.2"/>
                     <line x1="4" y1="10" x2="14" y2="10" stroke="#b48b31" strokeWidth="1.5"/>
                     <line x1="4" y1="16" x2="14" y2="16" stroke="#b48b31" strokeWidth="1.5"/>
                   </svg>
-                </div>
+                </div>}
                 <div className={styles.cardInfo}>
                   <div className={styles.cardName}>{label}</div>
                   <div className={styles.cardDims}>Accessory</div>
