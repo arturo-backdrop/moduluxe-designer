@@ -227,11 +227,10 @@ export default function QuotePanel({ config, sceneItems, catalog, onAIRender }) 
             <a href={`tel:${config.phoneHref}`} className={styles.phoneLink}>{config.phone}</a>
           </div>
         )}
-        {/* AI Render button — hidden until backend is ready
+        {/* AI Render button — result is simulated (booth capture) until backend is ready */}
         <button className={styles.aiRenderBtn} onClick={() => onAIRender?.()}>
           Get a branded AI render
         </button>
-        */}
       </div>
       {open && <ListModal sceneItems={sceneItems} catalog={catalog} onClose={() => setOpen(false)} />}
     </>
