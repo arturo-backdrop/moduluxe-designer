@@ -89,14 +89,14 @@ async function buildQuotePdf({ projectName, shot, lines, grandTotal, config }) {
   const money = n => (n > 0 ? fmt(n) : '-');
   let y = M;
 
-  // Header: small booth image top-left, project name + date to its right
+  // Header: project name + date top-left, small booth image top-right
   const IMG_W = 2.6, GAP = 0.3;
   let headerH = 0;
   let textX = M, textW = CW;
   if (shot?.dataUrl) {
     const imgH = (IMG_W * shot.height) / shot.width;
-    doc.addImage(shot.dataUrl, 'JPEG', M, y, IMG_W, imgH);
-    textX = M + IMG_W + GAP; textW = CW - IMG_W - GAP;
+    doc.addImage(shot.dataUrl, 'JPEG', M + CW - IMG_W, y, IMG_W, imgH);
+    textW = CW - IMG_W - GAP;
     headerH = imgH;
   }
   doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(26, 26, 26);
