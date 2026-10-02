@@ -78,9 +78,28 @@ const COL = '1fr 40px 72px 80px';
 
 // ── PDF export ────────────────────────────────────────────────
 // jsPDF is loaded on demand so it doesn't weigh down the initial bundle.
-async function buildQuotePdf({ projectName, shot, lines, grandTotal, config }) {
+// Loads the dark-on-light Backdrop logo (the sidebar uses the white "inverse"
+// one, which would vanish on paper) and downsizes it so the PDF stays small.
+// Returns { dataUrl, width, height } or null if it can't be loaded.
+async function loadLogo() {
+  try {
+    const res = await fetch(`${import.meta.env.BASE_URL}backdrop-logo.png`);
+    if (!res.ok) throw new Error(`logo ${res.status}`);
+    const img = await createImageBitmap(await res.blob());
+    const w = Math.min(900, img.width), h = Math.round((w * img.height) / img.width);
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    c.getContext('2d').drawImage(img, 0, 0, w, h);
+    return { dataUrl: c.toDataURL('image/png'), width: w, height: h };
+  } catch (e) {
+    console.warn('Quote PDF: logo not loaded, exporting without it.', e);
+    return null;
+  }
+}
+
+async function buildQuotePdf({ projectName, shot, logo, lines, grandTotal, config }) {
   const { jsPDF } = await import('jspdf');
-  const doc = new jsPDF({ unit: 'in', format: 'letter' });
+  const doc = new jsPDF({ unit: 'in', format: 'letter', compress: true });
   const PW = 8.5, PH = 11, M = 0.6, CW = PW - M * 2;
   const R_TOTAL = M + CW, R_UNIT = M + CW - 1.2, R_QTY = M + CW - 2.4, ITEM_W = CW - 2.8;
   const title = projectName || 'My Booth Design';
@@ -95,14 +114,32 @@ async function buildQuotePdf({ projectName, shot, lines, grandTotal, config }) {
   let textX = M, textW = CW;
   if (shot?.dataUrl) {
     const imgH = (IMG_W * shot.height) / shot.width;
-    doc.addImage(shot.dataUrl, 'JPEG', M + CW - IMG_W, y, IMG_W, imgH);
+    const ix = M + CW - IMG_W, RAD = 0.14;
+    // Clip to a rounded rectangle so the screenshot has rounded corners
+    doc.saveGraphicsState();
+    doc.roundedRect(ix, y, IMG_W, imgH, RAD, RAD, null);
+    doc.clip();
+    doc.discardPath();
+    doc.addImage(shot.dataUrl, 'JPEG', ix, y, IMG_W, imgH);
+    doc.restoreGraphicsState();
+    // Thin outline so the rounded edge reads on white paper
+    doc.setDrawColor(215, 215, 215); doc.setLineWidth(0.01);
+    doc.roundedRect(ix, y, IMG_W, imgH, RAD, RAD, 'S');
     textW = CW - IMG_W - GAP;
     headerH = imgH;
   }
+  // Backdrop logo, top-left (above project name + date)
+  const LOGO_W = 1.5;
+  let logoH = 0;
+  if (logo?.dataUrl) {
+    logoH = (LOGO_W * logo.height) / logo.width;
+    doc.addImage(logo.dataUrl, 'PNG', M, y, LOGO_W, logoH);
+  }
+  const textTop = y + (logoH ? logoH + 0.3 : 0);
   doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(26, 26, 26);
   const titleLines = doc.splitTextToSize(title, textW);
-  doc.text(titleLines, textX, y + 0.28);
-  const titleBottom = y + 0.28 + (titleLines.length - 1) * 0.3;
+  doc.text(titleLines, textX, textTop + 0.28);
+  const titleBottom = textTop + 0.28 + (titleLines.length - 1) * 0.3;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(180, 139, 49);
   doc.text(dateLabel, textX, titleBottom + 0.28);
   y += Math.max(headerH, titleBottom + 0.28 - y) + 0.4;
@@ -207,8 +244,9 @@ function ListModal({ sceneItems, catalog, config, projectName, onCaptureCorners,
   async function downloadPdf() {
     setBusy(true); setError('');
     try {
+      const logo = await loadLogo();
       await buildQuotePdf({
-        projectName, lines, grandTotal, config,
+        projectName, lines, grandTotal, config, logo,
         shot: shots.find(s => s.id === selected),
       });
     } catch (e) {
