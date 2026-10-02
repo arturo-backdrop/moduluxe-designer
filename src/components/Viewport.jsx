@@ -2128,6 +2128,48 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         renderer.autoClear = true;
         return canvasRef.current?.toDataURL('image/png') || null;
       },
+      // Renders the booth from each of the 4 floor corners (for the quote PDF).
+      // The user's camera is restored exactly as it was. Returns
+      // [{ id, label, dataUrl, width, height }].
+      captureCorners: ({ w = floorW, d = floorD } = {}) => {
+        const cv = canvasRef.current;
+        if (!cv) return [];
+        const prevPos    = camera.position.clone();
+        const prevTarget = controls.target.clone();
+        const prevHandles = handleGroup ? handleGroup.visible : null;
+        if (handleGroup) handleGroup.visible = false;
+
+        const radius  = Math.hypot(w, d);
+        const target  = new THREE.Vector3(0, 0.8, 0);
+        const corners = [
+          { id: 'front-right', label: 'Front right', sx:  1, sz:  1 },
+          { id: 'front-left',  label: 'Front left',  sx: -1, sz:  1 },
+          { id: 'back-left',   label: 'Back left',   sx: -1, sz: -1 },
+          { id: 'back-right',  label: 'Back right',  sx:  1, sz: -1 },
+        ];
+        let shots = [];
+        try {
+          shots = corners.map(({ id, label, sx, sz }) => {
+            const dir = new THREE.Vector3(sx, 0, sz).normalize();
+            camera.position.set(sx * w / 2, 0, sz * d / 2).addScaledVector(dir, radius * 0.9);
+            camera.position.y = radius * 0.75;
+            camera.lookAt(target);
+            camera.updateMatrixWorld();
+            renderer.render(bgScene, bgCam);
+            renderer.autoClear = false;
+            renderer.render(scene, camera);
+            renderer.autoClear = true;
+            return { id, label, dataUrl: cv.toDataURL('image/jpeg', 0.85), width: cv.width, height: cv.height };
+          });
+        } finally {
+          renderer.autoClear = true;
+          camera.position.copy(prevPos);
+          controls.target.copy(prevTarget);
+          controls.update();
+          if (handleGroup && prevHandles !== null) handleGroup.visible = prevHandles;
+        }
+        return shots;
+      },
       itemGroup, spawnContainer, pendingPositions, project3D, camera, controls,
       selectedUidRef: { current: null },
       clearSelection: () => {

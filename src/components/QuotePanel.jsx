@@ -76,9 +76,153 @@ function fmt(n) {
 
 const COL = '1fr 40px 72px 80px';
 
-function ListModal({ sceneItems, catalog, onClose }) {
+// ── PDF export ────────────────────────────────────────────────
+// jsPDF is loaded on demand so it doesn't weigh down the initial bundle.
+async function buildQuotePdf({ projectName, shot, lines, grandTotal, config }) {
+  const { jsPDF } = await import('jspdf');
+  const doc = new jsPDF({ unit: 'in', format: 'letter' });
+  const PW = 8.5, PH = 11, M = 0.6, CW = PW - M * 2;
+  const R_TOTAL = M + CW, R_UNIT = M + CW - 1.2, R_QTY = M + CW - 2.4, ITEM_W = CW - 2.8;
+  const title = projectName || 'My Booth Design';
+  const now = new Date();
+  const dateLabel = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const money = n => (n > 0 ? fmt(n) : '-');
+  let y = M;
+
+  // Title + date
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(26, 26, 26);
+  const titleLines = doc.splitTextToSize(title, CW);
+  doc.text(titleLines, M, y + 0.22);
+  y += 0.22 + (titleLines.length - 1) * 0.3 + 0.28;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(180, 139, 49);
+  doc.text(`Booth quote  |  ${dateLabel}`, M, y);
+  y += 0.25;
+
+  // Booth image (keeps aspect ratio, max height 4.2in)
+  if (shot?.dataUrl) {
+    const maxH = 4.2;
+    let w = CW, h = (CW * shot.height) / shot.width;
+    if (h > maxH) { h = maxH; w = (maxH * shot.width) / shot.height; }
+    doc.addImage(shot.dataUrl, 'JPEG', M + (CW - w) / 2, y, w, h);
+    y += h + 0.3;
+  }
+
+  // Table
+  const drawHeader = () => {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(150, 150, 150);
+    doc.text('ITEM', M, y);
+    doc.text('QTY', R_QTY, y, { align: 'right' });
+    doc.text('UNIT PRICE', R_UNIT, y, { align: 'right' });
+    doc.text('SUBTOTAL', R_TOTAL, y, { align: 'right' });
+    y += 0.08;
+    doc.setDrawColor(220, 220, 220); doc.setLineWidth(0.01);
+    doc.line(M, y, M + CW, y);
+    y += 0.22;
+  };
+  const ensureSpace = h => {
+    if (y + h > PH - M - 0.4) { doc.addPage(); y = M; drawHeader(); }
+  };
+  drawHeader();
+  lines.forEach(line => {
+    const nameLines = doc.splitTextToSize(line.name, ITEM_W);
+    ensureSpace(nameLines.length * 0.17 + 0.1);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(26, 26, 26);
+    doc.text(nameLines, M, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(String(line.count), R_QTY, y, { align: 'right' });
+    doc.text(money(line.unitPrice), R_UNIT, y, { align: 'right' });
+    doc.setFont('helvetica', 'bold');
+    doc.text(money(line.total), R_TOTAL, y, { align: 'right' });
+    y += nameLines.length * 0.17 + 0.05;
+    line.accs.forEach(acc => {
+      ensureSpace(0.2);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(120, 120, 120);
+      doc.text(`- ${acc.label}`, M + 0.2, y);
+      doc.text(String(acc.qty), R_QTY, y, { align: 'right' });
+      doc.text(money(acc.unitPrice), R_UNIT, y, { align: 'right' });
+      doc.text(money(acc.total), R_TOTAL, y, { align: 'right' });
+      y += 0.19;
+    });
+    y += 0.08;
+    doc.setDrawColor(240, 240, 240); doc.line(M, y - 0.04, M + CW, y - 0.04);
+    y += 0.1;
+  });
+
+  // Totals
+  ensureSpace(1.6);
+  y += 0.1;
+  doc.setDrawColor(200, 200, 200); doc.setLineWidth(0.02);
+  doc.line(M, y, M + CW, y);
+  y += 0.3;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(26, 26, 26);
+  doc.text('ESTIMATED PRICE', M, y);
+  if (grandTotal > 0) doc.text('OR RENT FOR', R_TOTAL, y, { align: 'right' });
+  y += 0.3;
+  doc.setFontSize(18);
+  doc.text(grandTotal > 0 ? fmt(grandTotal) : 'Contact for pricing', M, y);
+  if (grandTotal > 0) doc.text(fmt(Math.round(grandTotal / 3)), R_TOTAL, y, { align: 'right' });
+  y += 0.22;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(160, 160, 160);
+  doc.text('Final price may vary', M, y);
+  if (grandTotal > 0) doc.text('per event', R_TOTAL, y, { align: 'right' });
+  y += 0.5;
+
+  // Contact
+  ensureSpace(0.6);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(120, 120, 120);
+  doc.text('Want to get a quote?', M, y);
+  y += 0.22;
+  doc.setFont('helvetica', 'bold'); doc.setTextColor(180, 139, 49);
+  doc.text(`${config?.phone || '(888) 765-2711'}   |   sales@backdrop.com`, M, y);
+
+  const safeName = title.replace(/[^\w-]+/g, '_').replace(/^_+|_+$/g, '') || 'booth';
+  const stamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  doc.save(`${safeName}_quote_${stamp}.pdf`);
+}
+
+function ListModal({ sceneItems, catalog, config, projectName, onCaptureCorners, onClose }) {
   const lines = buildLineItems(sceneItems, catalog);
   const grandTotal = lines.reduce((s, l) => s + l.total + l.accs.reduce((a, acc) => a + acc.total, 0), 0);
+
+  // PDF flow: 'list' → 'pick' (choose one of 4 corner views) → download
+  const [step,     setStep]     = useState('list');
+  const [shots,    setShots]    = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [busy,     setBusy]     = useState(false);
+  const [error,    setError]    = useState('');
+
+  async function startPdf() {
+    setBusy(true); setError('');
+    await new Promise(r => requestAnimationFrame(r)); // let the busy state paint first
+    try {
+      const result = onCaptureCorners?.() || [];
+      if (!result.length) throw new Error('capture failed');
+      setShots(result); setSelected(result[0].id); setStep('pick');
+    } catch (e) {
+      console.error('Quote capture failed:', e);
+      setError('Could not capture the booth views. Please try again.');
+    }
+    setBusy(false);
+  }
+
+  async function downloadPdf() {
+    setBusy(true); setError('');
+    try {
+      await buildQuotePdf({
+        projectName, lines, grandTotal, config,
+        shot: shots.find(s => s.id === selected),
+      });
+    } catch (e) {
+      console.error('PDF export failed:', e);
+      setError('Could not create the PDF. Please try again.');
+    }
+    setBusy(false);
+  }
+
+  const goldBtn = {
+    flex:1, padding:'12px 16px', borderRadius:12, border:'none', cursor:'pointer',
+    background:'#b48b31', color:'#fff', fontWeight:800, fontSize:13, letterSpacing:'0.02em',
+  };
 
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
@@ -86,7 +230,7 @@ function ListModal({ sceneItems, catalog, onClose }) {
 
         {/* Header */}
         <div className={styles.modalHeader}>
-          <div className={styles.modalTitle}>Your List</div>
+          <div className={styles.modalTitle}>{step === 'pick' ? 'Choose a view' : 'Your List'}</div>
           <button className={styles.closeBtn} onClick={onClose}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -94,6 +238,34 @@ function ListModal({ sceneItems, catalog, onClose }) {
           </button>
         </div>
 
+        {step === 'pick' ? (
+          <div>
+            <div style={{ fontSize:12, color:'#888', marginBottom:12 }}>
+              Pick the angle you want on your PDF.
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+              {shots.map(s => (
+                <button key={s.id} onClick={() => setSelected(s.id)} style={{
+                  padding:0, background:'#fff', cursor:'pointer', textAlign:'left', overflow:'hidden',
+                  borderRadius:10, border: selected === s.id ? '2px solid #b48b31' : '2px solid #eee',
+                }}>
+                  <img src={s.dataUrl} alt={s.label} style={{ display:'block', width:'100%', aspectRatio:`${s.width} / ${s.height}`, objectFit:'cover' }} />
+                  <div style={{ padding:'6px 10px', fontSize:11, fontWeight:700, color: selected === s.id ? '#b48b31' : '#666' }}>
+                    {s.label}
+                  </div>
+                </button>
+              ))}
+            </div>
+            {error && <div style={{ color:'#c0392b', fontSize:12, marginTop:10 }}>{error}</div>}
+            <div style={{ display:'flex', gap:10, marginTop:16 }}>
+              <button onClick={() => setStep('list')} disabled={busy} style={{ ...goldBtn, flex:'0 0 auto', background:'#f3f3f3', color:'#666' }}>Back</button>
+              <button onClick={downloadPdf} disabled={busy || !selected} style={{ ...goldBtn, opacity: busy ? 0.6 : 1 }}>
+                {busy ? 'Creating PDF…' : 'Download PDF'}
+              </button>
+            </div>
+          </div>
+        ) : (
+        <>
         {/* Column headers */}
         <div style={{ display:'grid', gridTemplateColumns:COL, gap:'0 8px', padding:'0 4px 8px 4px', marginBottom:4 }}>
           <span style={{ fontSize:10, color:'#bbb', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Item</span>
@@ -157,6 +329,20 @@ function ListModal({ sceneItems, catalog, onClose }) {
           </div>
         </div>
 
+        {/* Download PDF */}
+        <div style={{ marginTop:16 }}>
+          <button onClick={startPdf} disabled={busy || lines.length === 0} style={{
+            ...goldBtn, width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:8,
+            opacity: busy || lines.length === 0 ? 0.6 : 1,
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            {busy ? 'Capturing views…' : 'Download PDF'}
+          </button>
+          {error && <div style={{ color:'#c0392b', fontSize:12, marginTop:8, textAlign:'center' }}>{error}</div>}
+        </div>
+
         {/* CTA */}
         <div style={{ marginTop:18, padding:'16px 20px', background:'#fdf8ef', borderRadius:14, textAlign:'center' }}>
           <div style={{ fontSize:12, color:'#aaa', marginBottom:12 }}>Want to get a quote?</div>
@@ -182,6 +368,8 @@ function ListModal({ sceneItems, catalog, onClose }) {
             </a>
           </div>
         </div>
+        </>
+        )}
 
       </div>
     </div>
@@ -191,7 +379,7 @@ function ListModal({ sceneItems, catalog, onClose }) {
 // ── QuotePanel pill ───────────────────────────────────────────
 
 
-export default function QuotePanel({ config, sceneItems, catalog, onAIRender }) {
+export default function QuotePanel({ config, sceneItems, catalog, projectName, onCaptureCorners, onAIRender }) {
   const [open, setOpen] = useState(false);
 
   const items = sceneItems.filter(i => {
@@ -233,7 +421,7 @@ export default function QuotePanel({ config, sceneItems, catalog, onAIRender }) 
         </button>
         */}
       </div>
-      {open && <ListModal sceneItems={sceneItems} catalog={catalog} onClose={() => setOpen(false)} />}
+      {open && <ListModal sceneItems={sceneItems} catalog={catalog} config={config} projectName={projectName} onCaptureCorners={onCaptureCorners} onClose={() => setOpen(false)} />}
     </>
   );
 }

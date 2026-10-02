@@ -672,7 +672,16 @@ export default function App() {
           </div>
           {/* QuotePanel + VideoWidget — fixed at bottom */}
           <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
-            <QuotePanel config={CONFIG} sceneItems={sceneItems} catalog={catalog} onAIRender={() => { viewportEngRef.current?.clearSelection?.(); setCaptureMode(true); }} />
+            <QuotePanel
+              config={CONFIG}
+              sceneItems={sceneItems}
+              catalog={catalog}
+              projectName={projectName}
+              onCaptureCorners={() => {
+                viewportEngRef.current?.clearSelection?.();
+                return viewportEngRef.current?.captureCorners?.({ w: floorSize?.w, d: floorSize?.d }) || [];
+              }}
+              onAIRender={() => { viewportEngRef.current?.clearSelection?.(); setCaptureMode(true); }} />
             <VideoWidget config={CONFIG} />
           </div>
         </div>
