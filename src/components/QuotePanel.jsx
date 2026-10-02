@@ -89,24 +89,23 @@ async function buildQuotePdf({ projectName, shot, lines, grandTotal, config }) {
   const money = n => (n > 0 ? fmt(n) : '-');
   let y = M;
 
-  // Title + date
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(26, 26, 26);
-  const titleLines = doc.splitTextToSize(title, CW);
-  doc.text(titleLines, M, y + 0.22);
-  y += 0.22 + (titleLines.length - 1) * 0.3 + 0.28;
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(180, 139, 49);
-  doc.text(`Booth quote  |  ${dateLabel}`, M, y);
-  y += 0.25;
-
-  // Booth image (keeps aspect ratio, max height 4.2in)
+  // Header: small booth image top-left, project name + date to its right
+  const IMG_W = 2.6, GAP = 0.3;
+  let headerH = 0;
+  let textX = M, textW = CW;
   if (shot?.dataUrl) {
-    const maxH = 4.2;
-    let w = CW, h = (CW * shot.height) / shot.width;
-    if (h > maxH) { h = maxH; w = (maxH * shot.width) / shot.height; }
-    doc.addImage(shot.dataUrl, 'JPEG', M + (CW - w) / 2, y, w, h);
-    y += h + 0.3;
+    const imgH = (IMG_W * shot.height) / shot.width;
+    doc.addImage(shot.dataUrl, 'JPEG', M, y, IMG_W, imgH);
+    textX = M + IMG_W + GAP; textW = CW - IMG_W - GAP;
+    headerH = imgH;
   }
-
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(26, 26, 26);
+  const titleLines = doc.splitTextToSize(title, textW);
+  doc.text(titleLines, textX, y + 0.28);
+  const titleBottom = y + 0.28 + (titleLines.length - 1) * 0.3;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(180, 139, 49);
+  doc.text(dateLabel, textX, titleBottom + 0.28);
+  y += Math.max(headerH, titleBottom + 0.28 - y) + 0.4;
   // Table
   const drawHeader = () => {
     doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(150, 150, 150);

@@ -2129,18 +2129,71 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         return canvasRef.current?.toDataURL('image/png') || null;
       },
       // Renders the booth from each of the 4 floor corners (for the quote PDF).
-      // The user's camera is restored exactly as it was. Returns
-      // [{ id, label, dataUrl, width, height }].
+      // Each view is auto-framed: the camera is pulled back along its corner
+      // direction until the bounding box of everything the user built fits
+      // inside the frame (with a small margin). Shots are always 4:3, whatever
+      // the window size, and the user's camera/viewport are restored exactly.
+      // Returns [{ id, label, dataUrl, width, height }].
       captureCorners: ({ w = floorW, d = floorD } = {}) => {
         const cv = canvasRef.current;
         if (!cv) return [];
-        const prevPos    = camera.position.clone();
-        const prevTarget = controls.target.clone();
+
+        // Bounding box of visible product + wall meshes (no glow planes/outlines)
+        scene.updateMatrixWorld(true);
+        const box = new THREE.Box3();
+        [itemGroup, wallGroup].forEach(g => g.traverseVisible(o => {
+          if (!o.isMesh || !o.geometry || o.userData.isMeta || o.userData.isWallOutline) return;
+          if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+          box.union(new THREE.Box3().copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld));
+        }));
+        if (box.isEmpty()) box.set(new THREE.Vector3(-w / 2, 0, -d / 2), new THREE.Vector3(w / 2, 2.5, d / 2));
+        const center = box.getCenter(new THREE.Vector3());
+        const R = box.getSize(new THREE.Vector3()).length() / 2; // bounding-sphere radius
+        const pts = [];
+        [box.min.x, box.max.x].forEach(x => [box.min.y, box.max.y].forEach(y => [box.min.z, box.max.z].forEach(z => pts.push(new THREE.Vector3(x, y, z)))));
+
+        const ELEV = THREE.MathUtils.degToRad(32);
+        const MARGIN = 0.92; // keep everything within 92% of the frame (~8% breathing room)
+        const v = new THREE.Vector3();
+        const place = (t, dir) => {
+          camera.position.set(
+            center.x + dir.x * Math.cos(ELEV) * t,
+            center.y + Math.sin(ELEV) * t,
+            center.z + dir.z * Math.cos(ELEV) * t,
+          );
+          camera.lookAt(center);
+          camera.updateMatrixWorld(true);
+        };
+        const fits = (t, dir) => {
+          place(t, dir);
+          return pts.every(p => { v.copy(p).project(camera); return Math.abs(v.x) <= MARGIN && Math.abs(v.y) <= MARGIN && v.z < 1; });
+        };
+        const solve = dir => { // smallest camera distance at which the whole box fits
+          let lo = R * 1.05, hi = Math.max(lo * 1.01, Math.min(R * 40, 190));
+          if (fits(lo, dir)) return lo;
+          for (let i = 0; i < 28; i++) { const mid = (lo + hi) / 2; if (fits(mid, dir)) hi = mid; else lo = mid; }
+          return hi;
+        };
+
+        // Fixed 4:3 region, centered on the canvas
+        const size = renderer.getSize(new THREE.Vector2());
+        const pr   = renderer.getPixelRatio();
+        const rw = Math.min(size.x, size.y * 4 / 3), rh = rw * 3 / 4;
+        const rx = (size.x - rw) / 2, ry = (size.y - rh) / 2;
+        const sx0 = Math.floor(rx * pr), sy0 = Math.floor(ry * pr);
+        const sw  = Math.floor(rw * pr), sh  = Math.floor(rh * pr);
+        const outW = Math.min(1600, sw), outH = Math.round(outW * 3 / 4);
+        const out = document.createElement('canvas');
+        out.width = outW; out.height = outH;
+        const octx = out.getContext('2d');
+
+        const prevPos     = camera.position.clone();
+        const prevTarget  = controls.target.clone();
+        const prevAspect  = camera.aspect;
         const prevHandles = handleGroup ? handleGroup.visible : null;
         if (handleGroup) handleGroup.visible = false;
+        camera.aspect = 4 / 3; camera.updateProjectionMatrix();
 
-        const radius  = Math.hypot(w, d);
-        const target  = new THREE.Vector3(0, 0.8, 0);
         const corners = [
           { id: 'front-right', label: 'Front right', sx:  1, sz:  1 },
           { id: 'front-left',  label: 'Front left',  sx: -1, sz:  1 },
@@ -2149,20 +2202,24 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         ];
         let shots = [];
         try {
+          renderer.setScissorTest(true);
           shots = corners.map(({ id, label, sx, sz }) => {
-            const dir = new THREE.Vector3(sx, 0, sz).normalize();
-            camera.position.set(sx * w / 2, 0, sz * d / 2).addScaledVector(dir, radius * 0.9);
-            camera.position.y = radius * 0.75;
-            camera.lookAt(target);
-            camera.updateMatrixWorld();
+            const dir = new THREE.Vector3(sx * w, 0, sz * d).normalize();
+            place(solve(dir), dir);
+            renderer.setViewport(rx, ry, rw, rh);
+            renderer.setScissor(rx, ry, rw, rh);
+            renderer.autoClear = true;
             renderer.render(bgScene, bgCam);
             renderer.autoClear = false;
             renderer.render(scene, camera);
-            renderer.autoClear = true;
-            return { id, label, dataUrl: cv.toDataURL('image/jpeg', 0.85), width: cv.width, height: cv.height };
+            octx.drawImage(cv, sx0, sy0, sw, sh, 0, 0, outW, outH);
+            return { id, label, dataUrl: out.toDataURL('image/jpeg', 0.88), width: outW, height: outH };
           });
         } finally {
           renderer.autoClear = true;
+          renderer.setScissorTest(false);
+          renderer.setViewport(0, 0, size.x, size.y);
+          camera.aspect = prevAspect; camera.updateProjectionMatrix();
           camera.position.copy(prevPos);
           controls.target.copy(prevTarget);
           controls.update();
