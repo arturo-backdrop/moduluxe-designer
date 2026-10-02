@@ -4,6 +4,8 @@ import { useAutoSave, loadSavedProject, clearSavedProject } from './hooks/useAut
 import { loadModel } from './three/glbParser.js';
 import { toDisplay, fromDisplay } from './units.js';
 import { normalizeManifest } from './manifest.js';
+import { measureModelBox } from './three/measureModel.js';
+import { itemRect, findFreeOffset } from './placement.js';
 
 import Onboarding  from './components/Onboarding.jsx';
 import Tour, { useTour } from './components/Tour.jsx';
@@ -66,6 +68,7 @@ export default function App() {
   const radialMenuWrapperRef = useRef(null);
   const viewportEngRef       = useRef(null);
   const [captureMode,    setCaptureMode]    = useState(false);
+  const [overlapPrompt,  setOverlapPrompt]  = useState(null); // preset waiting for "place it on top?" answer
   const [hoverTooltip,  setHoverTooltip]   = useState(null); // {x,y} | null
   const [aiCapture,     setAiCapture]      = useState(null);  // base64 PNG
   const [aiModalOpen,   setAiModalOpen]    = useState(false);
@@ -354,14 +357,19 @@ export default function App() {
   restoreItemStatesRef.current = restoreItemStates;
 
   // Sidebar: load only preset items, keep floor size
-  const handleLoadPreset = useCallback((preset) => {
-    if (!preset?.items?.length) return;
+  const sceneItemsRef = useRef(sceneItems);
+  sceneItemsRef.current = sceneItems;
+  const floorSizeRef = useRef(floorSize);
+  floorSizeRef.current = floorSize;
+
+  // Adds a preset's items to the scene, shifted by (dx, dz) meters
+  const addPresetItems = useCallback((preset, dx = 0, dz = 0) => {
     const groupId = `preset_group_${Date.now()}`;
     const newItems = preset.items.map((it, i) => ({
       uid: `${it.modelId}_preset_${Date.now()}_${i}`,
       modelId: it.modelId,
-      x: it.x || 0,
-      z: it.z || 0,
+      x: (it.x || 0) + dx,
+      z: (it.z || 0) + dz,
       rotY: it.rotY || 0,
       color: it.color || null,
       groupId,
@@ -379,6 +387,57 @@ export default function App() {
     // Apply socket and toggle states after GLBs finish loading
     setTimeout(() => restoreItemStatesRef.current?.(newItems), 300);
   }, [pushHistory, catalog]);
+
+  // Footprint of a model on the floor (real GLB bounds, manifest size as fallback)
+  const measureModel = useCallback(async (modelId) => {
+    const def = catalog[modelId];
+    try {
+      if (def?.file) {
+        const b = await measureModelBox(def.file);
+        if (b) return b;
+      }
+    } catch (e) {
+      console.warn('Could not measure model, using manifest size:', modelId, e);
+    }
+    const w = def?.w || 1, d = def?.d || 0.2;
+    return { minX: -w / 2, maxX: w / 2, minZ: -d / 2, maxZ: d / 2 };
+  }, [catalog]);
+
+  // Drops the preset in the free spot closest to its original position, always
+  // inside the floor. If there is no free spot, asks before stacking it.
+  const handleLoadPreset = useCallback(async (preset) => {
+    if (!preset?.items?.length) return;
+    const current = sceneItemsRef.current || [];
+    const floor   = floorSizeRef.current;
+    const walls   = current.filter(i => i.type === 'wall' &&
+      [i.x1, i.z1, i.x2, i.z2].every(Number.isFinite));
+    const placed  = current.filter(i => i.type !== 'wall' && i.modelId &&
+      Number.isFinite(i.x) && Number.isFinite(i.z));
+
+    // Nothing on the floor yet (or floor size unknown): keep the preset as designed
+    if ((!placed.length && !walls.length) || !floor?.w || !floor?.d) {
+      addPresetItems(preset, 0, 0);
+      return;
+    }
+
+    try {
+      const ids = [...new Set([...preset.items, ...placed].map(i => i.modelId))];
+      const boxes = {};
+      await Promise.all(ids.map(async id => { boxes[id] = await measureModel(id); }));
+
+      const presetRects   = preset.items.map(it => itemRect(it, boxes[it.modelId]));
+      const occupiedRects = placed.map(it => itemRect(it, boxes[it.modelId]));
+      const result = findFreeOffset({
+        presetRects, occupiedRects, walls, floorW: floor.w, floorD: floor.d,
+      });
+
+      if (result.fits) addPresetItems(preset, result.dx, result.dz);
+      else setOverlapPrompt({ preset });
+    } catch (e) {
+      console.error('Preset placement failed, adding it as designed:', e);
+      addPresetItems(preset, 0, 0);
+    }
+  }, [addPresetItems, measureModel]);
 
   const addSceneItem = useCallback((modelId) => {
     const uid = `${modelId}_${Date.now()}`;
@@ -1031,6 +1090,55 @@ export default function App() {
             }, 280);
           }}
         />
+      )}
+
+      {/* No free space for the preset: ask before stacking it on top */}
+      {overlapPrompt && (
+        <div
+          onClick={() => setOverlapPrompt(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 10000,
+            background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(2px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: "'Figtree', sans-serif",
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: '#fff', borderRadius: 16, padding: '24px 26px',
+              width: 'min(380px, 90vw)', boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+            }}
+          >
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#1a1a1a', marginBottom: 8 }}>
+              Not enough free space
+            </div>
+            <div style={{ fontSize: 13, color: '#666', lineHeight: 1.5, marginBottom: 20 }}>
+              There's no empty spot on the floor for “{overlapPrompt.preset?.name || 'this preset'}”.
+              Do you want to place it on top of what's already there?
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => setOverlapPrompt(null)}
+                style={{
+                  flex: 1, padding: '11px 14px', borderRadius: 12, border: 'none', cursor: 'pointer',
+                  background: '#f3f3f3', color: '#666', fontWeight: 700, fontSize: 13,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { addPresetItems(overlapPrompt.preset, 0, 0); setOverlapPrompt(null); }}
+                style={{
+                  flex: 1, padding: '11px 14px', borderRadius: 12, border: 'none', cursor: 'pointer',
+                  background: '#b48b31', color: '#fff', fontWeight: 800, fontSize: 13,
+                }}
+              >
+                Place it on top
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Hover tooltip */}
