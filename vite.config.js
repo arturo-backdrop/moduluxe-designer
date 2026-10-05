@@ -4,6 +4,7 @@ import { DEPLOY } from './deploy.config.js';
 
 export default defineConfig({
   plugins: [react()],
-  base: DEPLOY.base,
+  // VITE_BASE overrides the base for the /dev/ preview build (see deploy-dev.yml)
+  base: process.env.VITE_BASE || DEPLOY.base,
   ...(DEPLOY.assetsDir ? { build: { assetsDir: DEPLOY.assetsDir } } : {}),
 });

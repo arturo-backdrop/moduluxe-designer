@@ -1,8 +1,8 @@
-name: Deploy Production
+name: Deploy Dev Preview
 
 on:
   push:
-    branches: [main]
+    branches: [dev]
   workflow_dispatch:
 
 jobs:
@@ -21,14 +21,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # The dev preview is served from a subfolder, so assets need that base.
       - name: Build
         run: npm run build
+        env:
+          VITE_BASE: /moduluxe-designer/dev/
 
-      # Publishes to the root of the gh-pages branch. keep_files preserves
-      # the /dev/ preview folder written by deploy-dev.yml.
-      - name: Deploy to GitHub Pages
+      # Publishes to /dev/ on the gh-pages branch; the production files
+      # at the root are left untouched.
+      - name: Deploy preview to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
+          destination_dir: dev
           keep_files: true
