@@ -25,8 +25,8 @@ function springEase(t) {
 
 // ── Settings ──────────────────────────────────────────────────
 const S = {
-  bg:   { top: 0xebebeb, bottom: 0xd6d6d6 },
-  fog:  { color: 0xdedede, density: 0.018 },
+  bg:   { top: 0xc4bdb4, bottom: 0xf8f7f5 },   // warm gray (top) → near white (bottom)
+  fog:  { color: 0xe1ddd8, density: 0.018 },    // midpoint of the gradient so the floor edge blends in
   ambient: 0.1, key: 1.5, fill: 0.2, rim: 0.1, top: 0.15, side: 0.20, hemi: 0.2,
   floor: { roughness: 0.25, normalScale: 1.1, tiling: 2, tilingRough: 3.5 },
   shadow: { size: 2048, radius: 8, bias: -0.001 },
