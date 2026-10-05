@@ -454,7 +454,7 @@ export default function App() {
     const pct = total > 0 ? Math.round((loaded / total) * 100) : 0;
     return (
       <div style={{ position:'fixed', inset:0, background:'#ffffff', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16 }}>
-        <img src="/moduluxe-designer/backdrop-logo.png" style={{ height:48 }} alt="backdrop" />
+        <img src={`${import.meta.env.BASE_URL}backdrop-logo.png`} style={{ height:48 }} alt="backdrop" />
         <div style={{ fontFamily:'Figtree,sans-serif', fontSize:14, color:'#aaa', marginTop:8 }}>
           {total > 0 ? `Loading models… ${loaded}/${total}` : 'Loading catalog…'}
         </div>
