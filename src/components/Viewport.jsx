@@ -196,12 +196,28 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     // Background (no bloom, rendered before scene)
     const bgScene = new THREE.Scene();
     const bgCam   = new THREE.OrthographicCamera(-1,1,1,-1,0,1);
-    bgScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2), new THREE.ShaderMaterial({
-      uniforms: { t:{ value:new THREE.Color(S.bg.top) }, b:{ value:new THREE.Color(S.bg.bottom) } },
+    const bgMat = new THREE.ShaderMaterial({
+      uniforms: {
+        t:      { value:new THREE.Color(S.bg.top) },
+        b:      { value:new THREE.Color(S.bg.bottom) },
+        aspect: { value:window.innerWidth / window.innerHeight },
+      },
       vertexShader:  'varying vec2 v;void main(){v=uv;gl_Position=vec4(position,1.0);}',
-      fragmentShader:'uniform vec3 t,b;varying vec2 v;void main(){gl_FragColor=vec4(mix(b,t,v.y),1.0);}',
+      // Photo-studio backdrop: eased top→bottom falloff, soft backlight glow
+      // behind the booth (slightly above center) and a subtle corner vignette.
+      fragmentShader:`
+        uniform vec3 t, b; uniform float aspect; varying vec2 v;
+        void main(){
+          vec3 col = mix(b, t, smoothstep(0.0, 0.85, v.y));
+          vec2 p = (v - vec2(0.5, 0.58)) * vec2(aspect, 1.0);
+          col += vec3(0.045) * (1.0 - smoothstep(0.0, 0.75, length(p)));
+          vec2 q = (v - 0.5) * vec2(aspect, 1.0);
+          col *= 1.0 - 0.07 * smoothstep(0.45, 1.15, length(q));
+          gl_FragColor = vec4(col, 1.0);
+        }`,
       depthWrite:false, depthTest:false,
-    })));
+    });
+    bgScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2), bgMat));
 
     // Main scene
     const scene = new THREE.Scene();
@@ -2193,6 +2209,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         const prevHandles = handleGroup ? handleGroup.visible : null;
         if (handleGroup) handleGroup.visible = false;
         camera.aspect = 4 / 3; camera.updateProjectionMatrix();
+        bgMat.uniforms.aspect.value = 4 / 3;
 
         const corners = [
           { id: 'front-right', label: 'Front right', sx:  1, sz:  1 },
@@ -2220,6 +2237,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
           renderer.setScissorTest(false);
           renderer.setViewport(0, 0, size.x, size.y);
           camera.aspect = prevAspect; camera.updateProjectionMatrix();
+          bgMat.uniforms.aspect.value = prevAspect;
           camera.position.copy(prevPos);
           controls.target.copy(prevTarget);
           controls.update();
@@ -2321,6 +2339,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       const w = window.innerWidth, h = window.innerHeight;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
+      bgMat.uniforms.aspect.value = w / h;
       renderer.setSize(w, h);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     };
