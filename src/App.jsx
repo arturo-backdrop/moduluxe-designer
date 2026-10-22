@@ -4,6 +4,7 @@ import { useAutoSave, loadSavedProject, clearSavedProject } from './hooks/useAut
 import { loadModel } from './three/glbParser.js';
 import { toDisplay, fromDisplay } from './units.js';
 import { normalizeManifest } from './manifest.js';
+import MobileNotice, { useIsSmallScreen } from './components/MobileNotice.jsx';
 import { measureModelBox } from './three/measureModel.js';
 import { itemRect, findFreeOffset } from './placement.js';
 
@@ -34,7 +35,7 @@ const DEFAULT_STATE = {
   activeTool:  'select',
 };
 
-export default function App() {
+function AppMain() {
   const [catalogReady,   setCatalogReady]   = useState(false);
   const [glbsReady,      setGlbsReady]      = useState(false);
   const [loadProgress,   setLoadProgress]   = useState({ loaded: 0, total: 0 });
@@ -1173,8 +1174,10 @@ export default function App() {
   )
 }
 
-
-
-
-
-
+// Small screens (phones) get a friendly notice instead of the editor.
+// The editor isn't mounted at all, so no models are downloaded on mobile.
+export default function App() {
+  const isSmallScreen = useIsSmallScreen();
+  if (isSmallScreen) return <MobileNotice config={CONFIG} />;
+  return <AppMain />;
+}

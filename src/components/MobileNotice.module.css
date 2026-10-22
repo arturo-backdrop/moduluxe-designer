@@ -1,0 +1,94 @@
+.page {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, #ffffff 0%, #f4f1ea 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
+  font-family: 'Figtree', sans-serif;
+  overflow-y: auto;
+}
+
+.card {
+  width: 100%;
+  max-width: 400px;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.12);
+  padding: 32px 28px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: enter 0.45s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+@keyframes enter {
+  from { transform: scale(0.94) translateY(16px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.logo {
+  height: 32px;
+  margin-bottom: 28px;
+}
+
+.iconWrap {
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  background: rgba(180, 139, 49, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-weight: 900;
+  font-size: 24px;
+  line-height: 1.2;
+  color: #1a1a1a;
+  margin: 0 0 12px;
+}
+
+.text {
+  font-size: 15px;
+  line-height: 1.55;
+  color: #6b6b6b;
+  margin: 0 0 10px;
+}
+
+.btnPrimary {
+  width: 100%;
+  margin-top: 18px;
+  padding: 15px;
+  min-height: 48px;
+  background: #b48b31;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btnPrimary:active {
+  background: #9a7628;
+  transform: scale(0.98);
+}
+
+.contact {
+  margin-top: 20px;
+  font-size: 13px;
+  color: #aaa;
+}
+
+.phone {
+  color: #b48b31;
+  font-weight: 700;
+  text-decoration: none;
+}
