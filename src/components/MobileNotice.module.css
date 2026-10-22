@@ -3,14 +3,15 @@
   inset: 0;
   background: linear-gradient(180deg, #ffffff 0%, #f4f1ea 100%);
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
   padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
   font-family: 'Figtree', sans-serif;
   overflow-y: auto;
 }
 
 .card {
+  margin: auto;
+  flex-shrink: 0;
   width: 100%;
   max-width: 400px;
   background: #ffffff;
@@ -21,6 +22,7 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
+  overflow: hidden;
   animation: enter 0.45s cubic-bezier(0.34, 1.2, 0.64, 1);
 }
 
@@ -29,9 +31,18 @@
   to   { transform: scale(1) translateY(0); opacity: 1; }
 }
 
+.header {
+  align-self: stretch;
+  margin: -32px -28px 28px;
+  padding: 26px 20px;
+  background: #111111;
+  display: flex;
+  justify-content: center;
+}
+
 .logo {
-  height: 32px;
-  margin-bottom: 28px;
+  height: 34px;
+  display: block;
 }
 
 .iconWrap {
@@ -81,14 +92,56 @@
   transform: scale(0.98);
 }
 
-.contact {
-  margin-top: 20px;
-  font-size: 13px;
-  color: #aaa;
+.btnPrimary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
 }
 
-.phone {
+.help {
+  width: 100%;
+  margin-top: 24px;
+  padding: 22px 20px 20px;
+  background: rgba(180, 139, 49, 0.07);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.helpTitle {
+  font-weight: 800;
+  font-size: 20px;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.helpText {
+  font-size: 14px;
+  color: #6b6b6b;
+  margin-bottom: 16px;
+}
+
+.phoneBtn {
+  width: 100%;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 2px solid #b48b31;
+  border-radius: 12px;
+  background: #ffffff;
   color: #b48b31;
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 20px;
   text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, color 0.15s;
+}
+.phoneBtn:active {
+  background: #b48b31;
+  color: #ffffff;
 }
