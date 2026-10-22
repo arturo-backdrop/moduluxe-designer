@@ -1,23 +1,26 @@
+/* Sizes scale with viewport height (dvh) so the whole card fits on screen
+   without scrolling, from small phones (~550px tall) to large ones. */
+
 .page {
   position: fixed;
   inset: 0;
   background: linear-gradient(180deg, #ffffff 0%, #f4f1ea 100%);
   display: flex;
-  flex-direction: column;
-  padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
+  align-items: center;
+  justify-content: center;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
   font-family: 'Figtree', sans-serif;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .card {
-  margin: auto;
-  flex-shrink: 0;
   width: 100%;
   max-width: 400px;
+  max-height: 100%;
   background: #ffffff;
   border-radius: 20px;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.12);
-  padding: 32px 28px 28px;
+  padding: 0 clamp(18px, 6vw, 28px) clamp(16px, 3dvh, 28px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -33,49 +36,55 @@
 
 .header {
   align-self: stretch;
-  margin: -32px -28px 28px;
-  padding: 30px 20px;
+  margin: 0 calc(-1 * clamp(18px, 6vw, 28px)) clamp(14px, 3dvh, 26px);
+  padding: clamp(14px, 2.8dvh, 28px) 20px;
   background: #111111;
   display: flex;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .logo {
-  height: 52px;
+  height: clamp(36px, 6dvh, 52px);
   display: block;
 }
 
 .iconWrap {
-  width: 104px;
-  height: 104px;
+  width: clamp(64px, 11dvh, 100px);
+  height: clamp(64px, 11dvh, 100px);
   border-radius: 50%;
   background: rgba(180, 139, 49, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 24px;
+  margin-bottom: clamp(10px, 2.2dvh, 22px);
+  flex-shrink: 0;
+}
+.iconWrap svg {
+  width: 62%;
+  height: auto;
 }
 
 .title {
   font-weight: 900;
-  font-size: 24px;
+  font-size: clamp(20px, 3.2dvh, 24px);
   line-height: 1.2;
   color: #1a1a1a;
-  margin: 0 0 12px;
+  margin: 0 0 clamp(6px, 1.2dvh, 12px);
 }
 
 .text {
-  font-size: 15px;
-  line-height: 1.55;
+  font-size: clamp(14px, 2dvh, 15px);
+  line-height: 1.45;
   color: #6b6b6b;
-  margin: 0 0 10px;
+  margin: 0 0 clamp(4px, 1dvh, 10px);
 }
 
 .btnPrimary {
   width: 100%;
-  margin-top: 18px;
-  padding: 15px;
-  min-height: 48px;
+  margin-top: clamp(10px, 2dvh, 18px);
+  padding: 0 14px;
+  min-height: clamp(46px, 6.5dvh, 52px);
   background: #b48b31;
   color: #ffffff;
   border: none;
@@ -84,6 +93,12 @@
   font-weight: 700;
   font-size: 15px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  flex-shrink: 0;
   transition: background 0.15s, transform 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
@@ -92,41 +107,34 @@
   transform: scale(0.98);
 }
 
-.btnPrimary {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  text-decoration: none;
-}
-
 .help {
   width: 100%;
-  margin-top: 24px;
-  padding: 22px 20px 20px;
+  margin-top: clamp(12px, 2.4dvh, 22px);
+  padding: clamp(12px, 2.2dvh, 20px) 16px;
   background: rgba(180, 139, 49, 0.07);
   border-radius: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .helpTitle {
   font-weight: 800;
-  font-size: 20px;
+  font-size: clamp(18px, 2.8dvh, 20px);
   color: #1a1a1a;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .helpText {
   font-size: 14px;
   color: #6b6b6b;
-  margin-bottom: 16px;
+  margin-bottom: clamp(10px, 1.8dvh, 16px);
 }
 
 .phoneBtn {
   width: 100%;
-  min-height: 52px;
+  min-height: clamp(46px, 6.5dvh, 52px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -136,7 +144,7 @@
   background: #ffffff;
   color: #b48b31;
   font-weight: 800;
-  font-size: 20px;
+  font-size: clamp(18px, 2.8dvh, 20px);
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
   transition: background 0.15s, color 0.15s;

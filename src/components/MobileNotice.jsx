@@ -53,11 +53,8 @@ export default function MobileNotice({ config }) {
 
         <h1 className={styles.title}>Designed for larger screens</h1>
         <p className={styles.text}>
-          {config?.appName || 'Moduluxe Designer'} works best on a desktop or laptop,
-          where you'll have room to build and customize your booth.
-        </p>
-        <p className={styles.text}>
-          Please visit us from your computer for the full experience.
+          {config?.appName || 'Moduluxe Designer'} works best on a desktop or laptop.
+          Please visit us from your computer to build and customize your booth.
         </p>
 
         <a className={styles.btnPrimary} href="https://www.backdrop.com">
