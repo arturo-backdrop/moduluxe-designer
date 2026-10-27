@@ -95,7 +95,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
   const u = UNITS_MAP[units] || UNITS_MAP.m;
   const spacingDisplay = (arrayState.spacing * u.factor).toFixed(units==='m'?2:1);
 
-  if (!activeBtnId) return `<div style="font-size:9px;color:#999;">${modelName}</div>`;
+  if (!activeBtnId) return `<div style="font-size:9px;color:#1a1a1a;">${modelName}</div>`;
 
   // Wall/column/door props card
   if (activeBtnId === 'props' && wallProps) {
@@ -106,7 +106,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
     const hDisplay = (wp.height * u.factor).toFixed(units==='m'?2:1);
     const tDisplay = wp.thickness != null ? (wp.thickness * u.factor).toFixed(units==='m'?3:2) : null;
     return `
-      <div style="font-size:9px;color:#999;margin-bottom:4px;">${modelName}</div>
+      <div style="font-size:9px;color:#1a1a1a;margin-bottom:4px;">${modelName}</div>
       <div style="font-weight:900;font-size:12px;color:#1a1a1a;margin-bottom:8px;">Properties</div>
       <div style="display:flex;flex-direction:column;gap:8px;min-width:140px;">
         ${isWall||isCol ? `
@@ -160,7 +160,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
   }
 
   if (activeBtnId === 'array') return `
-    <div style="font-size:9px;color:#999;margin-bottom:6px;">${modelName}</div>
+    <div style="font-size:9px;color:#1a1a1a;margin-bottom:6px;">${modelName}</div>
     <div style="font-weight:900;font-size:12px;color:#1a1a1a;margin-bottom:8px;">Array</div>
     <div style="display:flex;flex-direction:column;gap:8px;">
       <div>
@@ -192,7 +192,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
     </div>`;
 
   if (activeBtnId === 'rotate') return `
-    <div style="font-size:9px;color:#999;margin-bottom:4px;">${modelName}</div>
+    <div style="font-size:9px;color:#1a1a1a;margin-bottom:4px;">${modelName}</div>
     <div style="font-weight:900;font-size:12px;color:#1a1a1a;margin-bottom:8px;">Rotate</div>
     <div style="display:flex;align-items:center;gap:8px;">
       <button id="rm_rot_left"  style="width:32px;height:32px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;">&#8635;</button>
@@ -201,7 +201,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
     </div>`;
 
   if (activeBtnId === 'color') return `
-    <div style="font-size:9px;color:#999;margin-bottom:6px;">${modelName}</div>
+    <div style="font-size:9px;color:#1a1a1a;margin-bottom:6px;">${modelName}</div>
     <div style="font-weight:900;font-size:12px;color:#1a1a1a;margin-bottom:8px;">Color</div>
     <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center;max-width:120px;">
       ${PRESET_COLORS.map(c=>`
@@ -218,14 +218,14 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
     </div>`;
 
   const btn = buttons.find(b=>b.id===activeBtnId);
-  if (!btn) return `<div style="font-size:9px;color:#999;">${modelName}</div>`;
+  if (!btn) return `<div style="font-size:9px;color:#1a1a1a;">${modelName}</div>`;
 
   // Socket group — grid of individual toggles
   if (btn.socketGroup) {
     const members = btn.socketGroup;
     const label = btn.label;
     return `
-      <div style="font-size:9px;color:#999;margin-bottom:4px;">${modelName}</div>
+      <div style="font-size:9px;color:#1a1a1a;margin-bottom:4px;">${modelName}</div>
       <div style="font-weight:900;font-size:12px;color:#1a1a1a;margin-bottom:8px;">${label}</div>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;width:100px;">
         ${members.map((s, i) => {
@@ -245,7 +245,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
       <div style="font-size:9px;color:#aaa;margin-top:6px;">Tap to toggle each</div>`;
   }
 
-  if (!btn.socket) return `<div style="font-size:9px;color:#999;">${modelName}</div>`;
+  if (!btn.socket) return `<div style="font-size:9px;color:#1a1a1a;">${modelName}</div>`;
   const s = btn.socket, state = socketStates[s.name] || s.state || {};
 
   if (s.behavior === 'fixed' || s.behavior === 'toggle_mesh') {
@@ -254,7 +254,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
     // but the mesh starts visible, so we invert the display for toggle_mesh
     const on = state.on;
     return `
-      <div style="font-size:9px;color:#999;margin-bottom:4px;">${modelName}</div>
+      <div style="font-size:9px;color:#1a1a1a;margin-bottom:4px;">${modelName}</div>
       <div style="font-weight:900;font-size:12px;color:#1a1a1a;">${s.label}</div>
       <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
         <div id="rm_toggle_${s.name}" style="width:34px;height:18px;border-radius:9px;position:relative;cursor:pointer;background:${on?ACCENT:'#e0e0e0'};transition:background 0.2s;flex-shrink:0;">
@@ -298,7 +298,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
     const posIdx    = state.positionIndex ?? -1; // -1 = off
     const labels    = positions.map((p,i) => p.name.replace(/.*\./, '') || (i+1));
     return `
-      <div style="font-size:9px;color:#999;margin-bottom:4px;">${modelName}</div>
+      <div style="font-size:9px;color:#1a1a1a;margin-bottom:4px;">${modelName}</div>
       <div style="font-weight:900;font-size:12px;color:#1a1a1a;margin-bottom:8px;">${s.label}</div>
       <div style="margin-bottom:8px;">
         <div style="display:flex;justify-content:space-between;font-size:10px;color:#999;margin-bottom:4px;">
@@ -325,7 +325,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
     const activeIdx = state.activeIdx ?? 0;
     const isAlt = activeIdx === 1;
     return `
-      <div style="font-size:9px;color:#999;margin-bottom:4px;">${modelName}</div>
+      <div style="font-size:9px;color:#1a1a1a;margin-bottom:4px;">${modelName}</div>
       <div style="font-weight:900;font-size:12px;color:#1a1a1a;">${s.label}</div>
       <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
         <span style="font-size:11px;color:#666;min-width:36px;">${variants[0]?.label || ''}</span>
@@ -335,7 +335,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
         <span style="font-size:11px;color:#666;min-width:36px;">${variants[1]?.label || ''}</span>
       </div>`;
   }
-  return `<div style="font-size:9px;color:#999;">${modelName}</div>`;
+  return `<div style="font-size:9px;color:#1a1a1a;">${modelName}</div>`;
 }
 
 
@@ -737,7 +737,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
 
       const label = document.createElement('span');
       label.textContent = b.label;
-      label.style.cssText = `font-family:Figtree,sans-serif;font-weight:500;font-size:9px;color:white;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,0.4);`;
+      label.style.cssText = `font-family:Figtree,sans-serif;font-weight:500;font-size:9px;color:#1a1a1a;white-space:nowrap;text-shadow:0 0 3px rgba(255,255,255,0.8);`;
 
       el.appendChild(circle);
       el.appendChild(label);
