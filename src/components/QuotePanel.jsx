@@ -7,7 +7,7 @@ const WALL_TYPES = new Set(['wall','column','door']);
 // TEMPORARY, hardcoded: Lightbox (Firefly) panels cannot be rented. If any is in
 // the design, no rental price is shown anywhere. Replace this check with a
 // `rentable` column from the manifest once the new tables land.
-const NO_RENT_MESSAGE = "Rental isn't available for designs with Lightbox panels.";
+const NO_RENT_MESSAGE = "Rental pricing isn't available for designs with Lightbox panels.";
 function isNonRentable(def, modelId) {
   const text = `${def?.category || ''} ${def?.name || ''} ${modelId || ''}`;
   return /lightbox|firefly/i.test(text);
