@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import styles from './VideoWidget.module.css';
 
-// ── Config ────────────────────────────────────────────────────
-const MINIMIZED_LABEL = 'NY Toy Fair Trade Show Booth Awards';
-
 export default function VideoWidget({ config }) {
   const [minimized, setMinimized] = useState(false);
 
@@ -22,7 +19,7 @@ export default function VideoWidget({ config }) {
               <path d="M8 5v14l11-7z"/>
             </svg>
           </div>
-          <span className={styles.pillLabel}>{MINIMIZED_LABEL}</span>
+          <span className={styles.pillLabel}>{config.videoTitle || 'Tutorial'}</span>
           <div className={styles.pillDot} />
         </button>
       ) : (

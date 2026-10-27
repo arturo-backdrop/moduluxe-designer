@@ -32,8 +32,8 @@ export const DEPLOY = {
   // YouTube video shown in the bottom right panel.
   // Leave null to hide the video widget entirely.
   youtubeId:     'JbzEVY4nR-o',
-  videoTitle:    'NY Toy Fair TSB Awards',
-  videoDuration: '1:59',
+  videoTitle:    'AMATEUR Vs PRO STRATEGIES',
+  videoDuration: '7:26',
 
   // ── App Info ─────────────────────────────────────────────────
   appName: 'Moduluxe Designer',
