@@ -7,7 +7,7 @@ const WALL_TYPES = new Set(['wall','column','door']);
 // TEMPORARY, hardcoded: Lightbox (Firefly) panels cannot be rented. If any is in
 // the design, no rental price is shown anywhere. Replace this check with a
 // `rentable` column from the manifest once the new tables land.
-const NO_RENT_MESSAGE = "Rental price isn't available because Lightbox panels can't be rented.";
+const NO_RENT_MESSAGE = "Rental isn't available for designs with Lightbox panels.";
 function isNonRentable(def, modelId) {
   const text = `${def?.category || ''} ${def?.name || ''} ${modelId || ''}`;
   return /lightbox|firefly/i.test(text);
@@ -204,15 +204,17 @@ async function buildQuotePdf({ projectName, shot, logo, lines, grandTotal, confi
   doc.line(M, y, M + CW, y);
   y += 0.3;
   doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(26, 26, 26);
-  doc.text('ESTIMATED PRICE', M, y);
+  // No rental column: the estimated price takes the right-hand spot
+  const ex = rentable ? M : R_TOTAL, ea = rentable ? 'left' : 'right';
+  doc.text('ESTIMATED PRICE', ex, y, { align: ea });
   if (grandTotal > 0 && rentable) doc.text('OR RENT FOR', R_TOTAL, y, { align: 'right' });
   y += 0.3;
   doc.setFontSize(18);
-  doc.text(grandTotal > 0 ? fmt(grandTotal) : 'Contact for pricing', M, y);
+  doc.text(grandTotal > 0 ? fmt(grandTotal) : 'Contact for pricing', ex, y, { align: ea });
   if (grandTotal > 0 && rentable) doc.text(fmt(Math.round(grandTotal / 3)), R_TOTAL, y, { align: 'right' });
   y += 0.22;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(160, 160, 160);
-  doc.text('Final price may vary', M, y);
+  doc.text('Final price may vary', ex, y, { align: ea });
   if (grandTotal > 0 && rentable) doc.text('per event', R_TOTAL, y, { align: 'right' });
   y += 0.5;
 
@@ -363,8 +365,8 @@ function ListModal({ sceneItems, catalog, config, projectName, onCaptureCorners,
         </div>
 
         {/* Estimated total */}
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', padding:'14px 4px 0', borderTop:'2px solid #f0f0f0', marginTop:4 }}>
-          <div style={{ textAlign:'left' }}>
+        <div style={{ display:'flex', justifyContent: rentable ? 'space-between' : 'flex-end', alignItems:'flex-end', padding:'14px 4px 0', borderTop:'2px solid #f0f0f0', marginTop:4 }}>
+          <div style={{ textAlign: rentable ? 'left' : 'right' }}>
             <div style={{ fontSize:11, color:'#1a1a1a', marginBottom:2, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Estimated Price</div>
             <div style={{ fontSize:22, fontWeight:900, color:'#1a1a1a', lineHeight:1 }}>
               {grandTotal > 0 ? fmt(grandTotal) : 'Contact for pricing'}
