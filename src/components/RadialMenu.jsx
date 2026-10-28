@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { CONFIG } from '../config';
 
 // ── Config (identical to prototype) ──────────────────────────
 const CFG = {
@@ -61,7 +62,7 @@ function buildButtons(sockets=[], itemType=null, paintable=true) {
 
   // Group sockets with same label into one button
   const groups = {};
-  sockets.forEach(s => {
+  sockets.filter(s => CONFIG.enableShelves || s.behavior !== 'distribute').forEach(s => {
     const label = s.label || s.name;
     if (!groups[label]) groups[label] = [];
     groups[label].push(s);

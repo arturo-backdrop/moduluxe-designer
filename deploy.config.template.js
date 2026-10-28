@@ -35,6 +35,10 @@ export const DEPLOY = {
   videoTitle:    'AMATEUR Vs PRO STRATEGIES',
   videoDuration: '7:26',
 
+  // ── Shelves button ───────────────────────────────────────────
+  // false = hide the "Shelves" button in the radial menu (presets keep their shelves).
+  enableShelves: false,
+
   // ── App Info ─────────────────────────────────────────────────
   appName: 'Moduluxe Designer',
   version: '0.0.8',

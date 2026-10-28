@@ -62,6 +62,11 @@ export const CONFIG = {
   videoTitle:    DEPLOY.videoTitle   || '',
   videoDuration: DEPLOY.videoDuration || '',
 
+  // ── Shelves accessory button ───────────────────────────────
+  // Hides the "Shelves" (distribute) button in the radial menu.
+  // Existing shelves in presets still render and are still quoted.
+  enableShelves: DEPLOY.enableShelves !== false,
+
   // ── Floor sizes ────────────────────────────────────────────
   floorSizes: [
     { label: '10×10 ft', w: 3.05, d: 3.05 },
