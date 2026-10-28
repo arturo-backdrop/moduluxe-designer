@@ -1311,7 +1311,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       if (e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='ArrowUp'||e.key==='ArrowDown') {
         if (!selectedUid || !selectedUids.length) return;
         e.preventDefault();
-        const STEP = 0.01; // 1cm
+        const STEP = e.shiftKey ? 0.10 : 0.01; // 1cm, or 10cm with Shift
         const cam = camera;
         const target = controls.target;
         const camForward = new THREE.Vector3().subVectors(target, cam.position).setY(0).normalize();
@@ -2334,6 +2334,33 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
     };
     window.addEventListener('viewport:zoom', onZoom);
 
+    // ── Keyboard add: place a product at the floor center and select it ──
+    const onAddModel = e => {
+      const modelId = e.detail?.modelId;
+      if (!modelId) return;
+      const x = snap(0), z = snap(0);
+      const uid = `${modelId}_${Date.now()}`;
+      pendingPositions.set(uid, { x, z });
+      const next = [...itemsRef.current, { uid, modelId, count: 1, x, z, rotY: 0 }];
+      onChangeRef.current?.(next);
+      onCommitRef.current?.(next);
+      // Select it so the arrow keys move it right away
+      setGroupOutline(selectedUids, false);
+      selectedUid = uid; selectedUids = [uid];
+      if (engRef.current) engRef.current.selectedUidRef.current = uid;
+      onRadialMenuRef.current?.(null);
+      onSelectRef.current?.(uid);
+      // Outline once the model has finished loading
+      let tries = 0;
+      const wait = () => {
+        if (selectedUid !== uid) return;
+        if (itemGroup.children.some(c => c.userData.uid === uid)) { setGroupOutline([uid], true); return; }
+        if (++tries < 120) setTimeout(wait, 50);
+      };
+      wait();
+    };
+    window.addEventListener('viewport:add-model', onAddModel);
+
     // ── Resize ────────────────────────────────────────────────
     const onResize = () => {
       const w = window.innerWidth, h = window.innerHeight;
@@ -2437,6 +2464,7 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       canvas.removeEventListener('dragleave',   onDragLeave);
       canvas.removeEventListener('drop',        onDrop);
       window.removeEventListener('viewport:zoom', onZoom);
+      window.removeEventListener('viewport:add-model', onAddModel);
       window.removeEventListener('resize',      onResize);
       renderer.dispose();
     };

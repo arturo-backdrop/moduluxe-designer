@@ -50,10 +50,19 @@ function ThumbPlaceholder() {
   );
 }
 
-function ProductItem({ item, units='ft' }) {
+function ProductItem({ item, units='ft', onAdd }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div className={`${styles.productItem} ${hovered ? styles.productItemHovered : ''}`}
+      role="button"
+      tabIndex={0}
+      aria-label={`${item.name}, add to design`}
+      onKeyDown={e => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('viewport:add-model', { detail: { modelId: item.id } }));
+        onAdd?.(item.name);
+      }}
       draggable
       onDragStart={e => {
         e.dataTransfer.setData('modelId', item.id);
@@ -116,6 +125,7 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
   const [catalog,    setCatalog]    = useState({});
   const [activeCategory, setActiveCategory] = useState(presets.length > 0 ? '__presets__' : null);
   const [loading,    setLoading]    = useState(true);
+  const [announce,   setAnnounce]   = useState('');
   const [logoHeight, setLogoHeight] = useState(76);
   const logoRef  = useRef(null);
   const navColRef = useRef(null);
@@ -242,6 +252,7 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
           <div className={styles.navDivider} />
 
           {/* Right product list */}
+          <div className={styles.srOnly} role="status" aria-live="polite">{announce}</div>
           <div className={styles.productList} role="region" aria-label="Products" tabIndex={0}>
             {loading && <div className={styles.emptyState}>Loading...</div>}
             {!loading && !activeCategory && (
@@ -265,7 +276,7 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
               ));
             })()}
             {!loading && activeCategory && activeCategory !== '__presets__' && (catalog[activeCategory] || []).map(item => (
-              <ProductItem key={item.id} item={item} units={units} />
+              <ProductItem key={item.id} item={item} units={units} onAdd={name => setAnnounce(`${name} added to design. Use the arrow keys to move it, Shift plus arrows to move faster.`)} />
             ))}
           </div>
         </div>

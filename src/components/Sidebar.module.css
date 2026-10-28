@@ -127,6 +127,21 @@
               background 0.2s ease, box-shadow 0.25s ease;
 }
 .productItem:active { cursor: grabbing; }
+.productItem:focus-visible {
+  outline: 2px solid #b48b31;
+  outline-offset: 2px;
+  border-color: #b48b31;
+  background: #fdf8ef;
+}
+.srOnly {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
 .productItemHovered {
   border-color: #b48b31;
   background: #fdf8ef;
