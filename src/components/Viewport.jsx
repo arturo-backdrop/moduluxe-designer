@@ -1306,6 +1306,18 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
         return;
       }
       if (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+      // Keys pressed inside the radial menu belong to the menu
+      if (e.target.closest?.('[data-radial-menu]')) return;
+
+      // M / Menu key / Shift+F10 — open the radial menu for the selected product
+      if ((e.key==='m' || e.key==='M' || e.key==='ContextMenu' || (e.key==='F10' && e.shiftKey))
+          && !e.ctrlKey && !e.metaKey && !e.altKey
+          && selectedUid && modeRef.current !== 'draw' && !captureModeRef.current) {
+        e.preventDefault();
+        window.__radialKeyboard = true;
+        openModelMenu(selectedUid);
+        return;
+      }
 
       // Arrow keys — move selected object 1cm at a time, camera-relative
       if (e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='ArrowUp'||e.key==='ArrowDown') {
@@ -1462,7 +1474,11 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       if (modeRef.current === 'draw') return;
       const hit = getHitContainer(e.clientX, e.clientY);
       if (!hit?.userData.uid) return;
-      const uid = hit.userData.uid;
+      openModelMenu(hit.userData.uid);
+    };
+
+    // Opens the radial menu for a model (shared by right-click and the keyboard)
+    const openModelMenu = uid => {
       const sourceUid = getSourceUid(uid);
       const savedItem = itemsRef.current.find(i => i.uid === sourceUid);
       setGroupOutline(selectedUids, false);

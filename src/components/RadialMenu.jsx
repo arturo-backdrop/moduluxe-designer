@@ -112,7 +112,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
       <div style="display:flex;flex-direction:column;gap:8px;min-width:140px;">
         ${isWall||isCol ? `
         <div>
-          <div style="font-size:9px;color:#999;margin-bottom:3px;">Height (${u.label})</div>
+          <div style="font-size:9px;color:#6b6b6b;margin-bottom:3px;">Height (${u.label})</div>
           <div style="display:flex;align-items:center;gap:6px;">
             <button id="rm_h_dec" style="width:22px;height:22px;border-radius:50%;border:none;background:#f0f0f0;cursor:pointer;">&#8722;</button>
             <span id="rm_h_val" style="font-weight:700;font-size:14px;min-width:36px;text-align:center;">${hDisplay}</span>
@@ -121,7 +121,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
         </div>` : ''}
         ${isWall ? `
         <div>
-          <div style="font-size:9px;color:#999;margin-bottom:3px;">Thickness (${u.label})</div>
+          <div style="font-size:9px;color:#6b6b6b;margin-bottom:3px;">Thickness (${u.label})</div>
           <div style="display:flex;align-items:center;gap:6px;">
             <button id="rm_t_dec" style="width:22px;height:22px;border-radius:50%;border:none;background:#f0f0f0;cursor:pointer;">&#8722;</button>
             <span id="rm_t_val" style="font-weight:700;font-size:14px;min-width:36px;text-align:center;">${tDisplay}</span>
@@ -129,19 +129,19 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
           </div>
         </div>
         <div>
-          <div id="rm_glass_label" style="font-size:9px;color:#999;margin-bottom:3px;">Glass — ${Math.round((wp.glassRatio||0)*100)}%</div>
+          <div id="rm_glass_label" style="font-size:9px;color:#6b6b6b;margin-bottom:3px;">Glass — ${Math.round((wp.glassRatio||0)*100)}%</div>
           <input id="rm_glass" type="range" min="0" max="1" step="0.01" value="${wp.glassRatio||0}"
             style="width:100%;accent-color:#b48b31;" />
         </div>` : ''}
         ${isDoor ? `
         <div>
-          <div id="rm_open_label" style="font-size:9px;color:#999;margin-bottom:3px;">Open — ${Math.round(wp.openAngle||45)}°</div>
+          <div id="rm_open_label" style="font-size:9px;color:#6b6b6b;margin-bottom:3px;">Open — ${Math.round(wp.openAngle||45)}°</div>
           <input id="rm_open" type="range" min="-90" max="90" step="1" value="${wp.openAngle||45}"
             style="width:100%;accent-color:#b48b31;" />
         </div>` : ''}
         ${isCol ? `
         <div>
-          <div style="font-size:9px;color:#999;margin-bottom:3px;">Width (${u.label})</div>
+          <div style="font-size:9px;color:#6b6b6b;margin-bottom:3px;">Width (${u.label})</div>
           <div style="display:flex;align-items:center;gap:6px;">
             <button id="rm_w_dec" style="width:22px;height:22px;border-radius:50%;border:none;background:#f0f0f0;cursor:pointer;">&#8722;</button>
             <span id="rm_w_val" style="font-weight:700;font-size:14px;min-width:36px;text-align:center;">${((wp.width||0.3)*u.factor).toFixed(units==='m'?2:1)}</span>
@@ -149,7 +149,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
           </div>
         </div>
         <div>
-          <div style="font-size:9px;color:#999;margin-bottom:3px;">Shape</div>
+          <div style="font-size:9px;color:#6b6b6b;margin-bottom:3px;">Shape</div>
           <div style="display:flex;gap:4px;">
             <button id="rm_sq" style="flex:1;padding:4px;border-radius:6px;border:none;font-size:10px;cursor:pointer;
               background:${wp.shape==='square'?'#1a1a1a':'#f0f0f0'};color:${wp.shape==='square'?'white':'#666'};">Square</button>
@@ -165,7 +165,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
     <div style="font-weight:900;font-size:12px;color:#1a1a1a;margin-bottom:8px;">Array</div>
     <div style="display:flex;flex-direction:column;gap:8px;">
       <div>
-        <div style="font-size:9px;color:#999;margin-bottom:4px;">Count</div>
+        <div style="font-size:9px;color:#6b6b6b;margin-bottom:4px;">Count</div>
         <div style="display:flex;align-items:center;gap:8px;">
           <button id="rm_arr_dec" style="width:26px;height:26px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;">&#8722;</button>
           <span id="rm_arr_count" style="font-weight:900;font-size:20px;color:#1a1a1a;min-width:24px;text-align:center;">${arrayState.count}</span>
@@ -173,7 +173,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
         </div>
       </div>
       <div>
-        <div style="font-size:9px;color:#999;margin-bottom:4px;">Spacing (${u.label})</div>
+        <div style="font-size:9px;color:#6b6b6b;margin-bottom:4px;">Spacing (${u.label})</div>
         <div style="display:flex;align-items:center;gap:8px;">
           <button id="rm_sp_dec" style="width:26px;height:26px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;">&#8722;</button>
           <span id="rm_sp_val" style="font-weight:900;font-size:16px;color:#1a1a1a;min-width:32px;text-align:center;">${spacingDisplay}</span>
@@ -181,7 +181,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
         </div>
       </div>
       <div style="border-top:1px solid #f0f0f0;padding-top:8px;">
-        <div style="font-size:9px;color:#999;margin-bottom:5px;">Units</div>
+        <div style="font-size:9px;color:#6b6b6b;margin-bottom:5px;">Units</div>
         <div style="display:flex;gap:4px;">
           ${['m','ft','cm','in'].map(ul => {
             const key = ul === 'in' ? 'inch' : ul;
@@ -215,7 +215,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
     <div style="display:flex;align-items:center;gap:6px;margin-top:8px;">
       <input id="rm_color_custom" type="color" value="${currentColor}"
         style="width:24px;height:24px;border:none;border-radius:4px;cursor:pointer;padding:0;">
-      <span style="font-size:9px;color:#999;">Custom</span>
+      <span style="font-size:9px;color:#6b6b6b;">Custom</span>
     </div>`;
 
   const btn = buttons.find(b=>b.id===activeBtnId);
@@ -243,7 +243,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
           </div>`;
         }).join('')}
       </div>
-      <div style="font-size:9px;color:#aaa;margin-top:6px;">Tap to toggle each</div>`;
+      <div style="font-size:9px;color:#6b6b6b;margin-top:6px;">Tap to toggle each</div>`;
   }
 
   if (!btn.socket) return `<div style="text-align:center;font-size:9px;color:#1a1a1a;">${modelName}</div>`;
@@ -273,7 +273,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
     const spDisplay  = (spacing * u.factor).toFixed(units==='m'?2:1);
     const baseDisplay= (baseY   * u.factor).toFixed(units==='m'?2:1);
     return `
-      <div style="text-align:center;font-size:9px;color:#999;margin-bottom:2px;">${modelName}</div>
+      <div style="text-align:center;font-size:9px;color:#6b6b6b;margin-bottom:2px;">${modelName}</div>
       <div style="font-weight:900;font-size:12px;color:#1a1a1a;margin-bottom:6px;">${s.label}</div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
         <button id="rm_dec_${s.name}" style="width:26px;height:26px;border-radius:50%;border:none;background:#f0f0f0;font-size:16px;cursor:pointer;">&#8722;</button>
@@ -302,7 +302,7 @@ function buildCardHTML(modelName, activeBtnId, buttons, socketStates, currentCol
       <div style="text-align:center;font-size:9px;color:#1a1a1a;margin-bottom:4px;">${modelName}</div>
       <div style="font-weight:900;font-size:12px;color:#1a1a1a;margin-bottom:8px;">${s.label}</div>
       <div style="margin-bottom:8px;">
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:#999;margin-bottom:4px;">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#6b6b6b;margin-bottom:4px;">
           <span>Off</span>
           <span>${posIdx < 0 ? 'Off' : 'Position ' + (posIdx+1) + ' / ' + total}</span>
           <span>${total}</span>
@@ -452,6 +452,11 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
         const icon = cel.querySelector('i');
         if (icon) icon.style.color = btnId === id ? 'white' : '#1a1a1a';
       });
+      state.buttons.forEach(bb => {
+        const e = state.btnEls[bb.id];
+        if (e && e.hasAttribute('aria-expanded')) e.setAttribute('aria-expanded', bb.id === id ? 'true' : 'false');
+      });
+      if (id && state._kbd) requestAnimationFrame(() => cardFocusables()[0]?.focus());
       if (circleEl) popScale(circleEl);
     }
 
@@ -744,6 +749,16 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
       el.appendChild(label);
       root.appendChild(el);
 
+      // Accessibility: menu item semantics + roving tabindex
+      const isToggle = b.socket?.behavior === 'fixed';
+      el.setAttribute('role', 'button');
+      el.setAttribute('aria-label', b.label);
+      el.tabIndex = -1;
+      if (isToggle) el.setAttribute('aria-pressed', state.socketStates[b.socket.name]?.on ? 'true' : 'false');
+      else if (b.hasProps) { el.setAttribute('aria-expanded', 'false'); }
+      el.addEventListener('focus', () => { circle.style.outline = '2px solid #b48b31'; circle.style.outlineOffset = '2px'; });
+      el.addEventListener('blur',  () => { circle.style.outline = 'none'; });
+
       state.btnEls[b.id]    = el;
       state.circleEls[b.id] = circle;
 
@@ -782,6 +797,8 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
           circle.style.background = isOn ? ACCENT : 'white';
           const icon = circle.querySelector('i');
           if (icon) icon.style.color = isOn ? 'white' : '#1a1a1a';
+          el.setAttribute('aria-pressed', isOn ? 'true' : 'false');
+          state._announce?.(`${b.label} ${isOn ? 'on' : 'off'}`);
           popScale(circle);
           return;
         }
@@ -790,9 +807,10 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
           else if (b.id === 'rotate') {
             state.currentRotY += Math.PI / 2; // 90°
             onAction?.('rotate', { rotY: state.currentRotY });
+            state._announce?.('Rotated 90 degrees');
             popScale(circle);
           }
-          else if (b.id === 'dup') { popScale(circle); onAction?.('dup'); }
+          else if (b.id === 'dup') { popScale(circle); onAction?.('dup'); state._announce?.('Duplicated'); }
           return;
         }
         setActiveBtn(state.activeBtn===b.id ? null : b.id, circle);
@@ -800,6 +818,123 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
     });
 
     bindCardEvents();
+
+    // ── Keyboard + screen-reader layer ────────────────────
+    root.setAttribute('data-radial-menu', '');
+    root.setAttribute('role', 'group');
+    root.setAttribute('aria-label', `${modelName} options`);
+    if (!document.getElementById('rm-focus-style')) {
+      const st = document.createElement('style');
+      st.id = 'rm-focus-style';
+      st.textContent = '[data-radial-menu] [role=button]:focus-visible,[data-radial-menu] button:focus-visible,[data-radial-menu] input:focus-visible{outline:2px solid #b48b31;outline-offset:2px}';
+      document.head.appendChild(st);
+    }
+    const live = document.createElement('div');
+    live.setAttribute('role', 'status');
+    live.setAttribute('aria-live', 'polite');
+    live.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;';
+    root.appendChild(live);
+    state._announce = msg => { live.textContent = ''; setTimeout(() => { live.textContent = msg; }, 30); };
+
+    const CARD_LABELS = [
+      [/^rm_arr_dec$/, 'Decrease count'], [/^rm_arr_inc$/, 'Increase count'],
+      [/^rm_sp_dec/, 'Decrease spacing'],  [/^rm_sp_inc/, 'Increase spacing'],
+      [/^rm_rot_left$/, 'Rotate left 45 degrees'], [/^rm_rot_right$/, 'Rotate right 45 degrees'],
+      [/^rm_h_dec$/, 'Decrease height'], [/^rm_h_inc$/, 'Increase height'],
+      [/^rm_t_dec$/, 'Decrease thickness'], [/^rm_t_inc$/, 'Increase thickness'],
+      [/^rm_w_dec$/, 'Decrease width'], [/^rm_w_inc$/, 'Increase width'],
+      [/^rm_sq$/, 'Square'], [/^rm_ci$/, 'Circle'],
+      [/^rm_glass$/, 'Glass amount'], [/^rm_open$/, 'Open angle'],
+      [/^rm_color_custom$/, 'Custom color'],
+    ];
+    function enhanceCard() {
+      card.querySelectorAll('[id^="rm_"]').forEach(el => {
+        let label = el.getAttribute('aria-label');
+        if (!label) {
+          const hit = CARD_LABELS.find(([re]) => re.test(el.id));
+          if (hit) label = hit[1];
+          else if (/^rm_color_[0-9a-fA-F]{3,6}$/.test(el.id)) label = 'Color #' + el.id.slice(9).toUpperCase();
+          else if (/^rm_pos_\d+_/.test(el.id)) label = 'Position ' + (parseInt(el.id.split('_')[2], 10) + 1);
+          else if (/^rm_pos_/.test(el.id) && el.tagName === 'INPUT') label = 'Position';
+          else label = (el.getAttribute('title') || el.textContent || '').trim();
+        }
+        if (el.tagName === 'DIV' && typeof el.onclick === 'function') {
+          el.setAttribute('role', 'button'); el.tabIndex = 0;
+          if (label) el.setAttribute('aria-label', label);
+        } else if (label && (el.tagName === 'INPUT' || (el.tagName === 'BUTTON' && el.textContent.trim().length <= 2))) {
+          if (!el.getAttribute('aria-label')) el.setAttribute('aria-label', label);
+        }
+      });
+    }
+    // The card is rebuilt (innerHTML) after most actions, which drops keyboard focus.
+    // Remember the focused control and put focus back on its replacement.
+    card.addEventListener('focusin', e => { if (e.target.id) state._lastFocusId = e.target.id; });
+    const cardObserver = new MutationObserver(() => {
+      enhanceCard();
+      if (state._kbd && state._lastFocusId && !root.contains(document.activeElement)) {
+        const again = card.querySelector('#' + CSS.escape(state._lastFocusId));
+        if (again) again.focus();
+      }
+    });
+    cardObserver.observe(card, { childList: true, subtree: true });
+    enhanceCard();
+
+    function ringEls() { return state.buttons.map(b => state.btnEls[b.id]).filter(Boolean); }
+    function focusRing(i) {
+      const els = ringEls(); if (!els.length) return;
+      const idx = ((i % els.length) + els.length) % els.length;
+      els.forEach((e, k) => { e.tabIndex = k === idx ? 0 : -1; });
+      els[idx].focus();
+    }
+    function cardFocusables() {
+      return [...card.querySelectorAll('[tabindex="0"], button:not([disabled]), input:not([disabled])')];
+    }
+    if (ringEls()[0]) ringEls()[0].tabIndex = 0;
+
+    root.addEventListener('pointerdown', () => { state._kbd = false; }, true);
+    root.addEventListener('keydown', e => {
+      state._kbd = true;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const t = e.target;
+      const ring = ringEls();
+      const onRing = ring.indexOf(t);
+      if (e.key === 'Escape') {
+        if (state.activeBtn) {
+          // First Esc closes the open panel and returns to the ring; the next one closes the menu
+          e.stopPropagation(); e.preventDefault();
+          const prev = state.activeBtn;
+          setActiveBtn(null, null);
+          focusRing(Math.max(0, state.buttons.findIndex(b => b.id === prev)));
+        }
+        return;
+      }
+      if (e.key === 'Tab') {
+        const list = [...ring.filter(x => x.tabIndex === 0), ...cardFocusables()];
+        if (list.length) {
+          e.preventDefault(); e.stopPropagation();
+          const i = list.indexOf(t);
+          const n = e.shiftKey ? (i <= 0 ? list.length - 1 : i - 1) : (i < 0 || i === list.length - 1 ? 0 : i + 1);
+          list[n].focus();
+        }
+        return;
+      }
+      if (onRing >= 0) {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); focusRing(onRing + 1); return; }
+        if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   { e.preventDefault(); e.stopPropagation(); focusRing(onRing - 1); return; }
+        if (e.key === 'Home') { e.preventDefault(); e.stopPropagation(); focusRing(0); return; }
+        if (e.key === 'End')  { e.preventDefault(); e.stopPropagation(); focusRing(ring.length - 1); return; }
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); t.click(); return; }
+      } else if (t.tagName === 'DIV' && t.getAttribute('role') === 'button' && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault(); e.stopPropagation(); t.click(); return;
+      }
+      // Keep arrows, letters and Delete from reaching the viewport shortcuts
+      if (e.key.length === 1 || e.key.startsWith('Arrow') || e.key === 'Delete' || e.key === 'Backspace') e.stopPropagation();
+    });
+    if (window.__radialKeyboard) {
+      window.__radialKeyboard = false;
+      state._kbd = true;
+      requestAnimationFrame(() => focusRing(0));
+    }
 
     // ── Open animation ────────────────────────────────────
     state.currentR = 0;
@@ -872,6 +1007,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
     return () => {
       cancelAnimationFrame(state.radiusRaf);
       clearTimeout(state.closeTimeout);
+      cardObserver.disconnect();
     };
   }, []);
 
