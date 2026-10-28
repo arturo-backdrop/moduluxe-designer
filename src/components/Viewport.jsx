@@ -147,6 +147,7 @@ function applyPaintColor(root, color) {
 
 export default function Viewport({ config, floorSize, sceneItems, onSceneItemsChange, onCommit, onRadialMenu, radialMenuWrapperRef, engRef: externalEngRef, mode = 'place', activeTool = 'select', onToolChange, onSelect, captureMode = false }) {
   const canvasRef = useRef(null);
+  const liveRef   = useRef(null);
   const engRef    = useRef(null);
   const itemsRef    = useRef(sceneItems);
   const onChangeRef = useRef(onSceneItemsChange);
@@ -1309,6 +1310,20 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       // Keys pressed inside the radial menu belong to the menu
       if (e.target.closest?.('[data-radial-menu]')) return;
 
+      // N / ] and P / [ — select the next / previous product (left to right)
+      if ((e.key==='n' || e.key==='N' || e.key===']' || e.key==='p' || e.key==='P' || e.key==='[')
+          && !e.ctrlKey && !e.metaKey && !e.altKey
+          && modeRef.current !== 'draw' && !captureModeRef.current) {
+        const fwd = e.key==='n' || e.key==='N' || e.key===']';
+        const list = selectableUids();
+        e.preventDefault();
+        if (!list.length) { announceSel('No products in the design yet.'); return; }
+        let idx = list.indexOf(selectedUid);
+        idx = idx < 0 ? (fwd ? 0 : list.length - 1) : (idx + (fwd ? 1 : -1) + list.length) % list.length;
+        selectByKeyboard(list[idx], idx, list.length);
+        return;
+      }
+
       // M / Menu key / Shift+F10 — open the radial menu for the selected product
       if ((e.key==='m' || e.key==='M' || e.key==='ContextMenu' || (e.key==='F10' && e.shiftKey))
           && !e.ctrlKey && !e.metaKey && !e.altKey
@@ -1476,6 +1491,39 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       if (!hit?.userData.uid) return;
       openModelMenu(hit.userData.uid);
     };
+
+    // ── Keyboard selection helpers ─────────────────────────────
+    const announceSel = msg => {
+      const el = liveRef.current; if (!el) return;
+      el.textContent = '';
+      setTimeout(() => { el.textContent = msg; }, 30);
+    };
+    // One stop per product (or per group), ordered left to right
+    function selectableUids() {
+      const seen = new Set(); const arr = [];
+      itemsRef.current.forEach(i => {
+        if (i.type === 'wall' || i.type === 'column' || i.type === 'door' || i.isArrayClone) return;
+        const u = getSourceUid(i.uid);
+        if (seen.has(u)) return;
+        seen.add(u);
+        arr.push(itemsRef.current.find(x => x.uid === u) || i);
+      });
+      arr.sort((a, b) => (a.x - b.x) || (a.z - b.z));
+      return arr.map(i => i.uid);
+    }
+    function selectByKeyboard(uid, idx, total) {
+      const sourceUid = getSourceUid(uid);
+      setGroupOutline(selectedUids, false);
+      selectedUid  = sourceUid;
+      selectedUids = getGroupUids(uid);
+      if (engRef.current) engRef.current.selectedUidRef.current = sourceUid;
+      setGroupOutline(selectedUids, true);
+      onRadialMenuRef.current?.(null);
+      onSelectRef.current?.(sourceUid);
+      const it  = itemsRef.current.find(i => i.uid === sourceUid);
+      const def = catalogRef.current.find(m => m.id === it?.modelId);
+      announceSel(`${def?.name || it?.modelId || 'Product'} selected, ${idx + 1} of ${total}. Press M for options, arrow keys to move.`);
+    }
 
     // Opens the radial menu for a model (shared by right-click and the keyboard)
     const openModelMenu = uid => {
@@ -2376,6 +2424,12 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
       wait();
     };
     window.addEventListener('viewport:add-model', onAddModel);
+    if (!document.getElementById('vp-focus-style')) {
+      const st = document.createElement('style');
+      st.id = 'vp-focus-style';
+      st.textContent = 'canvas[data-design-canvas]:focus-visible{outline:2px solid #b48b31;outline-offset:-3px}';
+      document.head.appendChild(st);
+    }
 
     // ── Resize ────────────────────────────────────────────────
     const onResize = () => {
@@ -2539,10 +2593,19 @@ export default function Viewport({ config, floorSize, sceneItems, onSceneItemsCh
   }, [sceneItems, config._catalogFlat]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{ display:'block', width:'100%', height:'100%', position:'absolute', inset:0 }}
-    />
+    <>
+      <canvas
+        ref={canvasRef}
+        data-design-canvas=""
+        tabIndex={0}
+        role="group"
+        aria-roledescription="3D design area"
+        aria-label="3D design area. Press N or P to select the next or previous product, M for its options, arrow keys to move it, Delete to remove it."
+        style={{ display:'block', width:'100%', height:'100%', position:'absolute', inset:0 }}
+      />
+      <div ref={liveRef} role="status" aria-live="polite"
+        style={{ position:'absolute', width:1, height:1, overflow:'hidden', clip:'rect(0,0,0,0)', whiteSpace:'nowrap' }} />
+    </>
   );
 }
 
