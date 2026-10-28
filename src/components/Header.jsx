@@ -91,6 +91,7 @@ export default function Header({
               <input
                 ref={inputRef}
                 className={styles.nameInput}
+                aria-label="Project name"
                 value={projectName}
                 onChange={e => onProjectNameChange(e.target.value)}
                 onBlur={() => { if (!projectName.trim()) onProjectNameChange('My Booth Design'); }}

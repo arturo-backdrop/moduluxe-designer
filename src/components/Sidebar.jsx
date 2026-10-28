@@ -242,7 +242,7 @@ export default function Sidebar({ config, mode, activeTool, onToolChange, onAddP
           <div className={styles.navDivider} />
 
           {/* Right product list */}
-          <div className={styles.productList}>
+          <div className={styles.productList} role="region" aria-label="Products" tabIndex={0}>
             {loading && <div className={styles.emptyState}>Loading...</div>}
             {!loading && !activeCategory && (
               <div className={styles.emptyState}>Select a category</div>
