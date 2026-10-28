@@ -53,7 +53,7 @@
 .editBtn {
   display: flex;
   align-items: center;
-  color: #bbb;
+  color: #767676;
   transition: color 0.15s;
   padding: 0;
   flex-shrink: 0;
@@ -80,7 +80,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #aaa;
+  color: #767676;
   transition: all 0.15s;
   flex-shrink: 0;
 }
@@ -126,7 +126,7 @@
   border-radius: 2.0000rem;
   border: none;
   cursor: pointer;
-  color: #888;
+  color: #6b6b6b;
   background: transparent;
   position: relative;
   z-index: 1;
@@ -154,7 +154,7 @@
   display: flex;
   align-items: center;
   gap: 0.2500rem;
-  color: #aaa;
+  color: #767676;
   font-family: 'Figtree', sans-serif;
   font-weight: 500;
   font-size: 0.7000rem;
@@ -178,7 +178,7 @@
   font-family: 'Figtree', sans-serif;
   font-size: 0.6000rem;
   font-weight: 500;
-  color: #999;
+  color: #767676;
   background: transparent;
   border: none;
   padding: 0.2000rem 0.3000rem;
@@ -195,7 +195,7 @@
   border-radius: 50%;
   border: 2px solid #e8e8e8;
   background: white;
-  color: #aaa;
+  color: #767676;
   font-size: 0.7000rem;
   font-weight: 700;
   cursor: pointer;
