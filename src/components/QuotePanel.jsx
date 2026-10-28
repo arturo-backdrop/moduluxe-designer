@@ -158,7 +158,7 @@ async function buildQuotePdf({ projectName, shot, logo, lines, grandTotal, confi
   y += Math.max(headerH, titleBottom + 0.28 - y) + 0.4;
   // Table
   const drawHeader = () => {
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(150, 150, 150);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(107, 107, 107);
     doc.text('ITEM', M, y);
     doc.text('QTY', R_QTY, y, { align: 'right' });
     doc.text('UNIT PRICE', R_UNIT, y, { align: 'right' });
@@ -185,7 +185,7 @@ async function buildQuotePdf({ projectName, shot, logo, lines, grandTotal, confi
     y += nameLines.length * 0.17 + 0.05;
     line.accs.forEach(acc => {
       ensureSpace(0.2);
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(120, 120, 120);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(107, 107, 107);
       doc.text(`- ${acc.label}`, M + 0.2, y);
       doc.text(String(acc.qty), R_QTY, y, { align: 'right' });
       doc.text(money(acc.unitPrice), R_UNIT, y, { align: 'right' });
@@ -213,14 +213,14 @@ async function buildQuotePdf({ projectName, shot, logo, lines, grandTotal, confi
   doc.text(grandTotal > 0 ? fmt(grandTotal) : 'Contact for pricing', ex, y, { align: ea });
   if (grandTotal > 0 && rentable) doc.text(fmt(Math.round(grandTotal / 3)), R_TOTAL, y, { align: 'right' });
   y += 0.22;
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(160, 160, 160);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(107, 107, 107);
   doc.text('Final price may vary', ex, y, { align: ea });
   if (grandTotal > 0 && rentable) doc.text('per event', R_TOTAL, y, { align: 'right' });
   y += 0.5;
 
   // Contact
   ensureSpace(0.6);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(120, 120, 120);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(107, 107, 107);
   doc.text('Want to get a quote?', M, y);
   y += 0.22;
   doc.setFont('helvetica', 'bold'); doc.setTextColor(180, 139, 49);
