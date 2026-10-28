@@ -738,7 +738,7 @@ export default function RadialMenu({ x, y, modelName, sockets=[], onAction, onCl
 
       const label = document.createElement('span');
       label.textContent = b.label;
-      label.style.cssText = `font-family:Figtree,sans-serif;font-weight:500;font-size:9px;color:#1a1a1a;white-space:nowrap;text-shadow:0 0 3px rgba(255,255,255,0.8);`;
+      label.style.cssText = `font-family:Figtree,sans-serif;font-weight:500;font-size:9px;color:#1a1a1a;white-space:nowrap;text-shadow:0 0 2px #fff,0 0 2px #fff,0 0 4px #fff,0 0 6px rgba(255,255,255,0.9),0 0 10px rgba(255,255,255,0.7);`;
 
       el.appendChild(circle);
       el.appendChild(label);
