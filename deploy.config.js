@@ -32,7 +32,7 @@ export const DEPLOY = {
   // YouTube video shown in the bottom right panel.
   // Leave null to hide the video widget entirely.
   youtubeId:     'JbzEVY4nR-o',
-  videoTitle:    'AMATEUR Vs PRO STRATEGIES',
+  videoTitle:    'AMATEUR VS PRO STRATEGIES',
   videoDuration: '7:26',
 
   // ── Shelves button ───────────────────────────────────────────
