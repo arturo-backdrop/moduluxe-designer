@@ -172,7 +172,7 @@ export default function AIRenderLoading({ onComplete, placeholderUrl, projectNam
             {resultUrl && (
               <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', overflow: 'hidden' }}>
                 {/* X close button */}
-                <button onClick={() => setShowConfirm(true)} style={{
+                <button onClick={() => setShowConfirm(true)} aria-label="Close" style={{
                   position: 'absolute', top: '0.75rem', right: '0.75rem', zIndex: 3,
                   width: '2rem', height: '2rem',
                   background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)',

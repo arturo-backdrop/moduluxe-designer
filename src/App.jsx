@@ -838,7 +838,7 @@ function AppMain() {
                     <span style={{fontSize:9,color:'#f87171',fontWeight:600}}>Delete</span>
                   </button>
                   {/* Close */}
-                  <button style={{ ...btnStyle(), color:'#aaa' }} onClick={() => setRadialMenu(null)}>✕</button>
+                  <button style={{ ...btnStyle(), color:'#aaa' }} onClick={() => setRadialMenu(null)} aria-label="Close">✕</button>
                 </div>
               </div>
             );
