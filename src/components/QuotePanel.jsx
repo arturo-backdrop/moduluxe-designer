@@ -293,7 +293,7 @@ function ListModal({ sceneItems, catalog, config, projectName, onCaptureCorners,
 
         {step === 'pick' ? (
           <div>
-            <div style={{ fontSize:12, color:'#888', marginBottom:12 }}>
+            <div style={{ fontSize:12, color:'#6b6b6b', marginBottom:12 }}>
               Pick the angle you want on your PDF.
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
@@ -321,25 +321,25 @@ function ListModal({ sceneItems, catalog, config, projectName, onCaptureCorners,
         <>
         {/* Column headers */}
         <div style={{ display:'grid', gridTemplateColumns:COL, gap:'0 8px', padding:'0 4px 8px 4px', marginBottom:4 }}>
-          <span style={{ fontSize:10, color:'#bbb', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Item</span>
-          <span style={{ fontSize:10, color:'#bbb', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', textAlign:'center' }}>Qty</span>
-          <span style={{ fontSize:10, color:'#bbb', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', textAlign:'center' }}>Unit</span>
-          <span style={{ fontSize:10, color:'#bbb', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', textAlign:'center' }}>Total</span>
+          <span style={{ fontSize:10, color:'#6b6b6b', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Item</span>
+          <span style={{ fontSize:10, color:'#6b6b6b', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', textAlign:'center' }}>Qty</span>
+          <span style={{ fontSize:10, color:'#6b6b6b', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', textAlign:'center' }}>Unit</span>
+          <span style={{ fontSize:10, color:'#6b6b6b', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', textAlign:'center' }}>Total</span>
         </div>
 
         {/* Items */}
         <div className={styles.itemsList} style={{ maxHeight:280 }}>
           {lines.length === 0 && (
-            <div style={{ textAlign:'center', color:'#bbb', fontSize:13, padding:'24px 0' }}>No items in scene</div>
+            <div style={{ textAlign:'center', color:'#6b6b6b', fontSize:13, padding:'24px 0' }}>No items in scene</div>
           )}
           {lines.map((line, i) => (
             <div key={i} style={{ padding:'10px 4px', borderBottom: i < lines.length-1 ? '1px solid #f5f5f5' : 'none' }}>
               {/* Model row */}
               <div style={{ display:'grid', gridTemplateColumns:COL, gap:'0 8px', alignItems:'center' }}>
                 <span style={{ fontWeight:600, fontSize:13, color:'#1a1a1a' }}>{line.name}</span>
-                <span style={{ textAlign:'center', fontSize:13, color:'#888', fontWeight:500 }}>{line.count}</span>
-                <span style={{ textAlign:'right', fontSize:13, color:'#888' }}>
-                  {line.unitPrice > 0 ? fmt(line.unitPrice) : <span style={{color:'#ddd'}}>—</span>}
+                <span style={{ textAlign:'center', fontSize:13, color:'#595959', fontWeight:500 }}>{line.count}</span>
+                <span style={{ textAlign:'right', fontSize:13, color:'#595959' }}>
+                  {line.unitPrice > 0 ? fmt(line.unitPrice) : <span style={{color:'#767676'}}>—</span>}
                 </span>
                 <span style={{ textAlign:'right', fontSize:13, fontWeight:700, color: line.total > 0 ? '#1a1a1a' : '#ddd' }}>
                   {line.total > 0 ? fmt(line.total) : '—'}
@@ -348,12 +348,12 @@ function ListModal({ sceneItems, catalog, config, projectName, onCaptureCorners,
               {/* Accessories */}
               {line.accs.map((acc, j) => (
                 <div key={j} style={{ display:'grid', gridTemplateColumns:COL, gap:'0 8px', alignItems:'center', marginTop:5 }}>
-                  <span style={{ fontSize:11, color:'#aaa', paddingLeft:14, display:'flex', alignItems:'center', gap:4 }}>
+                  <span style={{ fontSize:11, color:'#6b6b6b', paddingLeft:14, display:'flex', alignItems:'center', gap:4 }}>
                     <span style={{ color:'#ddd' }}>↳</span> {acc.label}
                   </span>
-                  <span style={{ textAlign:'center', fontSize:11, color:'#aaa' }}>{acc.qty}</span>
-                  <span style={{ textAlign:'right', fontSize:11, color:'#aaa' }}>
-                    {acc.unitPrice > 0 ? fmt(acc.unitPrice) : <span style={{color:'#ddd'}}>—</span>}
+                  <span style={{ textAlign:'center', fontSize:11, color:'#6b6b6b' }}>{acc.qty}</span>
+                  <span style={{ textAlign:'right', fontSize:11, color:'#6b6b6b' }}>
+                    {acc.unitPrice > 0 ? fmt(acc.unitPrice) : <span style={{color:'#767676'}}>—</span>}
                   </span>
                   <span style={{ textAlign:'right', fontSize:11, fontWeight:600, color: acc.total > 0 ? '#1a1a1a' : '#ddd' }}>
                     {acc.total > 0 ? fmt(acc.total) : '—'}
@@ -371,7 +371,7 @@ function ListModal({ sceneItems, catalog, config, projectName, onCaptureCorners,
             <div style={{ fontSize:22, fontWeight:900, color:'#1a1a1a', lineHeight:1 }}>
               {grandTotal > 0 ? fmt(grandTotal) : 'Contact for pricing'}
             </div>
-            <div style={{ fontSize:10, color:'#ccc', marginTop:4 }}>Final price may vary</div>
+            <div style={{ fontSize:10, color:'#6b6b6b', marginTop:4 }}>Final price may vary</div>
           </div>
           {rentable && (
             <div style={{ textAlign:'right' }}>
@@ -379,7 +379,7 @@ function ListModal({ sceneItems, catalog, config, projectName, onCaptureCorners,
               <div style={{ fontSize:22, fontWeight:900, color:'#1a1a1a', lineHeight:1 }}>
                 {grandTotal > 0 ? fmt(Math.round(grandTotal / 3)) : '—'}
               </div>
-              <div style={{ fontSize:10, color:'#ccc', marginTop:4 }}>per event</div>
+              <div style={{ fontSize:10, color:'#6b6b6b', marginTop:4 }}>per event</div>
             </div>
           )}
         </div>
@@ -400,7 +400,7 @@ function ListModal({ sceneItems, catalog, config, projectName, onCaptureCorners,
 
         {/* CTA */}
         <div style={{ marginTop:18, padding:'16px 20px', background:'#fdf8ef', borderRadius:14, textAlign:'center' }}>
-          <div style={{ fontSize:12, color:'#aaa', marginBottom:12 }}>Want to get a quote?</div>
+          <div style={{ fontSize:12, color:'#6b6b6b', marginBottom:12 }}>Want to get a quote?</div>
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:10 }}>
             <a href="tel:8887652711" style={{
               fontSize:18, fontWeight:900, color:'#b48b31', textDecoration:'none',
