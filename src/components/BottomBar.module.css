@@ -33,7 +33,7 @@
 
 .emptyMsg {
   font-size: 0.625rem;
-  color: #ccc;
+  color: #6b6b6b;
   font-style: italic;
   padding: 0.25rem;
 }
@@ -96,7 +96,7 @@
 .cardDims {
   font-weight: 400;
   font-size: 0.625rem;
-  color: #aaa;
+  color: #6b6b6b;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

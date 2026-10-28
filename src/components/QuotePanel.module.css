@@ -15,7 +15,7 @@
 .itemCount {
   font-size: 0.6188rem;
   font-weight: 400;
-  color: #aaa;
+  color: #767676;
   text-align: left;
 }
 
@@ -44,7 +44,7 @@
 .totalLabel {
   font-size: 0.6188rem;
   font-weight: 400;
-  color: #888;
+  color: #6b6b6b;
 }
 .totalValue {
   font-size: 1.35rem;
@@ -93,7 +93,7 @@
 /* ── Phone ───────────────────────────────────────────────── */
 .phoneRow {
   font-size: 0.6188rem;
-  color: #bbb;
+  color: #767676;
   text-align: center;
   line-height: 1.5;
 }
@@ -141,7 +141,7 @@
   width: 2.0000rem; height: 2.0000rem;
   border-radius: 50%;
   background: #f5f5f5;
-  color: #999;
+  color: #767676;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; border: none; transition: all 0.15s;
 }
@@ -151,7 +151,7 @@
 /* ── Form ────────────────────────────────────────────────── */
 .fieldGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7500rem; }
 .field { display: flex; flex-direction: column; gap: 0.3125rem; }
-.fieldLabel { font-size: 0.75rem; font-weight: 500; color: #888; }
+.fieldLabel { font-size: 0.75rem; font-weight: 500; color: #6b6b6b; }
 .req { color: #b48b31; }
 .fieldInput, .fieldTextarea {
   font-family: 'Figtree', sans-serif;
@@ -195,7 +195,7 @@
   align-items: center;
   padding: 0.7500rem 0;
   font-size: 0.875rem;
-  color: #888;
+  color: #6b6b6b;
   border-top: 1px solid #f0f0f0;
   margin-bottom: 0.8750rem;
 }
@@ -206,7 +206,7 @@
   align-items: center;
   gap: 0.5000rem;
   font-size: 0.75rem;
-  color: #888;
+  color: #6b6b6b;
   cursor: pointer;
   margin-bottom: 1.1250rem;
 }
@@ -264,5 +264,5 @@
 }
 .successIcon svg { width: 1.7500rem; height: 1.7500rem; }
 .successTitle { font-weight: 900; font-size: 1.125rem; color: #1a1a1a; }
-.successSub   { font-size: 0.875rem; color: #aaa; margin-bottom: 0.5000rem; }
+.successSub   { font-size: 0.875rem; color: #767676; margin-bottom: 0.5000rem; }
 .quotePill { z-index: 10; }
