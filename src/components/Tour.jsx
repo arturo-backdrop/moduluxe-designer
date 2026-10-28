@@ -276,7 +276,7 @@ export default function Tour({ onDone, onAction }) {
               background: i === step ? '#b48b31' : i < step ? 'rgba(180,139,49,0.4)' : 'rgba(255,255,255,0.15)',
             }} />
           ))}
-          <span style={{ marginLeft:'auto', fontSize:10, color:'rgba(255,255,255,0.3)', fontFamily:'Figtree,sans-serif' }}>
+          <span style={{ marginLeft:'auto', fontSize:10, color:'rgba(255,255,255,0.7)', fontFamily:'Figtree,sans-serif' }}>
             {step+1}/{STEPS.length}
           </span>
         </div>
@@ -308,12 +308,12 @@ export default function Tour({ onDone, onAction }) {
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:14 }}>
           <button onClick={onDone} style={{
             background:'none', border:'none', fontSize:11,
-            color:'rgba(255,255,255,0.3)', cursor:'pointer',
+            color:'rgba(255,255,255,0.7)', cursor:'pointer',
             fontFamily:'Figtree,sans-serif', padding:'4px 0',
             transition:'color 0.15s',
           }}
-          onMouseEnter={e => e.currentTarget.style.color='rgba(255,255,255,0.6)'}
-          onMouseLeave={e => e.currentTarget.style.color='rgba(255,255,255,0.3)'}>
+          onMouseEnter={e => e.currentTarget.style.color='rgba(255,255,255,0.95)'}
+          onMouseLeave={e => e.currentTarget.style.color='rgba(255,255,255,0.7)'}>
             Skip all
           </button>
           <button onClick={next} style={{
