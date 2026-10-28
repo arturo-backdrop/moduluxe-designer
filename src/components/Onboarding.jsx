@@ -4,6 +4,19 @@ import StartScratchThumb from '../assets/Start_From_Scratch.png';
 import styles from './Onboarding.module.css';
 
 // ── Floor size SVG preview ────────────────────────────────────
+// Makes a clickable <div> operable by keyboard (Tab to focus, Enter/Space to activate)
+function kbd(onActivate, pressed) {
+  return {
+    role: 'button',
+    tabIndex: 0,
+    ...(pressed !== undefined ? { 'aria-pressed': pressed } : {}),
+    onClick: onActivate,
+    onKeyDown: e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onActivate(); }
+    },
+  };
+}
+
 function FloorPreview({ w, h }) {
   const maxW = 48, maxH = 40;
   const sw = maxW * w, sh = maxH * h;
@@ -54,7 +67,8 @@ function PresetGrid({ presets, selectedPreset, onSelect }) {
               <div
                 key={preset.id}
                 className={`${styles.presetCard} ${selectedPreset === preset.id ? styles.presetCardSelected : ''}`}
-                onClick={() => onSelect(preset.id)}
+                {...kbd(() => onSelect(preset.id), selectedPreset === preset.id)}
+                aria-label={preset.name}
               >
                 <div className={styles.presetThumb}>
                   {preset.thumbnail
@@ -169,7 +183,7 @@ export default function Onboarding({ config, presets: manifestPresets = [], onCo
             <div className={styles.subtitle}>Pick a preset layout or design from scratch</div>
 
             <div className={styles.modeGrid}>
-              <div className={styles.modeCard} onClick={() => chooseMode('preset')}>
+              <div className={styles.modeCard} {...kbd(() => chooseMode('preset'))} aria-label="Start with a preset">
                 <div className={styles.modeImageCard}>
                   <img src={TheOnyxThumb} alt="Preset" className={styles.modeCardBg} />
                   <div className={styles.modeCardOverlay} />
@@ -180,7 +194,7 @@ export default function Onboarding({ config, presets: manifestPresets = [], onCo
                 </div>
               </div>
 
-              <div className={styles.modeCard} onClick={() => chooseMode('scratch')}>
+              <div className={styles.modeCard} {...kbd(() => chooseMode('scratch'))} aria-label="Start from scratch">
                 <div className={styles.modeImageCard}>
                   <img src={StartScratchThumb} alt="Start From Scratch" className={styles.modeCardBg} />
                   <div className={styles.modeCardOverlay} />
@@ -238,7 +252,8 @@ export default function Onboarding({ config, presets: manifestPresets = [], onCo
                 <div
                   key={i}
                   className={`${styles.floorCard} ${selectedFloor === i ? styles.floorCardSelected : ''}`}
-                  onClick={() => setSelectedFloor(i)}
+                  {...kbd(() => setSelectedFloor(i), selectedFloor === i)}
+                  aria-label={size.label}
                 >
                   <FloorPreview
                     w={Math.min(size.w / 10, 1)}

@@ -392,3 +392,11 @@
 }
 .btnSkip:hover { color: #666; }
 
+
+/* Keyboard focus ring for the clickable cards */
+.modeCard:focus-visible,
+.presetCard:focus-visible,
+.floorCard:focus-visible {
+  outline: 2px solid #b48b31;
+  outline-offset: 3px;
+}
