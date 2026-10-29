@@ -72,7 +72,7 @@ function PresetGrid({ presets, selectedPreset, onSelect }) {
               >
                 <div className={styles.presetThumb}>
                   {preset.thumbnail
-                    ? <img src={preset.thumbnail} alt={preset.name} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                    ? <img src={preset.thumbnail} alt={preset.name} style={{ width:'100%', height:'100%', objectFit:'contain' }} />
                     : <PresetThumb blocks={preset.blocks || []} selected={selectedPreset === preset.id} />
                   }
                   {selectedPreset === preset.id && (
