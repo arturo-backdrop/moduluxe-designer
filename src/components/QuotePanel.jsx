@@ -8,6 +8,12 @@ const WALL_TYPES = new Set(['wall','column','door']);
 // the design, no rental price is shown anywhere. Replace this check with a
 // `rentable` column from the manifest once the new tables land.
 const NO_RENT_MESSAGE = "Rental pricing isn't available for designs with Lightbox panels.";
+// Rental price = 40% of the purchase price (the flat ratio used on the Backdrop website).
+const RENT_RATE = 0.4;
+const rentFor = (total) => Math.round(total * RENT_RATE);
+
+// Shown under every quote total (modal + PDF).
+const QUOTE_DISCLAIMER = 'This quote doesn\u2019t reflect every element of your final setup and may differ from your final price. Please contact our Sales Team for a personalized quote.';
 function isNonRentable(def, modelId) {
   const text = `${def?.category || ''} ${def?.name || ''} ${modelId || ''}`;
   return /lightbox|firefly/i.test(text);
@@ -211,12 +217,15 @@ async function buildQuotePdf({ projectName, shot, logo, lines, grandTotal, confi
   y += 0.3;
   doc.setFontSize(18);
   doc.text(grandTotal > 0 ? fmt(grandTotal) : 'Contact for pricing', ex, y, { align: ea });
-  if (grandTotal > 0 && rentable) doc.text(fmt(Math.round(grandTotal / 3)), R_TOTAL, y, { align: 'right' });
+  if (grandTotal > 0 && rentable) doc.text(fmt(rentFor(grandTotal)), R_TOTAL, y, { align: 'right' });
   y += 0.22;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(107, 107, 107);
-  doc.text('Final price may vary', ex, y, { align: ea });
   if (grandTotal > 0 && rentable) doc.text('per event', R_TOTAL, y, { align: 'right' });
-  y += 0.5;
+  y += 0.3;
+  const discLines = doc.splitTextToSize(QUOTE_DISCLAIMER, CW);
+  ensureSpace(0.2 + discLines.length * 0.16);
+  doc.text(discLines, M, y);
+  y += discLines.length * 0.16 + 0.4;
 
   // Contact
   ensureSpace(0.6);
@@ -371,18 +380,20 @@ function ListModal({ sceneItems, catalog, config, projectName, onCaptureCorners,
             <div style={{ fontSize:22, fontWeight:900, color:'#1a1a1a', lineHeight:1 }}>
               {grandTotal > 0 ? fmt(grandTotal) : 'Contact for pricing'}
             </div>
-            <div style={{ fontSize:10, color:'#6b6b6b', marginTop:4 }}>Final price may vary</div>
           </div>
           {rentable && (
             <div style={{ textAlign:'right' }}>
               <div style={{ fontSize:11, color:'#1a1a1a', marginBottom:2, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Or Rent for</div>
               <div style={{ fontSize:22, fontWeight:900, color:'#1a1a1a', lineHeight:1 }}>
-                {grandTotal > 0 ? fmt(Math.round(grandTotal / 3)) : '—'}
+                {grandTotal > 0 ? fmt(rentFor(grandTotal)) : '—'}
               </div>
               <div style={{ fontSize:10, color:'#6b6b6b', marginTop:4 }}>per event</div>
             </div>
           )}
         </div>
+
+        {/* Quote disclaimer */}
+        <p data-testid="quote-disclaimer" style={{ fontSize:11, lineHeight:1.45, color:'#6b6b6b', margin:'12px 4px 0' }}>{QUOTE_DISCLAIMER}</p>
 
         {/* Download PDF */}
         <div style={{ marginTop:16 }}>
@@ -461,7 +472,7 @@ export default function QuotePanel({ config, sceneItems, catalog, projectName, o
           <div className={styles.totalLabel}>Estimated Total</div>
           <div className={styles.totalValue}>{total > 0 ? formatPrice(total) : 'Contact for pricing'}</div>
           {rentable
-            ? (total > 0 && <div className={styles.rentText}>Or rent for {formatPrice(Math.round(total / 3))}</div>)
+            ? (total > 0 && <div className={styles.rentText}>Or rent for {formatPrice(rentFor(total))}</div>)
             : <div className={styles.noRentNote} role="note">{NO_RENT_MESSAGE}</div>}
         </div>
         <button className={styles.quoteBtn} onClick={() => setOpen(true)} disabled={count === 0}>
