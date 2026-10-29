@@ -14,6 +14,8 @@ const rentFor = (total) => Math.round(total * RENT_RATE);
 
 // Shown under every quote total (modal + PDF).
 const QUOTE_DISCLAIMER = 'This quote doesn\u2019t reflect every element of your final setup and may differ from your final price. Please contact our Sales Team for a personalized quote.';
+// Short version for the compact quote pill.
+const QUOTE_DISCLAIMER_SHORT = 'Estimate only. Contact our Sales Team for a personalized quote.';
 function isNonRentable(def, modelId) {
   const text = `${def?.category || ''} ${def?.name || ''} ${modelId || ''}`;
   return /lightbox|firefly/i.test(text);
@@ -460,9 +462,8 @@ export default function QuotePanel({ config, sceneItems, catalog, projectName, o
     (s, l) => s + l.total + l.accs.reduce((a, acc) => a + acc.total, 0), 0
   );
 
-  function formatPrice(n) {
-    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
+  // Same whole-dollar format as the quote modal and PDF, so every total matches.
+  const formatPrice = fmt;
 
   return (
     <>
@@ -474,6 +475,7 @@ export default function QuotePanel({ config, sceneItems, catalog, projectName, o
           {rentable
             ? (total > 0 && <div className={styles.rentText}>Or rent for {formatPrice(rentFor(total))}</div>)
             : <div className={styles.noRentNote} role="note">{NO_RENT_MESSAGE}</div>}
+          <div className={styles.disclaimerNote} role="note">{QUOTE_DISCLAIMER_SHORT}</div>
         </div>
         <button className={styles.quoteBtn} onClick={() => setOpen(true)} disabled={count === 0}>
           Get quote
