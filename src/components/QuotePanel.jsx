@@ -16,6 +16,17 @@ const rentFor = (total) => Math.round(total * RENT_RATE);
 const QUOTE_DISCLAIMER = 'This quote doesn\u2019t reflect every element of your final setup and may differ from your final price. Please contact our Sales Team for a personalized quote.';
 // Short version for the compact quote pill.
 const QUOTE_DISCLAIMER_SHORT = 'Estimate only. Contact our Sales Team for a personalized quote.';
+// Small "i" info icon (decorative: the text next to it carries the message).
+function InfoIcon({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" style={{ flexShrink: 0 }}>
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="16" x2="12" y2="11" />
+      <line x1="12" y1="7.6" x2="12.01" y2="7.6" />
+    </svg>
+  );
+}
+
 function isNonRentable(def, modelId) {
   const text = `${def?.category || ''} ${def?.name || ''} ${modelId || ''}`;
   return /lightbox|firefly/i.test(text);
@@ -224,9 +235,16 @@ async function buildQuotePdf({ projectName, shot, logo, lines, grandTotal, confi
   doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(107, 107, 107);
   if (grandTotal > 0 && rentable) doc.text('per event', R_TOTAL, y, { align: 'right' });
   y += 0.3;
-  const discLines = doc.splitTextToSize(QUOTE_DISCLAIMER, CW);
+  const ICON_W = 0.2;
+  const discLines = doc.splitTextToSize(QUOTE_DISCLAIMER, CW - ICON_W);
   ensureSpace(0.2 + discLines.length * 0.16);
-  doc.text(discLines, M, y);
+  // info icon: ring with an "i" (vector, no image needed)
+  doc.setDrawColor(107, 107, 107); doc.setLineWidth(0.01);
+  doc.circle(M + 0.06, y - 0.03, 0.06, 'S');
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(6);
+  doc.text('i', M + 0.06, y - 0.01, { align: 'center' });
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+  doc.text(discLines, M + ICON_W, y);
   y += discLines.length * 0.16 + 0.4;
 
   // Contact
@@ -395,7 +413,10 @@ function ListModal({ sceneItems, catalog, config, projectName, onCaptureCorners,
         </div>
 
         {/* Quote disclaimer */}
-        <p data-testid="quote-disclaimer" style={{ fontSize:11, lineHeight:1.45, color:'#6b6b6b', margin:'12px 4px 0' }}>{QUOTE_DISCLAIMER}</p>
+        <div style={{ display:'flex', gap:8, alignItems:'flex-start', margin:'12px 4px 0', color:'#6b6b6b' }}>
+          <span style={{ marginTop:1, display:'inline-flex' }}><InfoIcon size={15} /></span>
+          <p data-testid="quote-disclaimer" style={{ fontSize:11, lineHeight:1.45, color:'#6b6b6b', margin:0 }}>{QUOTE_DISCLAIMER}</p>
+        </div>
 
         {/* Download PDF */}
         <div style={{ marginTop:16 }}>
@@ -475,7 +496,7 @@ export default function QuotePanel({ config, sceneItems, catalog, projectName, o
           {rentable
             ? (total > 0 && <div className={styles.rentText}>Or rent for {formatPrice(rentFor(total))}</div>)
             : <div className={styles.noRentNote} role="note">{NO_RENT_MESSAGE}</div>}
-          <div className={styles.disclaimerNote} role="note">{QUOTE_DISCLAIMER_SHORT}</div>
+          <div className={styles.disclaimerNote} role="note"><InfoIcon size={11} /><span>{QUOTE_DISCLAIMER_SHORT}</span></div>
         </div>
         <button className={styles.quoteBtn} onClick={() => setOpen(true)} disabled={count === 0}>
           Get quote

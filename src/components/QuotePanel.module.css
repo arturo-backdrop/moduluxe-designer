@@ -68,7 +68,11 @@
   color: #6b6b6b;
   margin-top: 0.25rem;
   max-width: 11rem;
+  display: flex;
+  gap: 0.3rem;
+  align-items: flex-start;
 }
+.disclaimerNote svg { margin-top: 0.1rem; }
 .rentText {
   font-size: 0.6188rem;
   font-weight: 400;
